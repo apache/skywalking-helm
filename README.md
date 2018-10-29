@@ -1,4 +1,7 @@
-# Apache SkyWalking Kubernetes
+Apache SkyWalking Kubernetes
+==========
+
+# Deploy SkyWalking backend to Kubernetes cluster
 
 To install and configure skywalking in a Kubernetes cluster, follow these instructions.
 
@@ -26,4 +29,12 @@ in the cluster.
 Use `kubectl apply -f ` with the scripts in `scripts/ui` to deploy oap server
 in the cluster.
 
+# Setup Istio to send metric to oap
 
+## Prerequisites
+
+Istio should be installed in kubernetes cluster.
+
+## Setup Istio to send metric to oap
+
+Use `kubectl apply -f ` with the scripts in `kubernetes/istio` to setup.
