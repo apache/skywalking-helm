@@ -97,7 +97,7 @@ spec:
                 fieldPath: metadata.name
           # NOTE: This will tell the elasticsearch node where to connect to other nodes to form a cluster
           - name: discovery.zen.ping.unicast.hosts
-            value: "elasticsearch-0.elasticsearch.skywalking.svc.cluster.local,elasticsearch-1.elasticsearch.skywalking.svc.cluster.local,elasticsearch-2.elasticsearch.skywalking.svc.cluster.local"
+            value: elasticsearch:9300
           # NOTE: You can increase the heap size
           - name: ES_JAVA_OPTS
             value: -Xms4g -Xmx4g
