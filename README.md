@@ -37,4 +37,4 @@ Istio should be installed in kubernetes cluster.
 
 ## Setup Istio to send metric to oap
 
-Use `kubectl apply -f ` with the scripts in `kubernetes/istio` to setup.
+Use `kubectl apply -f ` with the scripts in `scripts/istio` to setup.
