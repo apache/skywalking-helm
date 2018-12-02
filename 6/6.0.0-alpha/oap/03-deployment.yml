@@ -32,20 +32,6 @@ spec:
         app: oap
     spec:
       serviceAccountName: skywalking-oap
-      initContainers:
-      - name: init-oap
-        image: skywalking/oap:6.0.0-alpha
-        resources:
-          requests:
-            memory: 1Gi
-          limits:
-            memory: 2Gi
-        env:
-        - name: JAVA_OPTS
-          value: mode=init
-        volumeMounts:
-        - name: config
-          mountPath: /skywalking/config
       containers:
       - name: oap
         image: skywalking/oap:6.0.0-alpha
