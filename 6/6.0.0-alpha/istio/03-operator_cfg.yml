@@ -37,8 +37,10 @@ spec:
    value: request.size | 0
    dimensions:
      sourceService: source.workload.name | ""
+     sourceNamespace: source.workload.namespace | ""
      sourceUID: source.uid | ""
      destinationService: destination.workload.name | ""
+     destinationNamespace: destination.workload.namespace | ""
      destinationUID: destination.uid | ""
      requestMethod: request.method | ""
      requestPath: request.path | ""

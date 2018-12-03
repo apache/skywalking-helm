@@ -17,31 +17,45 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ui-deployment
+  name: oap-deployment
   namespace: skywalking
   labels:
-    app: ui
+    app: oap
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
-      app: ui
+      app: oap
   template:
     metadata:
       labels:
-        app: ui
+        app: oap
     spec:
+      serviceAccountName: skywalking-oap
       containers:
-      - name: ui
-        image: us.gcr.io/skywalking-live-demo/skywalking/ui:latest
+      - name: oap
+        image: skywalking/oap:6.0.0-alpha
         ports:
-        - containerPort: 8080
-          name: page
+        - containerPort: 11800
+          name: grpc
+        - containerPort: 12800
+          name: rest
         resources:
           requests:
             memory: 1Gi
           limits:
             memory: 2Gi
         env:
-        - name:  collector.ribbon.listOfServers
-          value: oap:12800
+        - name: JAVA_OPTS
+          value: -Xms256M -Xmx512M
+        - name: SKYWALKING_COLLECTOR_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        volumeMounts:
+        - name: config
+          mountPath: /skywalking/config
+      volumes:
+      - name: config
+        configMap:
+          name: oap-config

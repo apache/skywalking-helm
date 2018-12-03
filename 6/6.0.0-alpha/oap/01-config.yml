@@ -76,7 +76,7 @@ data:
     alarm:
       default:
 
-  log4j2.xml: |--
+  log4j2.xml: |-
     <Configuration status="INFO">
         <Appenders>
             <Console name="Console" target="SYSTEM_OUT">

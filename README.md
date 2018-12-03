@@ -9,11 +9,11 @@ To install and configure skywalking in a Kubernetes cluster, follow these instru
 
 Please promise the `skywalking` namespace existed in the cluster, otherwise, create a new one.
 
-`kubctl apply -f scripts/namespace.yml`
+`kubctl apply -f namespace.yml`
 
 ## Deploy Elasticsearch
 
-Use `kubectl apply -f ` with the scripts in `scripts/elasticsearch` to deploy elasticsearch servers
+Use `kubectl apply -f ` with the scripts in `elasticsearch` to deploy elasticsearch servers
 in the cluster.
 
 > `01-storageclass.yml` assume to use GKE as the kubernetes provisioner. You could fix it according
@@ -21,12 +21,12 @@ to your kubernetes environment.
 
 ## Deploy OAP server 
 
-Use `kubectl apply -f ` with the scripts in `scripts/opa` to deploy oap server
+Use `kubectl apply -f ` with the scripts in `opa` to deploy oap server
 in the cluster.
 
 ## Deploy UI server 
 
-Use `kubectl apply -f ` with the scripts in `scripts/ui` to deploy oap server
+Use `kubectl apply -f ` with the scripts in `ui` to deploy oap server
 in the cluster.
 
 # Setup Istio to send metric to oap
@@ -37,4 +37,4 @@ Istio should be installed in kubernetes cluster.
 
 ## Setup Istio to send metric to oap
 
-Use `kubectl apply -f ` with the scripts in `scripts/istio` to setup.
+Use `kubectl apply -f ` with the scripts in `istio` to setup.
