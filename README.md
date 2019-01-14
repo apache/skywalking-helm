@@ -21,7 +21,7 @@ to your kubernetes environment.
 
 ## Deploy OAP server 
 
-Use `kubectl apply -f ` with the scripts in `opa` to deploy oap server
+Use `kubectl apply -f ` with the scripts in `oap` to deploy oap server
 in the cluster.
 
 ## Deploy UI server 
