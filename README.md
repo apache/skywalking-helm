@@ -9,7 +9,7 @@ To install and configure skywalking in a Kubernetes cluster, follow these instru
 
 Please promise the `skywalking` namespace existed in the cluster, otherwise, create a new one.
 
-`kubctl apply -f namespace.yml`
+`kubectl apply -f namespace.yml`
 
 ## Deploy Elasticsearch
 
