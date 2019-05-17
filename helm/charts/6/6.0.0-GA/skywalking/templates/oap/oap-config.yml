@@ -13,7 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+{{- $oapService := .Values.oap.name -}}
+{{- $namespace := .Release.Namespace -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -23,9 +24,9 @@ data:
     cluster:
       kubernetes:
         watchTimeoutSeconds: 60
-        labelSelector: app=skywalking-oap
+        labelSelector: app={{ $oapService }}
         uidEnvName: SKYWALKING_COLLECTOR_UID
-        namespace: gogs-quick-start
+        namespace: {{ $namespace }}
     core:
       default:
         restHost: 0.0.0.0
