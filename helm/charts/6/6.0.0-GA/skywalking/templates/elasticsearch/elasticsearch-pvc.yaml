@@ -1,0 +1,27 @@
+{{- if .Values.elasticsearch.persistence.enabled -}}
+{{- if not .Values.elasticsearch.persistence.existingClaim -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  {{- if .Values.elasticsearch.persistence.annotations }}
+  annotations:
+{{ toYaml .Values.elasticsearch.persistence.annotations | indent 4 }}
+  {{- end }}
+  labels:
+    app: {{ .Values.elasticsearch.name }}
+  name: {{ template "skywalking.fullname" . }}-elasticsearch
+spec:
+  accessModes:
+  - {{ .Values.elasticsearch.persistence.accessMode }}
+{{- if .Values.elasticsearch.persistence.storageClass }}
+{{- if (eq "-" .Values.elasticsearch.persistence.storageClass) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: "{{ .Values.elasticsearch.persistence.storageClass }}"
+{{- end }}
+{{- end }}
+  resources:
+    requests:
+      storage: "{{ .Values.elasticsearch.persistence.size }}"
+{{- end -}}
+{{- end -}}
