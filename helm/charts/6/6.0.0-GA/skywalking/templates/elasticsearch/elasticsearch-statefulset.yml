@@ -103,7 +103,21 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /usr/share/elasticsearch/data
-      volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: {{ template "skywalking.fullname" . }}-elasticsearch
+  {{- if .Values.elasticsearch.persistence.enabled }}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - {{ .Values.elasticsearch.persistence.accessMode }}
+    {{- if .Values.elasticsearch.persistence.storageClass }}
+    {{- if (eq "-" .Values.elasticsearch.persistence.storageClass) }}
+      storageClassName: ""
+    {{- else }}
+      storageClassName: "{{ .Values.elasticsearch.persistence.storageClass }}"
+    {{- end }}
+    {{- end }}
+      resources:
+        requests:
+          storage: "{{ .Values.elasticsearch.persistence.size }}"
+  {{- end -}}
