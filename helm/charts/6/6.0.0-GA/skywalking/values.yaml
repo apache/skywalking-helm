@@ -41,6 +41,7 @@ elasticsearch:
     # existingClaim: your-claim
     accessMode: ReadWriteOnce
     size: 30Gi
+  terminationGracePeriodSeconds: 300
 
 oap:
   name: skywalking-oap

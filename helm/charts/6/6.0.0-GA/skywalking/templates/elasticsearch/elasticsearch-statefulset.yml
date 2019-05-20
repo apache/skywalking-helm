@@ -33,7 +33,7 @@ spec:
       labels:
         service: {{ .Values.elasticsearch.name }}
     spec:
-      terminationGracePeriodSeconds: 300
+      terminationGracePeriodSeconds: {{ .Values.elasticsearch.terminationGracePeriodSeconds }}
       initContainers:
       # NOTE:
       # This is to fix the permission on the volume
