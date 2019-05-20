@@ -54,6 +54,8 @@ oap:
     grpc: 11800
     rest: 12800
   replicas: 3
+  service:
+    type: ClusterIP
   env:
     javaOpts: "-Xms256M -Xmx512M"
   resources:

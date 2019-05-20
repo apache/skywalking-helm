@@ -21,6 +21,7 @@ metadata:
   labels:
     service: {{ .Values.oap.name }}
 spec:
+  type: {{ .Values.oap.service.type }}
   ports:
   - port: {{ .Values.oap.ports.rest }}
     name: rest
