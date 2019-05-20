@@ -12,6 +12,7 @@ elasticsearch:
   ports:
     http: 9200
     tcp: 9300
+  clusterHost: discovery.zen.ping.unicast.hosts
   env:
     esJavaOpts: "-Xms4g -Xmx4g"
   resources:
