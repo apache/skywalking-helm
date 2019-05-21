@@ -39,11 +39,10 @@ spec:
           name: grpc
         - containerPort: {{ .Values.oap.ports.rest }}
           name: rest
+{{- if .Values.oap.resources }}
         resources:
-          requests:
-            memory: {{ .Values.oap.resources.requests.memory }}
-          limits:
-            memory: {{ .Values.oap.resources.limits.memory }}
+{{ toYaml .Values.oap.resources | indent 10 }}
+{{- end }}
         env:
         - name: JAVA_OPTS
           value: {{ .Values.oap.env.javaOpts }}

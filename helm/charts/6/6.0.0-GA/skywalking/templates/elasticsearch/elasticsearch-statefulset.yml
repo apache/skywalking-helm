@@ -81,11 +81,10 @@ spec:
         - containerPort: {{ .Values.elasticsearch.ports.tcp }}
           name: tcp
         # NOTE: you can increase this resources
+{{- if .Values.elasticsearch.resources }}
         resources:
-          requests:
-            memory: {{ .Values.elasticsearch.resources.requests.memory }}
-          limits:
-            memory: {{ .Values.elasticsearch.resources.limits.memory }}
+{{ toYaml .Values.elasticsearch.resources | indent 10 }}
+{{- end }}
         env:
           # NOTE: the cluster name; update this
           - name: cluster.name

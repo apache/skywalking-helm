@@ -36,11 +36,10 @@ spec:
         ports:
         - containerPort: {{ .Values.ui.ports.page }}
           name: page
+{{- if .Values.ui.resources }}
         resources:
-          requests:
-            memory: {{ .Values.ui.resources.requests.memory }}
-          limits:
-            memory: {{ .Values.ui.resources.requests.memory }}
+{{ toYaml .Values.ui.resources | indent 10 }}
+{{- end }}
         env:
         - name: collector.ribbon.listOfServers
           value: {{ .Values.oap.name }}:{{ .Values.oap.ports.rest }}
