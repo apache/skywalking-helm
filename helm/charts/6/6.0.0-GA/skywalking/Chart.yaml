@@ -1,0 +1,9 @@
+name: skywalking
+apiVersion: v1
+appVersion: 6.0.0-GA
+description: Apache SkyWalking APM System
+version: 0.1.0
+
+maintainers:
+- name: innerpeacez
+  email: 10146749@qq.com
