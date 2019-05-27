@@ -1,0 +1,35 @@
+{{- if .Values.ui.ingress.enabled -}}
+{{- $fullName := include "skywalking.fullname" . -}}
+{{- $ingressPath := .Values.ui.ingress.path -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}-ui
+  labels:
+    app: {{ include "skywalking.name" . }}-ui
+{{- with .Values.ui.ingress.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+spec:
+{{- if .Values.ui.ingress.tls }}
+  tls:
+  {{- range .Values.ui.ingress.tls }}
+    - hosts:
+      {{- range .hosts }}
+        - {{ . | quote }}
+      {{- end }}
+      secretName: {{ .secretName }}
+  {{- end }}
+{{- end }}
+  rules:
+  {{- range .Values.ui.ingress.hosts }}
+    - host: {{ . | quote }}
+      http:
+        paths:
+          - path: {{ $ingressPath }}
+            backend:
+              serviceName: {{ $fullName }}-ui
+              servicePort: 8080
+  {{- end }}
+{{- end }}
