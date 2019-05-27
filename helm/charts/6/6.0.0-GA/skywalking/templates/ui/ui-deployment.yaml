@@ -17,43 +17,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "skywalking.fullname" . }}-oap
+  name: {{ template "skywalking.fullname" . }}-ui
   labels:
-    app: {{ .Values.oap.name }}
+    app: {{ .Values.ui.name }}
 spec:
-  replicas: {{ .Values.oap.replicas }}
+  replicas: {{ .Values.ui.replicas }}
   selector:
     matchLabels:
-      app: {{ .Values.oap.name }}
+      app: {{ .Values.ui.name }}
   template:
     metadata:
       labels:
-        app: {{ .Values.oap.name }}
+        app: {{ .Values.ui.name }}
     spec:
-      serviceAccountName: {{ .Values.oap.name }}
       containers:
-      - name: {{ .Values.oap.name }}
-        image: {{ .Values.oap.image.repository }}:{{ .Values.oap.image.tag }}
+      - name: {{ .Values.ui.name }}
+        image: {{ .Values.ui.image.repository }}:{{ .Values.ui.image.tag }}
+        imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
         ports:
-        - containerPort: {{ .Values.oap.ports.grpc }}
-          name: grpc
-        - containerPort: {{ .Values.oap.ports.rest }}
-          name: rest
-{{- if .Values.oap.resources }}
+        - containerPort: {{ .Values.ui.ports.page }}
+          name: page
+{{- if .Values.ui.resources }}
         resources:
-{{ toYaml .Values.oap.resources | indent 10 }}
+{{ toYaml .Values.ui.resources | indent 10 }}
 {{- end }}
         env:
-        - name: JAVA_OPTS
-          value: {{ .Values.oap.env.javaOpts }}
-        - name: SKYWALKING_COLLECTOR_UID
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.uid
-        volumeMounts:
-        - name: config
-          mountPath: /skywalking/config
-      volumes:
-      - name: config
-        configMap:
-          name: {{ template "skywalking.fullname" . }}-oap-config
+        - name: collector.ribbon.listOfServers
+          value: {{ .Values.oap.name }}:{{ .Values.oap.ports.rest }}
