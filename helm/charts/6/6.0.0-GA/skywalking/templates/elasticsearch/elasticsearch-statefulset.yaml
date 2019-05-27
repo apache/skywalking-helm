@@ -75,6 +75,7 @@ spec:
       containers:
       - name: elasticsearch
         image: {{ .Values.elasticsearch.image.repository }}:{{ .Values.elasticsearch.image.tag }}
+        imagePullPolicy: {{ .Values.elasticsearch.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.elasticsearch.ports.http }}
           name: http
