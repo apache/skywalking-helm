@@ -30,6 +30,6 @@ spec:
           - path: {{ $ingressPath }}
             backend:
               serviceName: {{ $fullName }}-ui
-              servicePort: 8080
+              servicePort: {{ .Values.ui.ports.page }}
   {{- end }}
 {{- end }}

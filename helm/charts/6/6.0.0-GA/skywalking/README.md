@@ -96,7 +96,7 @@ Roles and RoleBindings resources will be created automatically for `OAP` .
 > **Tip**: You can refer to the default `oap-role.yaml` file in [templates](templates/) to customize your own.
 
 ### ConfigMap Files
-Skywalking is configured through [aplication.yaml](https://prometheus.io/docs/operating/configuration/). This file (and any others listed in `Files`) will be mounted into the `skywalking-oap` pod.
+Skywalking is configured through [oap-config.yaml](oap-config.yaml). This file (and any others listed in `Files`) will be mounted into the `skywalking-oap` pod.
 
 ### Ingress TLS
 If your cluster allows automatic create/retrieve of TLS certificates (e.g. [kube-lego](https://github.com/jetstack/kube-lego)), please refer to the documentation for that mechanism.
