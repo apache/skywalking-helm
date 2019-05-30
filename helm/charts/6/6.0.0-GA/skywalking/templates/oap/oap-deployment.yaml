@@ -51,6 +51,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.uid
+        - name: TZ
+          value: {{ .Values.TZ }}
         volumeMounts:
         - name: config
           mountPath: /skywalking/config

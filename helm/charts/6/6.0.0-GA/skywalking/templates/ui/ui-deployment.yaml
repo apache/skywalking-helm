@@ -44,3 +44,5 @@ spec:
         env:
         - name: collector.ribbon.listOfServers
           value: {{ .Values.oap.name }}:{{ .Values.oap.ports.rest }}
+        - name: TZ
+          value: {{ .Values.TZ }}
