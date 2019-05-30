@@ -106,4 +106,4 @@ ui:
      # cpu: 100m
      memory: 1Gi
 
-TZ: Asia/Shanghai
+TZ: UTC-0

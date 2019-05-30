@@ -75,6 +75,7 @@ Parameter | Description | Default
 `ui.ingress.tls` | Associate TLS with the Ingress | `[]` 
  `ui.service.type`                             | Web UI svc type | `NodePort` 
  `ui.resources`                  | Web UI node resources requests & limits | `requests.memory=8Gi，limits.memory=16Gi - cpu limit must be an integer` 
+ `TZ` | Time zone configuration to OAP and Web UI | `UTC+0` 
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
