@@ -32,16 +32,18 @@ spec:
         app: ui
     spec:
       containers:
-      - name: ui
-        image: skywalking/ui:6.0.0-GA
-        ports:
-        - containerPort: 8080
-          name: page
-        resources:
-          requests:
-            memory: 1Gi
-          limits:
-            memory: 2Gi
-        env:
-        - name:  collector.ribbon.listOfServers
-          value: oap:12800
+        - name: ui
+          image: skywalking/ui:6.0.0-GA
+          ports:
+            - containerPort: 8080
+              name: page
+          resources:
+            requests:
+              memory: 1Gi
+            limits:
+              memory: 2Gi
+          env:
+            - name:  collector.ribbon.listOfServers
+              value: oap:12800
+            - name:  collector.ribbon.ReadTimeout
+              value: "20000"
