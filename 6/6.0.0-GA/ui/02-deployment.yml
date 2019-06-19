@@ -45,3 +45,5 @@ spec:
         env:
         - name:  collector.ribbon.listOfServers
           value: oap:12800
+        - name:  collector.ribbon.ReadTimeout
+          value: "20000"
