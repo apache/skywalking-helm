@@ -17,45 +17,60 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: oap-deployment
-  namespace: skywalking
+  name: oap
   labels:
     app: oap
 spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: oap
+  replicas: 1
   template:
     metadata:
+      name: oap
       labels:
         app: oap
     spec:
       serviceAccountName: skywalking-oap
       containers:
-      - name: oap
-        image: skywalking/oap:6.0.0-GA
-        ports:
-        - containerPort: 11800
-          name: grpc
-        - containerPort: 12800
-          name: rest
-        resources:
-          requests:
-            memory: 1Gi
-          limits:
-            memory: 2Gi
-        env:
-        - name: JAVA_OPTS
-          value: -Xms256M -Xmx512M
-        - name: SKYWALKING_COLLECTOR_UID
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.uid
-        volumeMounts:
-        - name: config
-          mountPath: /skywalking/config
+        - name: oap
+          image: skywalking/oap:6.0.0-GA
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 11800
+              name: grpc
+            - containerPort: 12800
+              name: rest
+          resources:
+            requests:
+              memory: 1Gi
+            limits:
+              memory: 2Gi
+          env:
+            - name: JAVA_OPTS
+              value: -Xms256M -Xmx512M
+            - name: SKYWALKING_COLLECTOR_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: SW_CORE_REST_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SW_CORE_GRPC_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          volumeMounts:
+            - name: config
+              mountPath: /skywalking/config
+            - mountPath: /etc/localtime
+              name: localtime
+      restartPolicy: Always
       volumes:
-      - name: config
-        configMap:
-          name: oap-config
+        - name: config
+          configMap:
+            name: oap-config
+        - name: localtime
+          hostPath:
+            path: /usr/share/zoneinfo/Asia/Shanghai
+  selector:
+    matchLabels:
+      app: oap
