@@ -34,7 +34,7 @@ spec:
       serviceAccountName: skywalking-oap
       containers:
       - name: oap
-        image: skywalking/oap:6.0.0-GA
+        image: apache/skywalking-oap-server:6.0.0-GA
         ports:
         - containerPort: 11800
           name: grpc
