@@ -5,36 +5,18 @@ Apache SkyWalking Kubernetes
 
 To install and configure skywalking in a Kubernetes cluster, follow these instructions.
 
-## Prerequisites
+## Structure of repository
 
-Please promise the `skywalking` namespace existed in the cluster, otherwise, create a new one.
+### archive
 
-`kubectl apply -f namespace.yml`
+Prior to 6.0.0-GA, only kubernetes YAMLs as examples for users and should be modified to fix real kuberentes enviroment, 
+for instance, resources, volume claims.
 
-## Deploy Elasticsearch
+Now, these YAMLs are archived in the repository, that means we never maintain them, but users still could use them.
 
-Use `kubectl apply -f ` with the scripts in `elasticsearch` to deploy elasticsearch servers
-in the cluster.
+We recommend using __helm-chart__ as your first choice.
 
-> `01-storageclass.yml` assume to use GKE as the kubernetes provisioner. You could fix it according
-to your kubernetes environment.
+### helm-chart 
 
-## Deploy OAP server 
-
-Use `kubectl apply -f ` with the scripts in `oap` to deploy oap server
-in the cluster.
-
-## Deploy UI server 
-
-Use `kubectl apply -f ` with the scripts in `ui` to deploy oap server
-in the cluster.
-
-# Setup Istio to send metric to oap
-
-## Prerequisites
-
-Istio should be installed in kubernetes cluster.
-
-## Setup Istio to send metric to oap
-
-Use `kubectl apply -f ` with the scripts in `istio` to setup.
+This is recommended as the best practice to deploy SkyWalking backend stack into kubernetes cluster. You can pick a 
+ sub folder base on version your desired version.
