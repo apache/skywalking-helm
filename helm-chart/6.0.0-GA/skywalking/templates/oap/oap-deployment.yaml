@@ -30,7 +30,7 @@ spec:
       labels:
         app: {{ .Values.oap.name }}
     spec:
-      serviceAccountName: {{ .Values.oap.name }}
+      serviceAccountName: {{ template "skywalking.fullname" . }}-oap
       containers:
       - name: {{ .Values.oap.name }}
         image: {{ .Values.oap.image.repository }}:{{ .Values.oap.image.tag }}

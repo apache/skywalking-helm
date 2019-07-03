@@ -96,7 +96,7 @@ spec:
                 fieldPath: metadata.name
           # NOTE: This will tell the elasticsearch node where to connect to other nodes to form a cluster
           - name: {{ .Values.elasticsearch.clusterHost }}
-            value: {{ .Values.elasticsearch.name }}:{{ .Values.elasticsearch.ports.tcp }}
+            value: {{ template "skywalking.fullname" . }}-elasticsearch:{{ .Values.elasticsearch.ports.tcp }}
           # NOTE: You can increase the heap size
           - name: ES_JAVA_OPTS
             value: {{ .Values.elasticsearch.env.esJavaOpts }}

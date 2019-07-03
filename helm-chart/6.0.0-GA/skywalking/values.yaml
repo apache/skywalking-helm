@@ -35,25 +35,25 @@ elasticsearch:
     ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
     ##   GKE, AWS & OpenStack)
     ##
-    storageClass: fast
+    storageClass: ""
     ##
     ## If you want to reuse an existing claim, you can pass the name of the PVC using
     ## the existingClaim variable
     # existingClaim: your-claim
     accessMode: ReadWriteOnce
-    size: 30Gi
+    size: 10Gi
   terminationGracePeriodSeconds: 300
 
 oap:
   name: skywalking-oap
   image:
-    repository: skywalking/oap
+    repository: docker.io/apache/skywalking-oap-server
     tag: 6.0.0-GA
     pullPolicy: IfNotPresent
   ports:
     grpc: 11800
     rest: 12800
-  replicas: 3
+  replicas: 2
   service:
     type: ClusterIP
   env:
@@ -74,7 +74,7 @@ ui:
   name: skywalking-ui
   replicas: 1
   image:
-    repository: skywalking/ui
+    repository: docker.io/apache/skywalking-ui
     tag: 6.0.0-GA
     pullPolicy: IfNotPresent
   ports:

@@ -13,8 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-{{- $oapService := .Values.oap.name -}}
-{{- $namespace := .Release.Namespace -}}
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -24,9 +23,9 @@ data:
     cluster:
       kubernetes:
         watchTimeoutSeconds: 60
-        labelSelector: app={{ $oapService }}
+        labelSelector: app={{ .Values.oap.name }}
         uidEnvName: SKYWALKING_COLLECTOR_UID
-        namespace: {{ $namespace }}
+        namespace: {{ .Release.Namespace }}
     core:
       default:
         restHost: 0.0.0.0
@@ -45,7 +44,7 @@ data:
         monthMetricsDataTTL: 18 # Unit is month
     storage:
       elasticsearch:
-        clusterNodes: skywalking-elasticsearch:9200
+        clusterNodes: {{ template "skywalking.fullname" . }}-elasticsearch:9200
         indexShardsNumber: 2
         indexReplicasNumber: 0
         bulkActions: 2000 # Execute the bulk every 2000 requests
