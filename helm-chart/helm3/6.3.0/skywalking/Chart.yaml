@@ -1,0 +1,20 @@
+apiVersion: v1
+name: skywalking
+home: https://skywalking.apache.org
+version: 0.1.0
+appVersion: 6.3.0
+description: Apache SkyWalking APM System
+icon: https://github.com/apache/skywalking-website/blob/master/docs/.vuepress/public/assets/logo.svg
+sources:
+- https://github.com/apache/skywalking-kubernetes
+maintainers:
+- name: hanahmily
+  email: hanahmily@gmail.com
+- name: innerpeacez
+  email: innerpeace.zhai@gmail.com
+
+dependencies:
+  - name: elasticsearch
+    version: ~1.28.2
+    repository: https://kubernetes-charts.storage.googleapis.com/
+    condition: elasticsearch.enabled
