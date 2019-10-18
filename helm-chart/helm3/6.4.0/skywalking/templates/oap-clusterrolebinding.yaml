@@ -1,5 +1,5 @@
-kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
 metadata:
   name: {{ template "skywalking.fullname" . }}
   labels:
@@ -7,7 +7,11 @@ metadata:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
-rules:
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "watch", "list"]
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ template "skywalking.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ template "skywalking.serviceAccountName.oap" . }}
+  namespace: {{ .Release.Namespace }}
