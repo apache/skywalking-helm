@@ -1,6 +1,6 @@
-{{- if .Values.oap.envoy.als.enabled }}
+{{- if not .Values.oap.envoy.als.enabled }}
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: {{ template "skywalking.fullname" . }}
   labels:
@@ -10,10 +10,10 @@ metadata:
     heritage: "{{ .Release.Service }}"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
+  kind: Role
   name: {{ template "skywalking.fullname" . }}
 subjects:
-- kind: ServiceAccount
-  name: {{ template "skywalking.serviceAccountName.oap" . }}
-  namespace: {{ .Release.Namespace }}
+  - kind: ServiceAccount
+    name: {{ template "skywalking.serviceAccountName.oap" . }}
+    namespace: {{ .Release.Namespace }}
 {{- end }}

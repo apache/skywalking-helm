@@ -91,6 +91,10 @@ spec:
               fieldPath: metadata.uid
         - name: SW_STORAGE
           value: elasticsearch
+        {{- if .Values.oap.envoy.als.enabled }}
+        - name: SW_ENVOY_ALS_ENABLED
+          value: {{ .Values.oap.envoy.als.enabled | quote}}
+        {{- end }}
         - name: SW_STORAGE_ES_CLUSTER_NODES
           value: "{{ include "call-nested" (list . "elasticsearch" "elasticsearch.client.fullname") }}:9200"
         {{- range $key, $value :=  .Values.oap.env }}
