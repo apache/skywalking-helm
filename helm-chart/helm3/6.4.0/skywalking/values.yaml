@@ -31,9 +31,13 @@ oap:
     #   memory: 4Gi
   # podAnnotations:
   #   example: oap-foo
+  envoy:
+    als:
+      enabled: false
+      # more envoy ALS ,please refer to https://github.com/apache/skywalking/blob/master/docs/en/setup/envoy/als_setting.md#observe-service-mesh-through-als
   env:
     # more env, please refer to https://hub.docker.com/r/apache/skywalking-oap-server
-
+    # or https://github.com/apache/skywalking-docker/blob/master/6/6.4/oap/README.md#sw_telemetry
 ui:
   name: skywalking-ui
   replicas: 1
@@ -153,7 +157,7 @@ elasticsearch:
     heapSize: "512m"
     # additionalJavaOpts: "-XX:MaxRAM=512m"
     persistence:
-      enabled: true
+      enabled: false
       accessMode: ReadWriteOnce
       name: data
       size: "4Gi"
@@ -200,7 +204,7 @@ elasticsearch:
     heapSize: "1536m"
     # additionalJavaOpts: "-XX:MaxRAM=1536m"
     persistence:
-      enabled: true
+      enabled: false
       accessMode: ReadWriteOnce
       name: data
       size: "30Gi"

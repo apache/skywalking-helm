@@ -29,7 +29,7 @@ The command deploys Apache Skywalking on the Kubernetes cluster in the default c
 To uninstall/delete the `my-release` deployment:
 
 ```shell
-$ helm delete my-release -n <namespace>
+$ helm uninstall my-release -n <namespace>
 ```
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
@@ -56,6 +56,7 @@ The following table lists the configurable parameters of the Skywalking chart an
 | `oap.nodeSelector`                    | OAP labels for master pod assignment                               | `{}`                                |
 | `oap.tolerations`                     | OAP tolerations                                                    | `[]`                                |
 | `oap.resources`                       | OAP node resources requests & limits                               | `{} - cpu limit must be an integer` |
+| `oap.envoy.als.enabled`               | Open envoy als                                                     | `false`                             |
 | `oap.env`                             | OAP environment variables                                          | `[]`                                |
 | `ui.name`                             | Web UI deployment name                                             | `ui`                                |
 | `ui.replicas`                         | Web UI k8s deployment replicas                                     | `1`                                 |
@@ -111,7 +112,7 @@ The following table lists the configurable parameters of the Skywalking chart an
 | `elasticsearch.master.tolerations` | `[]` | Master tolerations |
 | `elasticsearch.master.heapSize` | `512m` | Master node heap size |
 | `elasticsearch.master.name` | `master` | Master component name |
-| `elasticsearch.master.persistence.enabled` | `true` | Master persistent enabled/disabled |
+| `elasticsearch.master.persistence.enabled` | `false` | Master persistent enabled/disabled |
 | `elasticsearch.master.persistence.name` | `data` | Master statefulset PVC template name |
 | `elasticsearch.master.persistence.size` | `4Gi` | Master persistent volume size |
 | `elasticsearch.master.persistence.storageClass` | `nil` | Master persistent volume Class |
@@ -129,7 +130,7 @@ The following table lists the configurable parameters of the Skywalking chart an
 | `elasticsearch.data.priorityClassName` | `nil` | Data priorityClass |
 | `elasticsearch.data.heapSize` | `1536m` | Data node heap size |
 | `elasticsearch.data.hooks.drain.enabled` | `true` | Data nodes: Enable drain pre-stop and post-start hook |
-| `elasticsearch.data.persistence.enabled` | `true` | Data persistent enabled/disabled |
+| `elasticsearch.data.persistence.enabled` | `false` | Data persistent enabled/disabled |
 | `elasticsearch.data.persistence.name` | `data` | Data statefulset PVC template name |
 | `elasticsearch.data.persistence.size` | `30Gi` | Data persistent volume size |
 | `elasticsearch.data.persistence.storageClass` | `nil` | Data persistent volume Class |
@@ -196,3 +197,18 @@ ui:
         hosts:
           - skywalking.domain.com
 ```
+### Envoy ALS
+
+Envoy ALS(access log service) provides fully logs about RPC routed, including HTTP and TCP.
+
+If you want to open envoy ALS, you can do this by modifying values.yaml. 
+
+```yaml
+oap:
+  envoy:
+    als:
+      enabled: true
+```
+
+When envoy als ,will give ServiceAccount clusterrole permission.
+More envoy als ,please refer to https://github.com/apache/skywalking/blob/master/docs/en/setup/envoy/als_setting.md#observe-service-mesh-through-als
