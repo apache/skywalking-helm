@@ -56,7 +56,7 @@ The following table lists the configurable parameters of the Skywalking chart an
 | `oap.nodeSelector`                    | OAP labels for master pod assignment                               | `{}`                                |
 | `oap.tolerations`                     | OAP tolerations                                                    | `[]`                                |
 | `oap.resources`                       | OAP node resources requests & limits                               | `{} - cpu limit must be an integer` |
-| `oap.envoy.sla.enabled`               | Open envoy sla                                                     | `false`                             |
+| `oap.envoy.als.enabled`               | Open envoy als                                                     | `false`                             |
 | `oap.env`                             | OAP environment variables                                          | `[]`                                |
 | `ui.name`                             | Web UI deployment name                                             | `ui`                                |
 | `ui.replicas`                         | Web UI k8s deployment replicas                                     | `1`                                 |
@@ -201,14 +201,14 @@ ui:
 
 Envoy ALS(access log service) provides fully logs about RPC routed, including HTTP and TCP.
 
-If you want to open envoy sla, you can do this by modifying values.yaml. 
+If you want to open envoy ALS, you can do this by modifying values.yaml. 
 
 ```yaml
 oap:
   envoy:
-    sla:
+    als:
       enabled: true
 ```
 
-When envoy sla , will give ServerAccount clusterrole permission.
-More envoy sla ,please refer to https://github.com/apache/skywalking/blob/master/docs/en/setup/envoy/als_setting.md#observe-service-mesh-through-als
+When envoy als ,will give ServiceAccount clusterrole permission.
+More envoy als ,please refer to https://github.com/apache/skywalking/blob/master/docs/en/setup/envoy/als_setting.md#observe-service-mesh-through-als
