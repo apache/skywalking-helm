@@ -9,3 +9,4 @@ Get the UI URL by running these commands:
 {{- range .Values.ui.ingress.hosts }}
   http{{ if $.Values.ui.ingress.tls }}s{{ end }}://{{ . }}{{ $.Values.ui.ingress.path }}
 {{- end }}
+{{- end }}
