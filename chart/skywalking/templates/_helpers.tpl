@@ -74,5 +74,9 @@ Create the name of the service account to use for the oap cluster
 - name: wait-for-elasticsearch
   image: busybox:1.30
   imagePullPolicy: IfNotPresent
+{{- if .Values.elasticsearch.enabled }}
   command: ['sh', '-c', 'for i in $(seq 1 60); do nc -z -w3 {{ include "call-nested" (list . "elasticsearch" "elasticsearch.client.fullname") }} 9200 && exit 0 || sleep 5; done; exit 1']
+{{- else }}
+  command: ['sh', '-c', 'for i in $(seq 1 60); do nc -z -w3 {{ .Values.elasticsearch.config.host }} {{ .Values.elasticsearch.config.port.http }} && exit 0 || sleep 5; done; exit 1']
+{{- end }}
 {{- end -}}

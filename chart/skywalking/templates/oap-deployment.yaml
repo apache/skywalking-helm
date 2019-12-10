@@ -111,7 +111,11 @@ spec:
           value: {{ .Values.oap.envoy.als.enabled | quote}}
         {{- end }}
         - name: SW_STORAGE_ES_CLUSTER_NODES
+{{- if .Values.elasticsearch.enabled }}
           value: "{{ include "call-nested" (list . "elasticsearch" "elasticsearch.client.fullname") }}:9200"
+{{- else }}
+          value: "{{ .Values.elasticsearch.config.host }}:{{ .Values.elasticsearch.config.port.http }}"
+{{- end }}
         {{- range $key, $value :=  .Values.oap.env }}
         - name: {{ $key }}
           value: {{ $value | quote }}
