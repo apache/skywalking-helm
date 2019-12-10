@@ -38,112 +38,112 @@ The command removes all the Kubernetes components associated with the chart and 
 
 The following table lists the configurable parameters of the Skywalking chart and their default values.
 
-| Parameter                             | Description                                                        | Default                             |
-|---------------------------------------|--------------------------------------------------------------------|-------------------------------------|
-| `nameOverride`                        | Override name                                                      | `nil`                               |
-| `serviceAccounts.oap`                 | Name of the OAP service account to use or create                   | `nil`                               |
-| `oap.name`                            | OAP deployment name                                                | `oap`                               |
-| `oap.image.repository`                | OAP container image name                                           | `apache/skywalking-oap-server`      |
-| `oap.image.tag`                       | OAP container image tag                                            | `6.1.0`                             |
-| `oap.image.pullPolicy`                | OAP container image pull policy                                    | `IfNotPresent`                      |
-| `oap.ports.grpc`                      | OAP grpc port for tracing or metric                                | `11800`                             |
-| `oap.ports.rest`                      | OAP http port for Web UI                                           | `12800`                             |
-| `oap.replicas`                        | OAP k8s deployment replicas                                        | `2`                                 |
-| `oap.service.type`                    | OAP svc type                                                       | `ClusterIP`                         |
-| `oap.javaOpts`                        | Parameters to be added to `JAVA_OPTS`environment variable for OAP  | `-Xms2g -Xmx2g`                     |
-| `oap.antiAffinity`                    | OAP anti-affinity policy                                           | `soft`                              |
-| `oap.nodeAffinity`                    | OAP node affinity policy                                           | `{}`                                |
-| `oap.nodeSelector`                    | OAP labels for master pod assignment                               | `{}`                                |
-| `oap.tolerations`                     | OAP tolerations                                                    | `[]`                                |
-| `oap.resources`                       | OAP node resources requests & limits                               | `{} - cpu limit must be an integer` |
-| `oap.envoy.als.enabled`               | Open envoy als                                                     | `false`                             |
-| `oap.env`                             | OAP environment variables                                          | `[]`                                |
-| `ui.name`                             | Web UI deployment name                                             | `ui`                                |
-| `ui.replicas`                         | Web UI k8s deployment replicas                                     | `1`                                 |
-| `ui.image.repository`                 | Web UI container image name                                        | `apache/skywalking-ui`              |
-| `ui.image.tag`                        | Web UI container image tag                                         | `6.1.0`                             |
-| `ui.image.pullPolicy`                 | Web UI container image pull policy                                 | `IfNotPresent`                      |
-| `ui.ingress.enabled`                  | Create Ingress for Web UI                                          | `false`                             |
-| `ui.ingress.annotations`              | Associate annotations to the Ingress                               | `{}`                                |
-| `ui.ingress.path`                     | Associate path with the Ingress                                    | `/`                                 |
-| `ui.ingress.hosts`                    | Associate hosts with the Ingress                                   | `[]`                                |
-| `ui.ingress.tls`                      | Associate TLS with the Ingress                                     | `[]`                                |
-| `ui.service.type`                     | Web UI svc type                                                    | `ClusterIP`                         |
-| `ui.service.externalPort`             | external port for the service                                      | `80`                                |
-| `ui.service.internalPort`             | internal port for the service                                      | `8080`                              |
-| `ui.service.externalIPs`              | external IP addresses                                              | `nil`                               |
-| `ui.service.loadBalancerIP`           | Load Balancer IP address                                           | `nil`                               |
-| `ui.service.annotations`              | Kubernetes service annotations                                     | `{}`                                |
-| `ui.service.loadBalancerSourceRanges` | Limit load balancer source IPs to list of CIDRs (where available)) | `[]`                                |
-| `elasticsearch.enabled`               | Spin up a new elasticsearch cluster for SkyWalking                 | `true`                                |
-| `elasticsearch.client.name`                        | `client`                                                     | Client component name                                        |
-| `elasticsearch.client.replicas`                    | `2`                                                          | Client node replicas (deployment)                            |
-| `elasticsearch.client.resources`                   | `{} - cpu limit must be an integer`                          | Client node resources requests & limits                      |
-| `elasticsearch.client.priorityClassName`           | `nil`                                                        | Client priorityClass                                         |
-| `elasticsearch.client.heapSize`                    | `512m`                                                       | Client node heap size                                        |
-| `elasticsearch.client.podAnnotations`              | `{}`                                                         | Client Deployment annotations                                |
-| `elasticsearch.client.nodeSelector`                | `{}`                                                         | Node labels for client pod assignment                        |
-| `elasticsearch.client.tolerations`                 | `[]`                                                         | Client tolerations                                           |
-| `elasticsearch.client.serviceAnnotations`          | `{}`                                                         | Client Service annotations                                   |
-| `elasticsearch.client.serviceType`                 | `ClusterIP`                                                  | Client service type                                          |
-| `elasticsearch.client.httpNodePort`                | `nil`                                                        | Client service HTTP NodePort port number. Has no effect if client.serviceType is not `NodePort`. |
-| `elasticsearch.client.loadBalancerIP`              | `{}`                                                         | Client loadBalancerIP                                        |
-| `elasticsearch.client.loadBalancerSourceRanges`    | `{}`                                                         | Client loadBalancerSourceRanges                              |
-| `elasticsearch.client.antiAffinity` | `soft` | Client anti-affinity policy |
-| `elasticsearch.client.nodeAffinity` | `{}` | Client node affinity policy |
-| `elasticsearch.client.initResources` | `{}` | Client initContainer resources requests & limits |
-| `elasticsearch.client.additionalJavaOpts` | `""` | Parameters to be added to `ES_JAVA_OPTS` environment variable for client |
-| `elasticsearch.client.ingress.enabled` | `false` | Enable Client Ingress |
-| `elasticsearch.client.ingress.user` | `nil` | If this & password are set, enable basic-auth on ingress |
-| `elasticsearch.client.ingress.password` | `nil` | If this & user are set, enable basic-auth on ingress |
-| `elasticsearch.client.ingress.annotations` | `{}` | Client Ingress annotations |
-| `elasticsearch.client.ingress.hosts` | `[]` | Client Ingress Hostnames |
-| `elasticsearch.client.ingress.tls` | `[]` | Client Ingress TLS configuration |
-| `elasticsearch.client.exposeTransportPort` | `false` | Expose transport port 9300 on client service (ClusterIP) |
-| `elasticsearch.master.initResources` | `{}` | Master initContainer resources requests & limits |
-| `elasticsearch.master.additionalJavaOpts` | `""` | Parameters to be added to `ES_JAVA_OPTS` environment variable for master |
-| `elasticsearch.master.exposeHttp` | `false` | Expose http port 9200 on master Pods for monitoring, etc |
-| `elasticsearch.master.name` | `master` | Master component name |
-| `elasticsearch.master.replicas` | `2` | Master node replicas (deployment) |
-| `elasticsearch.master.resources` | `{} - cpu limit must be an integer` | Master node resources requests & limits |
-| `elasticsearch.master.priorityClassName` | `nil` | Master priorityClass |
-| `elasticsearch.master.podAnnotations` | `{}` | Master Deployment annotations |
-| `elasticsearch.master.nodeSelector` | `{}` | Node labels for master pod assignment |
-| `elasticsearch.master.tolerations` | `[]` | Master tolerations |
-| `elasticsearch.master.heapSize` | `512m` | Master node heap size |
-| `elasticsearch.master.name` | `master` | Master component name |
-| `elasticsearch.master.persistence.enabled` | `false` | Master persistent enabled/disabled |
-| `elasticsearch.master.persistence.name` | `data` | Master statefulset PVC template name |
-| `elasticsearch.master.persistence.size` | `4Gi` | Master persistent volume size |
-| `elasticsearch.master.persistence.storageClass` | `nil` | Master persistent volume Class |
-| `elasticsearch.master.persistence.accessMode` | `ReadWriteOnce` | Master persistent Access Mode |
-| `elasticsearch.master.readinessProbe` | see `values.yaml` for defaults | Master container readiness probes |
-| `elasticsearch.master.antiAffinity` | `soft` | Master anti-affinity policy |
-| `elasticsearch.master.nodeAffinity` | `{}` | Master node affinity policy |
-| `elasticsearch.master.podManagementPolicy` | `OrderedReady` | Master pod creation strategy |
-| `elasticsearch.master.updateStrategy` | `{type: "onDelete"}` | Master node update strategy policy |
-| `elasticsearch.data.initResources` | `{}` | Data initContainer resources requests & limits |
-| `elasticsearch.data.additionalJavaOpts` | `""` | Parameters to be added to `ES_JAVA_OPTS` environment variable for data |
-| `elasticsearch.data.exposeHttp` | `false` | Expose http port 9200 on data Pods for monitoring, etc |
-| `elasticsearch.data.replicas` | `2` | Data node replicas (statefulset) |
-| `elasticsearch.data.resources` | `{} - cpu limit must be an integer` | Data node resources requests & limits |
-| `elasticsearch.data.priorityClassName` | `nil` | Data priorityClass |
-| `elasticsearch.data.heapSize` | `1536m` | Data node heap size |
-| `elasticsearch.data.hooks.drain.enabled` | `true` | Data nodes: Enable drain pre-stop and post-start hook |
-| `elasticsearch.data.persistence.enabled` | `false` | Data persistent enabled/disabled |
-| `elasticsearch.data.persistence.name` | `data` | Data statefulset PVC template name |
-| `elasticsearch.data.persistence.size` | `30Gi` | Data persistent volume size |
-| `elasticsearch.data.persistence.storageClass` | `nil` | Data persistent volume Class |
-| `elasticsearch.data.persistence.accessMode` | `ReadWriteOnce` | Data persistent Access Mode |
-| `elasticsearch.data.readinessProbe` | see `values.yaml` for defaults | Readiness probes for data-containers |
-| `elasticsearch.data.podAnnotations` | `{}` | Data StatefulSet annotations |
-| `elasticsearch.data.nodeSelector` | `{}` | Node labels for data pod assignment |
-| `elasticsearch.data.tolerations` | `[]` | Data tolerations |
-| `elasticsearch.data.terminationGracePeriodSeconds` | `3600` | Data termination grace period (seconds) |
-| `elasticsearch.data.antiAffinity` | `soft` | Data anti-affinity policy |
-| `elasticsearch.data.nodeAffinity` | `{}` | Data node affinity policy |
-| `elasticsearch.data.podManagementPolicy` | `OrderedReady` | Data pod creation strategy |
-| `elasticsearch.data.updateStrategy` | `{type: "onDelete"}` | Data node update strategy policy |
+| Parameter                                                    | Description                                                                                      | Default                              |
+|--------------------------------------------------------------|--------------------------------------------------------------------------------------------------|--------------------------------------|
+| `nameOverride`                                               | Override name                                                                                    | `nil`                                |
+| `serviceAccounts.oap`                                        | Name of the OAP service account to use or create                                                 | `nil`                                |
+| `oap.name`                                                   | OAP deployment name                                                                              | `oap`                                |
+| `oap.image.repository`                                       | OAP container image name                                                                         | `apache/skywalking-oap-server`       |
+| `oap.image.tag`                                              | OAP container image tag                                                                          | `6.1.0`                              |
+| `oap.image.pullPolicy`                                       | OAP container image pull policy                                                                  | `IfNotPresent`                       |
+| `oap.ports.grpc`                                             | OAP grpc port for tracing or metric                                                              | `11800`                              |
+| `oap.ports.rest`                                             | OAP http port for Web UI                                                                         | `12800`                              |
+| `oap.replicas`                                               | OAP k8s deployment replicas                                                                      | `2`                                  |
+| `oap.service.type`                                           | OAP svc type                                                                                     | `ClusterIP`                          |
+| `oap.javaOpts`                                               | Parameters to be added to `JAVA_OPTS`environment variable for OAP                                | `-Xms2g -Xmx2g`                      |
+| `oap.antiAffinity`                                           | OAP anti-affinity policy                                                                         | `soft`                               |
+| `oap.nodeAffinity`                                           | OAP node affinity policy                                                                         | `{}`                                 |
+| `oap.nodeSelector`                                           | OAP labels for master pod assignment                                                             | `{}`                                 |
+| `oap.tolerations`                                            | OAP tolerations                                                                                  | `[]`                                 |
+| `oap.resources`                                              | OAP node resources requests & limits                                                             | `{} - cpu limit must be an integer`  |
+| `oap.envoy.als.enabled`                                      | Open envoy als                                                                                   | `false`                              |
+| `oap.env`                                                    | OAP environment variables                                                                        | `[]`                                 |
+| `ui.name`                                                    | Web UI deployment name                                                                           | `ui`                                 |
+| `ui.replicas`                                                | Web UI k8s deployment replicas                                                                   | `1`                                  |
+| `ui.image.repository`                                        | Web UI container image name                                                                      | `apache/skywalking-ui`               |
+| `ui.image.tag`                                               | Web UI container image tag                                                                       | `6.1.0`                              |
+| `ui.image.pullPolicy`                                        | Web UI container image pull policy                                                               | `IfNotPresent`                       |
+| `ui.ingress.enabled`                                         | Create Ingress for Web UI                                                                        | `false`                              |
+| `ui.ingress.annotations`                                     | Associate annotations to the Ingress                                                             | `{}`                                 |
+| `ui.ingress.path`                                            | Associate path with the Ingress                                                                  | `/`                                  |
+| `ui.ingress.hosts`                                           | Associate hosts with the Ingress                                                                 | `[]`                                 |
+| `ui.ingress.tls`                                             | Associate TLS with the Ingress                                                                   | `[]`                                 |
+| `ui.service.type`                                            | Web UI svc type                                                                                  | `ClusterIP`                          |
+| `ui.service.externalPort`                                    | external port for the service                                                                    | `80`                                 |
+| `ui.service.internalPort`                                    | internal port for the service                                                                    | `8080`                               |
+| `ui.service.externalIPs`                                     | external IP addresses                                                                            | `nil`                                |
+| `ui.service.loadBalancerIP`                                  | Load Balancer IP address                                                                         | `nil`                                |
+| `ui.service.annotations`                                     | Kubernetes service annotations                                                                   | `{}`                                 |
+| `ui.service.loadBalancerSourceRanges`                        | Limit load balancer source IPs to list of CIDRs (where available))                               | `[]`                                 |
+| `elasticsearch.enabled`                                      | Spin up a new elasticsearch cluster for SkyWalking                                               | `true`                               |
+| `elasticsearch.client.name`                                  |  Client component name                                                                           |  `client`                            |
+| `elasticsearch.client.replicas`                              |  Client node replicas (deployment)                                                               |  `2`                                 |
+| `elasticsearch.client.resources`                             |  Client node resources requests & limits                                                         |  `{} - cpu limit must be an integer` |
+| `elasticsearch.client.priorityClassName`                     |  Client priorityClass                                                                            |  `nil`                               |
+| `elasticsearch.client.heapSize`                              |  Client node heap size                                                                           |  `512m`                              |
+| `elasticsearch.client.podAnnotations`                        |  Client Deployment annotations                                                                   |  `{}`                                |
+| `elasticsearch.client.nodeSelector`                          |  Node labels for client pod assignment                                                           |  `{}`                                |
+| `elasticsearch.client.tolerations`                           |  Client tolerations                                                                              |  `[]`                                |
+| `elasticsearch.client.serviceAnnotations`                    |  Client Service annotations                                                                      |  `{}`                                |
+| `elasticsearch.client.serviceType`                           |  Client service type                                                                             |  `ClusterIP`                         |
+| `elasticsearch.client.httpNodePort`                          |  Client service HTTP NodePort port number. Has no effect if client.serviceType is not `NodePort`.|  `nil`                               |
+| `elasticsearch.client.loadBalancerIP`                        |  Client loadBalancerIP                                                                           |  `{}`                                |
+| `elasticsearch.client.loadBalancerSourceRanges`              |  Client loadBalancerSourceRanges                                                                 |  `{}`                                |
+| `elasticsearch.client.antiAffinity`                          |  Client anti-affinity policy                                                                     |  `soft`                              |
+| `elasticsearch.client.nodeAffinity`                          |  Client node affinity policy                                                                     |  `{}`                                |
+| `elasticsearch.client.initResources`                         |  Client initContainer resources requests & limits                                                |  `{}`                                |
+| `elasticsearch.client.additionalJavaOpts`                    |  Parameters to be added to `ES_JAVA_OPTS` environment variable for client                        |  `""`                                |
+| `elasticsearch.client.ingress.enabled`                       |  Enable Client Ingress                                                                           |  `false`                             |
+| `elasticsearch.client.ingress.user`                          |  If this & password are set, enable basic-auth on ingress                                        |  `nil`                               |
+| `elasticsearch.client.ingress.password`                      |  If this & user are set, enable basic-auth on ingress                                            |  `nil`                               |
+| `elasticsearch.client.ingress.annotations`                   |  Client Ingress annotations                                                                      |  `{}`                                |
+| `elasticsearch.client.ingress.hosts`                         |  Client Ingress Hostnames                                                                        |  `[]`                                |
+| `elasticsearch.client.ingress.tls`                           |  Client Ingress TLS configuration                                                                |  `[]`                                |
+| `elasticsearch.client.exposeTransportPort`                   |  Expose transport port 9300 on client service (ClusterIP)                                        |  `false`                             |
+| `elasticsearch.master.initResources`                         |  Master initContainer resources requests & limits                                                |  `{}`                                |
+| `elasticsearch.master.additionalJavaOpts`                    |  Parameters to be added to `ES_JAVA_OPTS` environment variable for master                        |  `""`                                |
+| `elasticsearch.master.exposeHttp`                            |  Expose http port 9200 on master Pods for monitoring, etc                                        |  `false`                             |
+| `elasticsearch.master.name`                                  |  Master component name                                                                           |  `master`                            |
+| `elasticsearch.master.replicas`                              |  Master node replicas (deployment)                                                               |  `2`                                 |
+| `elasticsearch.master.resources`                             |  Master node resources requests & limits                                                         |  `{} - cpu limit must be an integer` |
+| `elasticsearch.master.priorityClassName`                     |  Master priorityClass                                                                            |  `nil`                               |
+| `elasticsearch.master.podAnnotations`                        |  Master Deployment annotations                                                                   |  `{}`                                |
+| `elasticsearch.master.nodeSelector`                          |  Node labels for master pod assignment                                                           |  `{}`                                |
+| `elasticsearch.master.tolerations`                           |  Master tolerations                                                                              |  `[]`                                |
+| `elasticsearch.master.heapSize`                              |  Master node heap size                                                                           |  `512m`                              |
+| `elasticsearch.master.name`                                  |  Master component name                                                                           |  `master`                            |
+| `elasticsearch.master.persistence.enabled`                   |  Master persistent enabled/disabled                                                              |  `false`                             |
+| `elasticsearch.master.persistence.name`                      |  Master statefulset PVC template name                                                            |  `data`                              |
+| `elasticsearch.master.persistence.size`                      |  Master persistent volume size                                                                   |  `4Gi`                               |
+| `elasticsearch.master.persistence.storageClass`              |  Master persistent volume Class                                                                  |  `nil`                               |
+| `elasticsearch.master.persistence.accessMode`                |  Master persistent Access Mode                                                                   |  `ReadWriteOnce`                     |
+| `elasticsearch.master.readinessProbe`                        |  Master container readiness probes                                                               |  see `values.yaml` for defaults      |
+| `elasticsearch.master.antiAffinity`                          |  Master anti-affinity policy                                                                     |  `soft`                              |
+| `elasticsearch.master.nodeAffinity`                          |  Master node affinity policy                                                                     |  `{}`                                |
+| `elasticsearch.master.podManagementPolicy`                   |  Master pod creation strategy                                                                    |  `OrderedReady`                      |
+| `elasticsearch.master.updateStrategy`                        |  Master node update strategy policy                                                              |  `{type: "onDelete"}`                |
+| `elasticsearch.data.initResources`                           |  Data initContainer resources requests & limits                                                  |  `{}`                                |
+| `elasticsearch.data.additionalJavaOpts`                      |  Parameters to be added to `ES_JAVA_OPTS` environment variable for data                          |  `""`                                |
+| `elasticsearch.data.exposeHttp`                              |  Expose http port 9200 on data Pods for monitoring, etc                                          |  `false`                             |
+| `elasticsearch.data.replicas`                                |  Data node replicas (statefulset)                                                                |  `2`                                 |
+| `elasticsearch.data.resources`                               |  Data node resources requests & limits                                                           |  `{} - cpu limit must be an integer` |
+| `elasticsearch.data.priorityClassName`                       |  Data priorityClass                                                                              |  `nil`                               |
+| `elasticsearch.data.heapSize`                                |  Data node heap size                                                                             |  `1536m`                             |
+| `elasticsearch.data.hooks.drain.enabled`                     |  Data nodes: Enable drain pre-stop and post-start hook                                           |  `true`                              |
+| `elasticsearch.data.persistence.enabled`                     |  Data persistent enabled/disabled                                                                |  `false`                             |
+| `elasticsearch.data.persistence.name`                        |  Data statefulset PVC template name                                                              |  `data`                              |
+| `elasticsearch.data.persistence.size`                        |  Data persistent volume size                                                                     |  `30Gi`                              |
+| `elasticsearch.data.persistence.storageClass`                |  Data persistent volume Class                                                                    |  `nil`                               |
+| `elasticsearch.data.persistence.accessMode`                  |  Data persistent Access Mode                                                                     |  `ReadWriteOnce`                     |
+| `elasticsearch.data.readinessProbe`                          |  Readiness probes for data-containers                                                            |  see `values.yaml` for defaults      |
+| `elasticsearch.data.podAnnotations`                          |  Data StatefulSet annotations                                                                    |  `{}`                                |
+| `elasticsearch.data.nodeSelector`                            |  Node labels for data pod assignment                                                             |  `{}`                                |
+| `elasticsearch.data.tolerations`                             |  Data tolerations                                                                                |  `[]`                                |
+| `elasticsearch.data.terminationGracePeriodSeconds`           |  Data termination grace period (seconds)                                                         |  `3600`                              |
+| `elasticsearch.data.antiAffinity`                            |  Data anti-affinity policy                                                                       |  `soft`                              |
+| `elasticsearch.data.nodeAffinity`                            |  Data node affinity policy                                                                       |  `{}`                                |
+| `elasticsearch.data.podManagementPolicy`                     |  Data pod creation strategy                                                                      |  `OrderedReady`                      |
+| `elasticsearch.data.updateStrategy`                          |  Data node update strategy policy                                                                |  `{type: "onDelete"}`                |
 
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,

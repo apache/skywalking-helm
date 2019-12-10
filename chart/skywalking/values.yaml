@@ -1,3 +1,18 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Default values for skywalking.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
@@ -35,6 +50,9 @@ oap:
     als:
       enabled: false
       # more envoy ALS ,please refer to https://github.com/apache/skywalking/blob/master/docs/en/setup/envoy/als_setting.md#observe-service-mesh-through-als
+  istio:
+    adapter:
+      enabled: false
   env:
     # more env, please refer to https://hub.docker.com/r/apache/skywalking-oap-server
     # or https://github.com/apache/skywalking-docker/blob/master/6/6.4/oap/README.md#sw_telemetry
@@ -82,7 +100,12 @@ ui:
 
 elasticsearch:
   enabled: true
-  # If elasticsearch,enabled=true values for elasticsearch.
+  # If elasticsearch.enabled=true values for elasticsearch.
+  # or elasticsearch.enabled=false, Will not deploy ES pod. The following config options must be configured
+  config:
+    port:
+      http: 9200
+    host: elasticsearch # es service on kubernetes or host
 
   ## Define serviceAccount names for components. Defaults to component's fully qualified name.
   serviceAccounts:
@@ -157,7 +180,7 @@ elasticsearch:
     heapSize: "512m"
     # additionalJavaOpts: "-XX:MaxRAM=512m"
     persistence:
-      enabled: false
+      enabled: true
       accessMode: ReadWriteOnce
       name: data
       size: "4Gi"
@@ -204,7 +227,7 @@ elasticsearch:
     heapSize: "1536m"
     # additionalJavaOpts: "-XX:MaxRAM=1536m"
     persistence:
-      enabled: false
+      enabled: true
       accessMode: ReadWriteOnce
       name: data
       size: "30Gi"
