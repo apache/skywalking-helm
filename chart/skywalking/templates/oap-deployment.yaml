@@ -82,6 +82,16 @@ spec:
       - name: {{ .Values.oap.name }}
         image: "{{ .Values.oap.image.repository }}:{{ .Values.oap.image.tag }}"
         imagePullPolicy: {{ .Values.oap.image.pullPolicy }}
+        livenessProbe:
+          tcpSocket:
+            port: 12800
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          tcpSocket:
+            port: 12800
+          initialDelaySeconds: 15
+          periodSeconds: 20
         ports:
         - containerPort: 11800
           name: grpc
