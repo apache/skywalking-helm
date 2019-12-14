@@ -11,7 +11,7 @@ To install and configure skywalking in a Kubernetes cluster, follow these instru
 ```shell script
 $ cd chart
 
-$ helm add stable https://kubernetes-charts.storage.googleapis.com/
+$ helm repo add stable https://kubernetes-charts.storage.googleapis.com/
 
 $ helm dep up 
 
@@ -26,7 +26,7 @@ Only need to close the elasticsearch deployed by chart default and configure the
 ```shell script
 $ cd chart
 
-$ helm add stable https://kubernetes-charts.storage.googleapis.com/
+$ helm repo add stable https://kubernetes-charts.storage.googleapis.com/
 
 $ helm dep up 
 
