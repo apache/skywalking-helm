@@ -13,7 +13,7 @@ $ cd chart
 
 $ helm repo add stable https://kubernetes-charts.storage.googleapis.com/
 
-$ helm dep up 
+$ helm dep up skywalking
 
 $ helm install <release_name> skywalking -n <namespace>
 ```
@@ -28,7 +28,7 @@ $ cd chart
 
 $ helm repo add stable https://kubernetes-charts.storage.googleapis.com/
 
-$ helm dep up 
+$ helm dep up skywalking
 
 $ helm install <release_name> skywalking -n <namespace> \
         --set elasticsearch.enabled=false \
