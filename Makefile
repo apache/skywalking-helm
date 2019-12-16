@@ -44,3 +44,5 @@ release-src: package
 release: release-src
 	gpg --batch --yes --armor --detach-sig $(RELEASE_SRC).tgz
 	shasum -a 512 $(RELEASE_SRC).tgz > $(RELEASE_SRC).tgz.sha512
+	gpg --batch --yes --armor --detach-sig $(CHART_NAME).tgz
+	shasum -a 512 $(CHART_NAME).tgz > $(CHART_NAME).tgz.sha512
