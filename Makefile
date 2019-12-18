@@ -21,18 +21,29 @@ CHART_NAME = skywalking-${VERSION}
 
 RELEASE_SRC = skywalking-kubernetes-${VERSION}-src
 
-package:
-    $(shell helm package ${CHART_DIR})
+prepare:
+	cp -R NOTICE ${CHART_DIR}/NOTICE
+	cp -R LICENSE ${CHART_DIR}/LICENSE
+
+package: prepare
+	helm dep up ${CHART_DIR}
+	helm package ${CHART_DIR}
+	rm -rf ${CHART_DIR}/NOTICE
+	rm -rf ${CHART_DIR}/LICENSE
 
 clean:
-	-rm -rf bin/ \
-	-rm -rf ${CHART_NAME}.tgz \
-	-rm -rf ${RELEASE_SRC}.tgz \
-	-rm -rf ${RELEASE_SRC}.tgz.asc \
-	-rm -rf ${RELEASE_SRC}.tgz.sha512
+	rm -rf bin/ \
+	rm -rf ${CHART_DIR}/NOTICE \
+	rm -rf ${CHART_DIR}/LICENSE \
+	rm -rf ${CHART_NAME}.tgz \
+	rm -rf ${CHART_NAME}.tgz.asc \
+	rm -rf ${CHART_NAME}.tgz.sha512 \
+	rm -rf ${RELEASE_SRC}.tgz \
+	rm -rf ${RELEASE_SRC}.tgz.asc \
+	rm -rf ${RELEASE_SRC}.tgz.sha512
 
 release-src: package
-	-tar -zcvf $(RELEASE_SRC).tgz \
+	tar -zcvf $(RELEASE_SRC).tgz \
 	--exclude bin \
 	--exclude .git \
 	--exclude .idea \
