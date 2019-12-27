@@ -42,7 +42,7 @@ clean:
 	rm -rf ${RELEASE_SRC}.tgz.asc \
 	rm -rf ${RELEASE_SRC}.tgz.sha512
 
-release-src: package
+release-src:
 	tar -zcvf $(RELEASE_SRC).tgz \
 	--exclude bin \
 	--exclude .git \
@@ -52,7 +52,7 @@ release-src: package
 	--exclude .github \
 	.
 
-release: release-src
+release: release-src package
 	gpg --batch --yes --armor --detach-sig $(RELEASE_SRC).tgz
 	shasum -a 512 $(RELEASE_SRC).tgz > $(RELEASE_SRC).tgz.sha512
 	gpg --batch --yes --armor --detach-sig $(CHART_NAME).tgz
