@@ -187,15 +187,15 @@ ui:
     ## Must be provided if Ingress is enabled
     ##
     hosts:
-      - skywalking.domain.com
+      - skywalking
 
     ## Skywalking ui server Ingress TLS configuration
     ## Secrets must be manually created in the namespace
     ##
     tls:
-      - secretName: skywalking-tls
+      - secretName: skywalking
         hosts:
-          - skywalking.domain.com
+          - skywalking
 ```
 ### Envoy ALS
 
