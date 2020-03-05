@@ -1,9 +1,13 @@
 Apache SkyWalking Kubernetes
 ==========
 
-# Deploy SkyWalking backend to Kubernetes cluster
+<img src="http://skywalking.apache.org/assets/logo.svg" alt="Sky Walking logo" height="90px" align="right" />
 
-To install and configure skywalking in a Kubernetes cluster, follow these instructions.
+[![GitHub stars](https://img.shields.io/github/stars/apache/skywalking.svg?style=for-the-badge&label=Stars&logo=github)](https://github.com/apache/skywalking)
+[![Twitter Follow](https://img.shields.io/twitter/follow/asfskywalking.svg?style=for-the-badge&label=Follow&logo=twitter)](https://twitter.com/AsfSkyWalking)
+
+SkyWalking Kubernetes repository provides ways to install and configure skywalking in a Kubernetes cluster.
+The scripts are written in Helm3.
 
 ## Documentation
 #### Deploy SkyWalking and Elasticsearch 7 (default)
@@ -68,7 +72,9 @@ This is recommended as the best practice to deploy SkyWalking backend stack into
 | 6.5.0              | 1.0.0         |
 | 6.6.0              | 1.1.0         | 
 
-Note:  The source code for the release chart is located in the chart folder in the master branch.
+Please head to the [releases page](http://skywalking.apache.org/downloads/) to download a release of Apache SkyWalking.
+
+Note:  The source code for the release chart matches the git tag.
 
 #### old chart position table
 
@@ -80,6 +86,12 @@ Note:  The source code for the release chart is located in the chart folder in t
 | 6.4.0              | [6.4.0](https://github.com/apache/skywalking-kubernetes/tree/legacy-helm-chart/helm-chart/helm3/6.4.0) |
 
 Note:  The source code for old charts are in the **legacy-helm-chart** branch.
+
+# Contact Us
+* Submit an [issue](https://github.com/apache/skywalking/issues)
+* Mail list: **dev@skywalking.apache.org**. Mail to `dev-subscribe@skywalking.apache.org`, follow the reply to subscribe the mail list.
+* Join `skywalking` channel at [Apache Slack](https://join.slack.com/t/the-asf/shared_invite/enQtNzc2ODE3MjI1MDk1LTAyZGJmNTg1NWZhNmVmOWZjMjA2MGUyOGY4MjE5ZGUwOTQxY2Q3MDBmNTM5YTllNGU4M2QyMzQ4M2U4ZjQ5YmY). If the link is not working, find the latest one at [Apache INFRA WIKI](https://cwiki.apache.org/confluence/display/INFRA/Slack+Guest+Invites).
+* QQ Group: 392443393(2000/2000, not available), 901167865(available)
 
 # LICENSE
 Apache 2.0
