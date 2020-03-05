@@ -11,19 +11,19 @@ To install and configure skywalking in a Kubernetes cluster, follow these instru
 ```shell script
 $ cd chart
 
-$ helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+$ helm repo add elastic https://helm.elastic.co
 
-$ helm dep up skywalking-es7
+$ helm dep up skywalking
 
-$ helm install <release_name> skywalking-es7 -n <namespace>
+$ helm install <release_name> skywalking -n <namespace>
 ``` 
 
 **Note**: If you want to deploy Elasticsearch 6, execute the following command
 
 ```shell script
-$ helm dep up skywalking-es6
+$ helm dep up skywalking
 
-$ helm install <release_name> skywalking-es6 -n <namespace>
+$ helm install <release_name> skywalking -n <namespace> --values ./skywalking/values-es6.yaml
 ```
 
 #### Only deploy SkyWalking ,and use existing Elasticsearch
@@ -34,11 +34,11 @@ Only need to close the elasticsearch deployed by chart default and configure the
 ```shell script
 $ cd chart
 
-$ helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+$ helm repo add elastic https://helm.elastic.co
 
-$ helm dep up skywalking-es7
+$ helm dep up skywalking
 
-$ helm install <release_name> skywalking-es7 -n <namespace> \
+$ helm install <release_name> skywalking -n <namespace> \
         --set elasticsearch.enabled=false \
         --set elasticsearch.config.host=<es_host> \
         --set elasticsearch.config.port.http=<es_port>
@@ -47,9 +47,10 @@ $ helm install <release_name> skywalking-es7 -n <namespace> \
 **Note**: You need to make sure your ES cluster version is 7.x , If your cluster version is 6.x, execute the following command
 
 ```shell script
-$ helm dep up skywalking-es6
+$ helm dep up skywalking
 
-$ helm install <release_name> skywalking-es6 -n <namespace> \
+$ helm install <release_name> skywalking -n <namespace> \
+        --values ./skywalking/values-es6.yaml
         --set elasticsearch.enabled=false \
         --set elasticsearch.config.host=<es_host> \
         --set elasticsearch.config.port.http=<es_port>
@@ -62,11 +63,10 @@ $ helm install <release_name> skywalking-es6 -n <namespace> \
 This is recommended as the best practice to deploy SkyWalking backend stack into kubernetes cluster. 
 
 #### release chart table 
-| SkyWalking version | Chart name     | Chart version |
-| ------------------ | -------------  | ------------- |
-| 6.5.0              | skywalking     | 1.0.0         |
-| 6.6.0-es6          | skywalking-es6 | 1.1.0         |
-| 6.6.0-es7          | skywalking-es7 | 1.1.0         | 
+| SkyWalking version | Chart version |
+| ------------------ | ------------- |
+| 6.5.0              | 1.0.0         |
+| 6.6.0              | 1.1.0         | 
 
 Note:  The source code for the release chart is located in the chart folder in the master branch.
 
