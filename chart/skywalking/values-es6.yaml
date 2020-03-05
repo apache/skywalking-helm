@@ -24,7 +24,7 @@ oap:
   name: skywalking-oap
   image:
     repository: apache/skywalking-oap-server
-    tag: 6.6.0-es7
+    tag: 6.6.0-es6
     pullPolicy: IfNotPresent
   ports:
     grpc: 11800
@@ -148,7 +148,7 @@ elasticsearch:
   #    path: /usr/share/elasticsearch/config/certs
 
   image: "docker.elastic.co/elasticsearch/elasticsearch"
-  imageTag: "7.5.1"
+  imageTag: "6.8.6"
   imagePullPolicy: "IfNotPresent"
 
   podAnnotations: {}

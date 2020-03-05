@@ -51,7 +51,7 @@ spec:
           value: elasticsearch
         - name: SW_STORAGE_ES_CLUSTER_NODES
 {{- if .Values.elasticsearch.enabled }}
-          value: "{{ include "call-nested" (list . "elasticsearch" "elasticsearch.client.fullname") }}:9200"
-{{- else }}
+          value: "{{ .Values.elasticsearch.clusterName }}-{{ .Values.elasticsearch.nodeGroup }}:{{ .Values.elasticsearch.httpPort }}"
+  {{- else }}
           value: "{{ .Values.elasticsearch.config.host }}:{{ .Values.elasticsearch.config.port.http }}"
 {{- end }}
