@@ -55,3 +55,7 @@ spec:
   {{- else }}
           value: "{{ .Values.elasticsearch.config.host }}:{{ .Values.elasticsearch.config.port.http }}"
 {{- end }}
+        {{- range $key, $value :=  .Values.oap.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
