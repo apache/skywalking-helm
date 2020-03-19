@@ -62,6 +62,7 @@ and_elastic_repo ${ELASTIC_REPO}
 create_namespace ${SKYWALKING_ES6_NAMESPACE}
 create_namespace ${SKYWALKING_ES7_NAMESPACE}
 
+helm repo up
 helm dep up skywalking
 
 sudo sysctl -w vm.max_map_count=262144
@@ -76,7 +77,10 @@ helm -n $SKYWALKING_ES7_NAMESPACE install skywalking skywalking
 
 for component in $NEED_CHECK_PREFIX"oap" ; do
   sleep 60
-  kubectl get deploy -o wide -n ${SKYWALKING_ES6_NAMESPACE}
+  for (( i = 0; i < 5; i++ )); do
+      kubectl get deploy -o wide -n ${SKYWALKING_ES6_NAMESPACE}
+      sleep 10
+  done
   kubectl -n ${SKYWALKING_ES6_NAMESPACE} wait $component --for condition=available --timeout=600s
 
   kubectl get deploy -o wide -n ${SKYWALKING_ES7_NAMESPACE}
