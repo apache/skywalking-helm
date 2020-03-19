@@ -29,19 +29,19 @@ cd ${CHART_PATH}
 
 and_stable_repo(){
   ELASTIC_REPO=$1
-  helm repo add elastic $STABLE_REPO
+  helm repo add elastic ${ELASTIC_REPO}
 
   STATUS_CMD=`echo $?`
-  CHECK_REPO_CMD=`helm repo list | grep $STABLE_REPO | wc -l`
+  CHECK_REPO_CMD=`helm repo list | grep ${ELASTIC_REPO} | wc -l`
   echo "$STATUS_CMD"
   echo "$CHECK_REPO_CMD"
   while [[ $STATUS_CMD != 0 && $CHECK_REPO_CMD -ge 1 ]]
   do
     sleep 5
-    helm repo add stable $STABLE_REPO
+    helm repo add stable ${ELASTIC_REPO}
 
     STATUS_CMD=`echo $?`
-    CHECK_REPO_CMD=`helm repo list | grep $STABLE_REPO | wc -l`
+    CHECK_REPO_CMD=`helm repo list | grep ${ELASTIC_REPO} | wc -l`
   done
 }
 
