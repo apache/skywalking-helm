@@ -70,10 +70,10 @@ sudo sysctl -w vm.drop_caches=1
 sudo sysctl -w vm.drop_caches=3
 
 echo "Skywalking ES6 Deploy"
-helm -n $SKYWALKING_ES6_NAMESPACE install skywalking skywalking --values ./skywalking/values-es6.yaml
+helm -n $SKYWALKING_ES6_NAMESPACE install skywalking skywalking --values ./skywalking/values-es6.yaml --set replicas=1
 
 echo "Skywalking ES7 Deploy"
-helm -n $SKYWALKING_ES7_NAMESPACE install skywalking skywalking
+helm -n $SKYWALKING_ES7_NAMESPACE install skywalking skywalking --set replicas=1
 
 for component in $NEED_CHECK_PREFIX"oap" ; do
   sleep 60
