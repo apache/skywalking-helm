@@ -27,7 +27,7 @@ ELASTIC_REPO="https://helm.elastic.co/"
 
 cd ${CHART_PATH}
 
-and_elastic_repo(){
+function and_elastic_repo(){
   ELASTIC_REPO=$1
   helm repo add elastic ${ELASTIC_REPO}
 
@@ -45,7 +45,7 @@ and_elastic_repo(){
   done
 }
 
-create_namespace() {
+function create_namespace() {
   NAMESPACE=$1
   kubectl create ns ${NAMESPACE}
 
@@ -70,20 +70,22 @@ sudo sysctl -w vm.drop_caches=1
 sudo sysctl -w vm.drop_caches=3
 
 echo "Skywalking ES6 Deploy"
-helm -n $SKYWALKING_ES6_NAMESPACE install skywalking skywalking --values ./skywalking/values-es6.yaml --set oap.replicas=1 --set elasticsearch.replicas=1
+helm -n $SKYWALKING_ES6_NAMESPACE install skywalking skywalking \
+        --values ./skywalking/values-es6.yaml \
+        --set oap.replicas=1 --set elasticsearch.replicas=1
 
 echo "Skywalking ES7 Deploy"
-helm -n $SKYWALKING_ES7_NAMESPACE install skywalking skywalking --set oap.replicas=1 --set elasticsearch.replicas=1
+helm -n $SKYWALKING_ES7_NAMESPACE install skywalking skywalking \
+        --set oap.replicas=1 --set elasticsearch.replicas=1
 
-wait_component_available() {
-  # shellcheck disable=SC2030
-  COMPONENT=&1
+function wait_component_available() {
+  COMPONENT=$1
   NAMESPACE=$2
   CONDITIONS=$3
   kubectl -n ${NAMESPACE} wait ${COMPONENT} --for condition=${CONDITIONS} --timeout=600s
 }
 
-get_component_name() {
+function get_component_name() {
   NAME=$1
   NAMESPACE=$2
   COMPONENT_TYPE=$3
@@ -91,9 +93,11 @@ get_component_name() {
   echo ${name}
 }
 
-SW_ES6_DEPLOY_NAME=`get_component_name oap ${SKYWALKING_ES7_NAMESPACE} deploy`
+SW_ES6_DEPLOY_NAME=`get_component_name oap ${SKYWALKING_ES6_NAMESPACE} deploy`
+SW_ES7_DEPLOY_NAME=`get_component_name oap ${SKYWALKING_ES7_NAMESPACE} deploy`
 
 wait_component_available ${SW_ES6_DEPLOY_NAME} ${SKYWALKING_ES7_NAMESPACE} available
+wait_component_available ${SW_ES7_DEPLOY_NAME} ${SKYWALKING_ES7_NAMESPACE} available
 
 #sleep 600
 #kubectl -n ${SKYWALKING_ES7_NAMESPACE} wait $component --for condition=available --timeout=600s
