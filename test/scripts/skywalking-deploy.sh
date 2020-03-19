@@ -76,12 +76,13 @@ echo "Skywalking ES7 Deploy"
 helm -n $SKYWALKING_ES7_NAMESPACE install skywalking skywalking --set oap.replicas=1 --set elasticsearch.replicas=1
 
 for component in $NEED_CHECK_PREFIX"oap" ; do
-  sleep 60
-  for (( i = 0; i < 5; i++ )); do
-      kubectl get pod -o wide -n ${SKYWALKING_ES7_NAMESPACE}
-      sleep 10
-      kubectl logs elasticsearch-master-0 -n ${SKYWALKING_ES7_NAMESPACE}
-  done
+#  sleep 60
+#  for (( i = 0; i < 5; i++ )); do
+#      kubectl get pod -o wide -n ${SKYWALKING_ES7_NAMESPACE}
+#      sleep 10
+#      kubectl logs elasticsearch-master-0 -n ${SKYWALKING_ES7_NAMESPACE}
+#  done
+  kubectl logs elasticsearch-master-0 -n ${SKYWALKING_ES7_NAMESPACE} -f --pod-running-timeout=10m
   kubectl -n ${SKYWALKING_ES7_NAMESPACE} wait $component --for condition=available --timeout=600s
   kubectl -n ${SKYWALKING_ES6_NAMESPACE} wait $component --for condition=available --timeout=600s
 done
