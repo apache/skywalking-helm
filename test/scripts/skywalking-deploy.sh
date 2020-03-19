@@ -80,7 +80,7 @@ for component in $NEED_CHECK_PREFIX"oap" ; do
   for (( i = 0; i < 5; i++ )); do
       kubectl get pod -o wide -n ${SKYWALKING_ES7_NAMESPACE}
       sleep 10
-      kubectl logs elasticsearch-master-0 -ndemo
+      kubectl logs elasticsearch-master-0 -n ${SKYWALKING_ES7_NAMESPACE}
   done
   kubectl -n ${SKYWALKING_ES7_NAMESPACE} wait $component --for condition=available --timeout=600s
   kubectl -n ${SKYWALKING_ES6_NAMESPACE} wait $component --for condition=available --timeout=600s
