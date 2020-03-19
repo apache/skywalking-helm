@@ -27,7 +27,7 @@ ELASTIC_REPO="https://helm.elastic.co/"
 
 cd ${CHART_PATH}
 
-and_stable_repo(){
+and_elastic_repo(){
   ELASTIC_REPO=$1
   helm repo add elastic ${ELASTIC_REPO}
 
@@ -38,7 +38,7 @@ and_stable_repo(){
   while [[ $STATUS_CMD != 0 && $CHECK_REPO_CMD -ge 1 ]]
   do
     sleep 5
-    helm repo add stable ${ELASTIC_REPO}
+    helm repo add elastic ${ELASTIC_REPO}
 
     STATUS_CMD=`echo $?`
     CHECK_REPO_CMD=`helm repo list | grep ${ELASTIC_REPO} | wc -l`
@@ -58,7 +58,7 @@ create_namespace() {
   done
 }
 
-and_stable_repo ${ELASTIC_REPO}
+and_elastic_repo ${ELASTIC_REPO}
 create_namespace ${SKYWALKING_ES6_NAMESPACE}
 create_namespace ${SKYWALKING_ES7_NAMESPACE}
 
