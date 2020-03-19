@@ -78,7 +78,7 @@ helm -n $SKYWALKING_ES7_NAMESPACE install skywalking skywalking
 for component in $NEED_CHECK_PREFIX"oap" ; do
   sleep 60
   for (( i = 0; i < 5; i++ )); do
-      kubectl get deploy -o wide -n ${SKYWALKING_ES6_NAMESPACE}
+      kubectl get all -o wide -n ${SKYWALKING_ES6_NAMESPACE}
       sleep 10
   done
   kubectl -n ${SKYWALKING_ES6_NAMESPACE} wait $component --for condition=available --timeout=600s
