@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: active
+name: chart-deploy-ci
 
 on:
   pull_request:
@@ -24,11 +24,3 @@ on:
     tags:
       - 'v*'
 
-jobs:
-  build:
-    runs-on: ubuntu-16.04
-    steps:
-      - uses: actions/checkout@v2
-      - name: checkout submodules
-        shell: bash
-        run: echo "github action active"
