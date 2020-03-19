@@ -22,7 +22,7 @@ CURRENT_DIR="$(cd "$(dirname $0)"; pwd)"
 CHART_PATH="$CURRENT_DIR/../../chart"
 SKYWALKING_ES7_NAMESPACE="skywaling-es7"
 SKYWALKING_ES6_NAMESPACE="skywaling-es6"
-NEED_CHECK_PREFIX="deployment/skywalking-skywalking-"
+
 ELASTIC_REPO="https://helm.elastic.co/"
 
 cd ${CHART_PATH}
@@ -75,18 +75,32 @@ helm -n $SKYWALKING_ES6_NAMESPACE install skywalking skywalking --values ./skywa
 echo "Skywalking ES7 Deploy"
 helm -n $SKYWALKING_ES7_NAMESPACE install skywalking skywalking --set oap.replicas=1 --set elasticsearch.replicas=1
 
-for component in $NEED_CHECK_PREFIX"oap" ; do
-  sleep 600
-#  for (( i = 0; i < 5; i++ )); do
-#      kubectl get pod -o wide -n ${SKYWALKING_ES7_NAMESPACE}
-#      sleep 10
-#      kubectl logs elasticsearch-master-0 -n ${SKYWALKING_ES7_NAMESPACE}
-#  done
-  kubectl describe pod/elasticsearch-master-0 -n ${SKYWALKING_ES7_NAMESPACE}
-#  kubectl logs elasticsearch-master-0 -n ${SKYWALKING_ES7_NAMESPACE} -f
-  kubectl get all -n ${SKYWALKING_ES7_NAMESPACE}
-  kubectl -n ${SKYWALKING_ES7_NAMESPACE} wait $component --for condition=available --timeout=600s
-  kubectl -n ${SKYWALKING_ES6_NAMESPACE} wait $component --for condition=available --timeout=600s
-done
+wait_component_available() {
+  # shellcheck disable=SC2030
+  COMPONENT=&1
+  NAMESPACE=$2
+  CONDITIONS=$3
+  kubectl -n ${NAMESPACE} wait ${COMPONENT} --for condition=${CONDITIONS} --timeout=600s
+}
+
+get_component_name() {
+  NAME=$1
+  NAMESPACE=$2
+  COMPONENT_TYPE=$3
+  name=${COMPONENT_TYPE}/`kubectl get ${COMPONENT_TYPE} -n ${NAMESPACE} | grep ${NAME} | awk '{print $1}'`
+  echo ${name}
+}
+
+SW_ES6_DEPLOY_NAME=`get_component_name oap ${SKYWALKING_ES7_NAMESPACE} deploy`
+
+wait_component_available ${SW_ES6_DEPLOY_NAME} ${SKYWALKING_ES7_NAMESPACE} available
+
+#sleep 600
+#kubectl -n ${SKYWALKING_ES7_NAMESPACE} wait $component --for condition=available --timeout=600s
+#kubectl describe pod/elasticsearch-master-0 -n ${SKYWALKING_ES7_NAMESPACE}
+##  kubectl logs elasticsearch-master-0 -n ${SKYWALKING_ES7_NAMESPACE} -f
+#kubectl get all -n ${SKYWALKING_ES7_NAMESPACE}
+#kubectl -n ${SKYWALKING_ES7_NAMESPACE} wait $component --for condition=available --timeout=600s
+#kubectl -n ${SKYWALKING_ES6_NAMESPACE} wait $component --for condition=available --timeout=600s
 
 echo "SkyWalking deployed successfully"
