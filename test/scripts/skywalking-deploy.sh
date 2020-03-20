@@ -97,7 +97,7 @@ function get_component_name() {
 SW_ES6_DEPLOY_NAME=`get_component_name oap ${SKYWALKING_ES6_NAMESPACE} deploy`
 SW_ES7_DEPLOY_NAME=`get_component_name oap ${SKYWALKING_ES7_NAMESPACE} deploy`
 
-wait_component_available ${SW_ES6_DEPLOY_NAME} ${SKYWALKING_ES7_NAMESPACE} available
+wait_component_available ${SW_ES6_DEPLOY_NAME} ${SKYWALKING_ES6_NAMESPACE} available
 wait_component_available ${SW_ES7_DEPLOY_NAME} ${SKYWALKING_ES7_NAMESPACE} available
 
 echo "SkyWalking deployed successfully"
