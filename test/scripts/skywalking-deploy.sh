@@ -97,6 +97,12 @@ function get_component_name() {
 SW_ES6_DEPLOY_NAME=`get_component_name oap ${SKYWALKING_ES6_NAMESPACE} deploy`
 SW_ES7_DEPLOY_NAME=`get_component_name oap ${SKYWALKING_ES7_NAMESPACE} deploy`
 
+# wait oap available
+sleep 600
+kubectl get pod -n ${SKYWALKING_ES6_NAMESPACE}
+echo "--------------------------------------------------------"
+kubectl get pod -n ${SKYWALKING_ES7_NAMESPACE}
+
 wait_component_available ${SW_ES6_DEPLOY_NAME} ${SKYWALKING_ES6_NAMESPACE} available
 wait_component_available ${SW_ES7_DEPLOY_NAME} ${SKYWALKING_ES7_NAMESPACE} available
 
