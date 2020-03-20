@@ -64,6 +64,7 @@ create_namespace ${SKYWALKING_ES7_NAMESPACE}
 
 helm repo up
 helm dep up skywalking
+helm lint skywalking
 
 sudo sysctl -w vm.max_map_count=262144
 sudo sysctl -w vm.drop_caches=1
@@ -98,13 +99,5 @@ SW_ES7_DEPLOY_NAME=`get_component_name oap ${SKYWALKING_ES7_NAMESPACE} deploy`
 
 wait_component_available ${SW_ES6_DEPLOY_NAME} ${SKYWALKING_ES7_NAMESPACE} available
 wait_component_available ${SW_ES7_DEPLOY_NAME} ${SKYWALKING_ES7_NAMESPACE} available
-
-#sleep 600
-#kubectl -n ${SKYWALKING_ES7_NAMESPACE} wait $component --for condition=available --timeout=600s
-#kubectl describe pod/elasticsearch-master-0 -n ${SKYWALKING_ES7_NAMESPACE}
-##  kubectl logs elasticsearch-master-0 -n ${SKYWALKING_ES7_NAMESPACE} -f
-#kubectl get all -n ${SKYWALKING_ES7_NAMESPACE}
-#kubectl -n ${SKYWALKING_ES7_NAMESPACE} wait $component --for condition=available --timeout=600s
-#kubectl -n ${SKYWALKING_ES6_NAMESPACE} wait $component --for condition=available --timeout=600s
 
 echo "SkyWalking deployed successfully"
