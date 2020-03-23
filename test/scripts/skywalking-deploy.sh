@@ -73,7 +73,8 @@ sudo sysctl -w vm.drop_caches=3
 echo "Skywalking ES6 Deploy"
 helm -n $SKYWALKING_ES6_NAMESPACE install skywalking skywalking \
         --values ./skywalking/values-es6.yaml \
-        --set oap.replicas=1 --set elasticsearch.replicas=1
+        --set oap.replicas=1 --set elasticsearch.replicas=1 \
+        --set elasticsearch.minimumMasterNodes=1
 
 echo "Skywalking ES7 Deploy"
 helm -n $SKYWALKING_ES7_NAMESPACE install skywalking skywalking \
@@ -98,12 +99,6 @@ SW_ES6_DEPLOY_NAME=`get_component_name oap ${SKYWALKING_ES6_NAMESPACE} deploy`
 SW_ES7_DEPLOY_NAME=`get_component_name oap ${SKYWALKING_ES7_NAMESPACE} deploy`
 
 # wait oap available
-sleep 600
-kubectl get pod -n ${SKYWALKING_ES6_NAMESPACE} -o wide
-kubectl describe pod/elasticsearch-master-0 -n ${SKYWALKING_ES6_NAMESPACE}
-echo "--------------------------------------------------------"
-kubectl get pod -n ${SKYWALKING_ES7_NAMESPACE} -o wide
-
 wait_component_available ${SW_ES6_DEPLOY_NAME} ${SKYWALKING_ES6_NAMESPACE} available
 wait_component_available ${SW_ES7_DEPLOY_NAME} ${SKYWALKING_ES7_NAMESPACE} available
 
