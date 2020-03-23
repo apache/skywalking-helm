@@ -56,8 +56,6 @@ oap:
   env:
     # more env, please refer to https://hub.docker.com/r/apache/skywalking-oap-server
     # or https://github.com/apache/skywalking-docker/blob/master/6/6.4/oap/README.md#sw_telemetry
-    # SW_ES_USER: "xxx"
-    # SW_ES_PASSWORD: "xxx"
 ui:
   name: skywalking-ui
   replicas: 1
@@ -106,6 +104,8 @@ elasticsearch:
 #    port:
 #      http: 9200
 #    host: elasticsearch # es service on kubernetes or host
+#    user: "xxx"
+#    password: "xxx"
   clusterName: "elasticsearch"
   nodeGroup: "master"
 
