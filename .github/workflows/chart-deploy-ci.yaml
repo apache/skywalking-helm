@@ -24,3 +24,29 @@ on:
     tags:
       - 'v*'
 
+env:
+  SCRIPTS_DIR: ./test/scripts
+  LOG_DIR: /tmp/skywalking
+jobs:
+  build:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Prepare enviroment
+        run: |
+          bash ${SCRIPTS_DIR}/pre.sh
+          mkdir -p ${LOG_DIR}
+      - name: Start minikube
+        run: bash ${SCRIPTS_DIR}/minikube.sh start > ${LOG_DIR}/minikube-start-log.txt 2>&1 &
+      - name: Wating minikube ready
+        run: bash ${SCRIPTS_DIR}/minikube.sh wait
+      - name: Setup tunnel
+        run: minikube tunnel --log_dir=${LOG_DIR} &
+      - name: SW And ES install
+        run: bash ${SCRIPTS_DIR}/skywalking-deploy.sh
+      - uses: actions/upload-artifact@v1.0.0
+        if: always()
+        with:
+          name: logs
+          path: /tmp/skywalking
+
