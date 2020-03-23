@@ -35,6 +35,8 @@ clean:
 	rm -rf bin/ \
 	rm -rf ${CHART_DIR}/NOTICE \
 	rm -rf ${CHART_DIR}/LICENSE \
+    rm -rf ${CHART_DIR}/Chart.lock \
+    rm -rf ${CHART_DIR}/charts \
 	rm -rf ${CHART_NAME}.tgz \
 	rm -rf ${CHART_NAME}.tgz.asc \
 	rm -rf ${CHART_NAME}.tgz.sha512 \
