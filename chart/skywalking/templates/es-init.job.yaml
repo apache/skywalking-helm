@@ -48,7 +48,7 @@ spec:
         - name: JAVA_OPTS
           value: "{{ .Values.oap.javaOpts }} -Dmode=init"
         - name: SW_STORAGE
-          value: elasticsearch
+          value: {{ .Values.oap.storageType }}
         - name: SW_STORAGE_ES_CLUSTER_NODES
 {{- if .Values.elasticsearch.enabled }}
           value: "{{ .Values.elasticsearch.clusterName }}-{{ .Values.elasticsearch.nodeGroup }}:{{ .Values.elasticsearch.httpPort }}"

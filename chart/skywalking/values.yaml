@@ -26,6 +26,7 @@ oap:
     repository: apache/skywalking-oap-server
     tag: 7.0.0-es7
     pullPolicy: IfNotPresent
+  storageType: elasticsearch7
   ports:
     grpc: 11800
     rest: 12800

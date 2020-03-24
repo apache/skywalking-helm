@@ -115,7 +115,7 @@ spec:
             fieldRef:
               fieldPath: metadata.uid
         - name: SW_STORAGE
-          value: elasticsearch
+          value: {{ .Values.oap.storageType }}
         {{- if .Values.oap.envoy.als.enabled }}
         - name: SW_ENVOY_ALS_ENABLED
           value: {{ .Values.oap.envoy.als.enabled | quote}}
