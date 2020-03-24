@@ -24,8 +24,9 @@ oap:
   name: skywalking-oap
   image:
     repository: apache/skywalking-oap-server
-    tag: 6.6.0-es7
+    tag: 7.0.0-es7
     pullPolicy: IfNotPresent
+  storageType: elasticsearch7
   ports:
     grpc: 11800
     rest: 12800
@@ -61,7 +62,7 @@ ui:
   replicas: 1
   image:
     repository: apache/skywalking-ui
-    tag: 6.6.0
+    tag: 7.0.0
     pullPolicy: IfNotPresent
   # podAnnotations:
   #   example: oap-foo
