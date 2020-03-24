@@ -100,12 +100,12 @@ ui:
 
 elasticsearch:
   enabled: true
-#  config:
-#    port:
-#      http: 9200
-#    host: elasticsearch # es service on kubernetes or host
-#    user: "xxx"
-#    password: "xxx"
+  config:               # For users of an existing elasticsearch cluster,takes effect when `elasticsearch.enabled` is false
+    port:
+      http: 9200
+    host: elasticsearch # es service on kubernetes or host
+    user: "xxx"         # [optional]
+    password: "xxx"     # [optional]
   clusterName: "elasticsearch"
   nodeGroup: "master"
 
