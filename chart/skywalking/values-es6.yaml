@@ -104,6 +104,8 @@ elasticsearch:
 #    port:
 #      http: 9200
 #    host: elasticsearch # es service on kubernetes or host
+#    user: "xxx"
+#    password: "xxx"
   clusterName: "elasticsearch"
   nodeGroup: "master"
 
