@@ -55,6 +55,7 @@ spec:
   {{- else }}
           value: "{{ .Values.elasticsearch.config.host }}:{{ .Values.elasticsearch.config.port.http }}"
 {{- end }}
+{{- if .Values.elasticsearch.enabled }}
         {{- if .Values.elasticsearch.config.user }}
         - name: SW_ES_USER
           value: "{{ .Values.elasticsearch.config.user }}"
@@ -63,6 +64,7 @@ spec:
         - name: SW_ES_PASSWORD
           value: "{{ .Values.elasticsearch.config.password }}"
         {{- end }}
+{{- end }}
         {{- range $key, $value :=  .Values.oap.env }}
         - name: {{ $key }}
           value: {{ $value | quote }}
