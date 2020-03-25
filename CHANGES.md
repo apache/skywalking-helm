@@ -2,6 +2,14 @@ Changes by Version
 ==================
 Release Notes.
 
+2.0.0
+------------------
+
+#### Features
+- Support SkyWalking 7.0.0
+- Support set ES user/password
+- Add CI for release
+
 1.1.0
 ------------------
 
