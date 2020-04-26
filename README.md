@@ -12,7 +12,7 @@ The scripts are written in Helm3.
 ## Documentation
 
 #### Chart Detailed Configuration
-chart detailed configuration please read ![Chart Readme](./chart/skywalking/README.md)
+chart detailed configuration please read [Chart Readme](./chart/skywalking/README.md)
 
 #### Deploy SkyWalking and Elasticsearch 7 (default)
 
