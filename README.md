@@ -10,6 +10,10 @@ SkyWalking Kubernetes repository provides ways to install and configure skywalki
 The scripts are written in Helm3.
 
 ## Documentation
+
+#### Chart Detailed Configuration
+chart detailed configuration please read [Chart Readme](./chart/skywalking/README.md)
+
 #### Deploy SkyWalking and Elasticsearch 7 (default)
 
 ```shell script
@@ -45,7 +49,9 @@ $ helm dep up skywalking
 $ helm install <release_name> skywalking -n <namespace> \
         --set elasticsearch.enabled=false \
         --set elasticsearch.config.host=<es_host> \
-        --set elasticsearch.config.port.http=<es_port>
+        --set elasticsearch.config.port.http=<es_port> \
+        --set elasticsearch.config.user=<es_user> \
+        --set elasticsearch.config.password=<es_password> 
 ```
 
 **Note**: You need to make sure your ES cluster version is 7.x , If your cluster version is 6.x, execute the following command
@@ -57,7 +63,9 @@ $ helm install <release_name> skywalking -n <namespace> \
         --values ./skywalking/values-es6.yaml
         --set elasticsearch.enabled=false \
         --set elasticsearch.config.host=<es_host> \
-        --set elasticsearch.config.port.http=<es_port>
+        --set elasticsearch.config.port.http=<es_port> \
+        --set elasticsearch.config.user=<es_user> \
+        --set elasticsearch.config.password=<es_password> 
 ```
 
 ## Structure of repository
@@ -71,6 +79,7 @@ This is recommended as the best practice to deploy SkyWalking backend stack into
 | ------------------ | ------------- |
 | 6.5.0              | 1.0.0         |
 | 6.6.0              | 1.1.0         | 
+| 7.0.0              | 2.0.0         | 
 
 Please head to the [releases page](http://skywalking.apache.org/downloads/) to download a release of Apache SkyWalking.
 
