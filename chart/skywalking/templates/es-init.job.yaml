@@ -52,7 +52,7 @@ spec:
         - name: SW_STORAGE_ES_CLUSTER_NODES
 {{- if .Values.elasticsearch.enabled }}
           value: "{{ .Values.elasticsearch.clusterName }}-{{ .Values.elasticsearch.nodeGroup }}:{{ .Values.elasticsearch.httpPort }}"
-  {{- else }}
+{{- else }}
           value: "{{ .Values.elasticsearch.config.host }}:{{ .Values.elasticsearch.config.port.http }}"
 {{- end }}
 {{- if not .Values.elasticsearch.enabled }}
