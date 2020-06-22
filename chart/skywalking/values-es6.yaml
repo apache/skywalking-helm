@@ -21,10 +21,10 @@ serviceAccounts:
   oap:
 
 oap:
-  name: skywalking-oap
+  name: oap
   image:
     repository: apache/skywalking-oap-server
-    tag: 7.0.0-es6
+    tag: 8.0.1-es6
     pullPolicy: IfNotPresent
   storageType: elasticsearch
   ports:
@@ -58,11 +58,11 @@ oap:
     # more env, please refer to https://hub.docker.com/r/apache/skywalking-oap-server
     # or https://github.com/apache/skywalking-docker/blob/master/6/6.4/oap/README.md#sw_telemetry
 ui:
-  name: skywalking-ui
+  name: ui
   replicas: 1
   image:
     repository: apache/skywalking-ui
-    tag: 7.0.0
+    tag: 8.0.1
     pullPolicy: IfNotPresent
   # podAnnotations:
   #   example: oap-foo
@@ -349,3 +349,4 @@ elasticsearch:
   keystore: []
 
 nameOverride: ""
+fullnameOverride: ""

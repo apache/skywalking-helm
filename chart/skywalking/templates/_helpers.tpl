@@ -20,7 +20,7 @@ limitations under the License.
 Expand the name of the chart.
 */}}
 {{- define "skywalking.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
+{{- default .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*

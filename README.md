@@ -60,7 +60,7 @@ $ helm install <release_name> skywalking -n <namespace> \
 $ helm dep up skywalking
 
 $ helm install <release_name> skywalking -n <namespace> \
-        --values ./skywalking/values-es6.yaml
+        --values ./skywalking/values-es6.yaml \
         --set elasticsearch.enabled=false \
         --set elasticsearch.config.host=<es_host> \
         --set elasticsearch.config.port.http=<es_port> \
@@ -80,6 +80,7 @@ This is recommended as the best practice to deploy SkyWalking backend stack into
 | 6.5.0              | 1.0.0         |
 | 6.6.0              | 1.1.0         | 
 | 7.0.0              | 2.0.0         | 
+| 8.0.1              | 3.0.0         | 
 
 Please head to the [releases page](http://skywalking.apache.org/downloads/) to download a release of Apache SkyWalking.
 

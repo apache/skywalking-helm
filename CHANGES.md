@@ -2,6 +2,15 @@ Changes by Version
 ==================
 Release Notes.
 
+3.0.0
+------------------
+
+#### Features
+- Support SkyWalking 8.0.1
+
+##### Note: 
+- 8.0.0 image is not suitable as chart image, ISSUE: https://github.com/apache/skywalking/issues/4953
+
 2.0.0
 ------------------
 
