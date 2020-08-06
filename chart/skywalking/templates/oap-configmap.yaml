@@ -13,23 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v2
-name: skywalking
-home: https://skywalking.apache.org
-version: 3.1.0
-appVersion: 8.1.0
-description: Apache SkyWalking APM System
-icon: https://raw.githubusercontent.com/apache/skywalking-kubernetes/master/logo/sw-logo-for-chart.jpg
-sources:
-- https://github.com/apache/skywalking-kubernetes
-maintainers:
-- name: hanahmily
-  email: hanahmily@gmail.com
-- name: innerpeacez
-  email: innerpeace.zhai@gmail.com
-
-dependencies:
-  - name: elasticsearch
-    version: ~7.5.1
-    repository: https://helm.elastic.co/
-    condition: elasticsearch.enabled
+{{- if .Values.oap.dymicConfigEnabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skywalking-dynamic-config
+  labels:
+    app: {{ template "skywalking.name" . }}
+    release: {{ .Release.Name }}
+    component: {{ .Values.oap.name }}
+data:
+{{- end }}

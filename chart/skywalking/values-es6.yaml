@@ -22,9 +22,13 @@ serviceAccounts:
 
 oap:
   name: oap
+  # When 'dymicConfigEnabled' set to true, enable oap dynamic configuration through k8s configmap，
+  # Note: The default configmap data is empty, please refer to the detailed documentation (https://github.com/apache/skywalking/blob/master/docs/en/setup/backend/dynamic-config.md)
+  # Sync period in seconds. Defaults to 60 seconds. env: SW_CONFIG_CONFIGMAP_PERIOD
+  dymicConfigEnabled: false
   image:
     repository: apache/skywalking-oap-server
-    tag: 8.0.1-es6
+    tag: 8.1.0-es6
     pullPolicy: IfNotPresent
   storageType: elasticsearch
   ports:
@@ -62,7 +66,7 @@ ui:
   replicas: 1
   image:
     repository: apache/skywalking-ui
-    tag: 8.0.1
+    tag: 8.1.0
     pullPolicy: IfNotPresent
   # podAnnotations:
   #   example: oap-foo

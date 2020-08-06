@@ -81,6 +81,7 @@ This is recommended as the best practice to deploy SkyWalking backend stack into
 | 6.6.0              | 1.1.0         | 
 | 7.0.0              | 2.0.0         | 
 | 8.0.1              | 3.0.0         | 
+| 8.1.0              | 3.1.0         | 
 
 Please head to the [releases page](http://skywalking.apache.org/downloads/) to download a release of Apache SkyWalking.
 
