@@ -108,7 +108,7 @@ spec:
           value: kubernetes
         - name: SW_CLUSTER_K8S_NAMESPACE
           value: "{{ .Release.Namespace }}"
-{{- if .Values.oap.dymicConfigEnabled }}
+{{- if .Values.oap.dynamicConfigEnabled }}
         - name: SW_CONFIGURATION
           value: k8s-configmap
         - name: SW_CONFIG_CONFIGMAP_PERIOD

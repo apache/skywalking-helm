@@ -2,6 +2,16 @@ Changes by Version
 ==================
 Release Notes.
 
+3.1.0
+------------------
+
+#### Features
+- Support SkyWalking 8.1.0
+- Support enable oap dynamic configuration through k8s configmap
+
+#### Download
+- http://skywalking.apache.org/downloads/
+
 3.0.0
 ------------------
 
