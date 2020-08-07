@@ -43,6 +43,7 @@ The following table lists the configurable parameters of the Skywalking chart an
 | `nameOverride`                                               | Override name                                                                                    | `nil`                                |
 | `serviceAccounts.oap`                                        | Name of the OAP service account to use or create                                                 | `nil`                                |
 | `oap.name`                                                   | OAP deployment name                                                                              | `oap`                                |
+| `oap.dymicConfigEnabled`                                     | Enable oap dynamic configuration through k8s configmap                                           | `false`                              |
 | `oap.image.repository`                                       | OAP container image name                                                                         | `apache/skywalking-oap-server`       |
 | `oap.image.tag`                                              | OAP container image tag                                                                          | `6.1.0`                              |
 | `oap.image.pullPolicy`                                       | OAP container image pull policy                                                                  | `IfNotPresent`                       |
