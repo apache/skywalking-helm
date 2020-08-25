@@ -14,8 +14,6 @@
 # limitations under the License.
 
 {{- if .Values.ui.ingress.enabled }}
-{{- $serviceName := include "skywalking.ui.fullname" . -}}
-{{- $servicePort := .Values.ui.service.externalPort -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -32,6 +30,8 @@ metadata:
     {{- end }}
 spec:
   rules:
+    {{- $serviceName := include "skywalking.ui.fullname" . -}}
+    {{- $servicePort := .Values.ui.service.externalPort -}}
     {{- range .Values.ui.ingress.hosts }}
       {{- $url := splitList "/" . }}
     - host: {{ first $url }}

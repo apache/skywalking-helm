@@ -19,7 +19,9 @@
 
 serviceAccounts:
   oap:
-
+initContainer:
+  image: busybox
+  tag: '1.30'
 oap:
   name: oap
   # When 'dynamicConfigEnabled' set to true, enable oap dynamic configuration through k8s configmap，
