@@ -122,10 +122,6 @@ spec:
               fieldPath: metadata.uid
         - name: SW_STORAGE
           value: {{ .Values.oap.storageType }}
-        {{- if .Values.oap.envoy.als.enabled }}
-        - name: SW_ENVOY_ALS_ENABLED
-          value: {{ .Values.oap.envoy.als.enabled | quote}}
-        {{- end }}
         - name: SW_STORAGE_ES_CLUSTER_NODES
 {{- if .Values.elasticsearch.enabled }}
           value: "{{ .Values.elasticsearch.clusterName }}-{{ .Values.elasticsearch.nodeGroup }}:{{ .Values.elasticsearch.httpPort }}"
