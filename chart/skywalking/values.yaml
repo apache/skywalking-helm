@@ -30,9 +30,9 @@ oap:
   dynamicConfigEnabled: false
   image:
     repository: apache/skywalking-oap-server
-    tag: 8.1.0-es7
+    tag: latest
     pullPolicy: IfNotPresent
-  storageType: elasticsearch7
+  storageType: elasticsearch
   ports:
     grpc: 11800
     rest: 12800
@@ -157,7 +157,7 @@ elasticsearch:
   #    path: /usr/share/elasticsearch/config/certs
 
   image: "docker.elastic.co/elasticsearch/elasticsearch"
-  imageTag: "7.5.1"
+  imageTag: "6.8.6"
   imagePullPolicy: "IfNotPresent"
 
   podAnnotations: {}

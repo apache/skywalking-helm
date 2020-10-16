@@ -72,12 +72,13 @@ sudo sysctl -w vm.drop_caches=3
 
 echo "Skywalking ES6 Deploy"
 helm -n $SKYWALKING_ES6_NAMESPACE install skywalking skywalking \
-        --values ./skywalking/values-es6.yaml \
         --set oap.replicas=1 --set elasticsearch.replicas=1 \
         --set elasticsearch.minimumMasterNodes=1
 
 echo "Skywalking ES7 Deploy"
 helm -n $SKYWALKING_ES7_NAMESPACE install skywalking skywalking \
+        -f ./skywalking/values.yaml \
+        -f ./skywalking/values-es7.yaml \
         --set oap.replicas=1 --set elasticsearch.replicas=1
 
 function wait_component_available() {

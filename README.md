@@ -6,66 +6,91 @@ Apache SkyWalking Kubernetes
 [![GitHub stars](https://img.shields.io/github/stars/apache/skywalking.svg?style=for-the-badge&label=Stars&logo=github)](https://github.com/apache/skywalking)
 [![Twitter Follow](https://img.shields.io/twitter/follow/asfskywalking.svg?style=for-the-badge&label=Follow&logo=twitter)](https://twitter.com/AsfSkyWalking)
 
-SkyWalking Kubernetes repository provides ways to install and configure skywalking in a Kubernetes cluster.
-The scripts are written in Helm3.
+SkyWalking Kubernetes repository provides ways to install and configure SkyWalking in a Kubernetes cluster.
+The scripts are written in Helm 3.
 
 ## Documentation
 
-#### Chart Detailed Configuration
-chart detailed configuration please read [Chart Readme](./chart/skywalking/README.md)
+### Chart Detailed Configuration
+Chart detailed configuration can be found at [Chart Readme](./chart/skywalking/README.md)
 
-#### Deploy SkyWalking and Elasticsearch 7 (default)
+### Deploy SkyWalking in a Kubernetes cluster
+
+#### Prerequisites
 
 ```shell script
-$ cd chart
+git clone https://github.com/apache/skywalking-kubernetes
+cd skywalking-kubernetes/chart
+helm repo add elastic https://helm.elastic.co
+helm dep up skywalking
+export SKYWALKING_RELEASE_NAME=skywalking  # change the release name according to your scenario
+export SKYWALKING_RELEASE_NAMESPACE=istio-system  # change the namespace according to your scenario
+```
 
-$ helm repo add elastic https://helm.elastic.co
+#### Deploy the latest SkyWalking & Elasticsearch 6 (default)
 
-$ helm dep up skywalking
-
-$ helm install <release_name> skywalking -n <namespace>
+```shell script
+helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}"
 ``` 
 
-**Note**: If you want to deploy Elasticsearch 6, execute the following command
+#### Deploy the latest SkyWalking & Elasticsearch 7
 
 ```shell script
-$ helm dep up skywalking
-
-$ helm install <release_name> skywalking -n <namespace> --values ./skywalking/values-es6.yaml
+helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  -f ./skywalking/values.yaml \
+  -f ./skywalking/values-es7.yaml
 ```
 
-#### Only deploy SkyWalking ,and use existing Elasticsearch
-If not want to deploy a new elasticsearch cluster, this way can be solved.
+#### Deploy a specific version of SkyWalking & Elasticsearch
 
-Only need to close the elasticsearch deployed by chart default and configure the existing elasticsearch connection method.
+- Deploy SkyWalking 8.0.1 & Elasticsearch 6.8.6
 
 ```shell script
-$ cd chart
-
-$ helm repo add elastic https://helm.elastic.co
-
-$ helm dep up skywalking
-
-$ helm install <release_name> skywalking -n <namespace> \
-        --set elasticsearch.enabled=false \
-        --set elasticsearch.config.host=<es_host> \
-        --set elasticsearch.config.port.http=<es_port> \
-        --set elasticsearch.config.user=<es_user> \
-        --set elasticsearch.config.password=<es_password> 
+helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  --set oap.image.tag=8.0.1-es6 \
+  --set ui.image.tag=8.0.1 \
+  --set elasticsearch.imageTag=6.8.6
 ```
 
-**Note**: You need to make sure your ES cluster version is 7.x , If your cluster version is 6.x, execute the following command
+- Deploy SkyWalking 8.1.0 & Elasticsearch 7.5.1
+```shell script
+helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  --set oap.image.tag=8.1.0-es7 \
+  --set ui.image.tag=8.1.0 \
+  --set elasticsearch.imageTag=7.5.1
+``` 
+
+**NOTE**: Please make sure the specified OAP image tag supports the specified Elasticsearch version. 
+
+#### Deploy the latest SkyWalking & an existing Elasticsearch
+
+1. Modify the connection information to the existing elasticsearch cluster in file [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml).
+1. Execute the command.
+```shell script
+helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  -f ./skywalking/values.yaml \
+  -f ./skywalking/values-my-es.yaml
+```
+
+OR, if your existing Elasticsearch version is 7.x.x
 
 ```shell script
-$ helm dep up skywalking
+helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  -f ./skywalking/values.yaml \
+  -f ./skywalking/values-es7.yaml \
+  -f ./skywalking/values-my-es.yaml
+```
 
-$ helm install <release_name> skywalking -n <namespace> \
-        --values ./skywalking/values-es6.yaml \
-        --set elasticsearch.enabled=false \
-        --set elasticsearch.config.host=<es_host> \
-        --set elasticsearch.config.port.http=<es_port> \
-        --set elasticsearch.config.user=<es_user> \
-        --set elasticsearch.config.password=<es_password> 
+You can also add `--set oap.image.tag=<oap.tag> --set ui.image.tag=<ui.tag>` to deploy a specific version of SkyWalking with
+the existing Elasticsearch, as [mentioned above](#deploy-a-specific-version-of-skywalking--elasticsearch), for example:
+
+```shell script
+helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  -f ./skywalking/values.yaml \
+  -f ./skywalking/values-es7.yaml \
+  -f ./skywalking/values-my-es.yaml \
+  --set oap.image.tag=8.1.0-es7 \
+  --set ui.image.tag=8.1.0
 ```
 
 ## Structure of repository
