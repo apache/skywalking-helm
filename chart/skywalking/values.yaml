@@ -19,9 +19,11 @@
 
 serviceAccounts:
   oap:
+
 initContainer:
   image: busybox
   tag: '1.30'
+
 oap:
   name: oap
   # When 'dynamicConfigEnabled' set to true, enable oap dynamic configuration through k8s configmap，
@@ -30,9 +32,9 @@ oap:
   dynamicConfigEnabled: false
   image:
     repository: apache/skywalking-oap-server
-    tag: 8.1.0-es7
+    tag: null  # Must be set explicitly
     pullPolicy: IfNotPresent
-  storageType: elasticsearch7
+  storageType: null
   ports:
     grpc: 11800
     rest: 12800
@@ -63,12 +65,13 @@ oap:
   env:
     # more env, please refer to https://hub.docker.com/r/apache/skywalking-oap-server
     # or https://github.com/apache/skywalking-docker/blob/master/6/6.4/oap/README.md#sw_telemetry
+
 ui:
   name: ui
   replicas: 1
   image:
     repository: apache/skywalking-ui
-    tag: 8.1.0
+    tag: null  # Must be set explicitly
     pullPolicy: IfNotPresent
   # podAnnotations:
   #   example: oap-foo
@@ -157,7 +160,7 @@ elasticsearch:
   #    path: /usr/share/elasticsearch/config/certs
 
   image: "docker.elastic.co/elasticsearch/elasticsearch"
-  imageTag: "7.5.1"
+  imageTag: "6.8.6"
   imagePullPolicy: "IfNotPresent"
 
   podAnnotations: {}

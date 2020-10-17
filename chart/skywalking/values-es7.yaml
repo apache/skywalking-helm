@@ -19,12 +19,12 @@
 
 oap:
   image:
-    tag: 8.1.0-es6
-  storageType: elasticsearch
+    tag: 8.1.0-es7
+  storageType: elasticsearch7
 
 ui:
   image:
     tag: 8.1.0
 
 elasticsearch:
-  imageTag: "6.8.6"
+  imageTag: "7.5.1"
