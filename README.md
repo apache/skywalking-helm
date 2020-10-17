@@ -12,9 +12,22 @@ The scripts are written in Helm 3.
 ## Documentation
 
 ### Chart Detailed Configuration
+
 Chart detailed configuration can be found at [Chart Readme](./chart/skywalking/README.md)
 
 ### Deploy SkyWalking in a Kubernetes cluster
+
+There are required values that you must set explicitly when deploying SkyWalking.
+
+| name | description | example |
+| ---- | ----------- | ------- |
+| `oap.image.tag` | the OAP docker image tag | `8.1.0-es6`, `8.1.0-es7`, etc. |
+| `oap.storageType` | the storage type of the OAP | `elasticsearch`, `elasticsearch7`, etc. |
+| `ui.image.tag` | the UI docker image tag | `8.1.0`, `8.1.0`, ect. |
+
+You can set these required values via command line (e.g. `--set oap.image.tag=8.1.0-es6 --set oap.storageType=elasticsearch`),
+or edit them in a separate file(e.g. [`values-es6.yaml`](chart/skywalking/values-es6.yaml), [`values-es7.yaml`](chart/skywalking/values-es7.yaml))
+and use `-f <filename>` or `--values=<filename>`.
 
 #### Prerequisites
 
@@ -24,21 +37,7 @@ cd skywalking-kubernetes/chart
 helm repo add elastic https://helm.elastic.co
 helm dep up skywalking
 export SKYWALKING_RELEASE_NAME=skywalking  # change the release name according to your scenario
-export SKYWALKING_RELEASE_NAMESPACE=istio-system  # change the namespace according to your scenario
-```
-
-#### Deploy the latest SkyWalking & Elasticsearch 6 (default)
-
-```shell script
-helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}"
-``` 
-
-#### Deploy the latest SkyWalking & Elasticsearch 7
-
-```shell script
-helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  -f ./skywalking/values.yaml \
-  -f ./skywalking/values-es7.yaml
+export SKYWALKING_RELEASE_NAMESPACE=default  # change the namespace according to your scenario
 ```
 
 #### Deploy a specific version of SkyWalking & Elasticsearch
@@ -48,6 +47,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NA
 ```shell script
 helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=8.0.1-es6 \
+  --set oap.storageType=elasticsearch \
   --set ui.image.tag=8.0.1 \
   --set elasticsearch.imageTag=6.8.6
 ```
@@ -56,41 +56,20 @@ helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NA
 ```shell script
 helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=8.1.0-es7 \
+  --set oap.storageType=elasticsearch7 \
   --set ui.image.tag=8.1.0 \
   --set elasticsearch.imageTag=7.5.1
 ``` 
 
 **NOTE**: Please make sure the specified OAP image tag supports the specified Elasticsearch version. 
 
-#### Deploy the latest SkyWalking & an existing Elasticsearch
+#### Deploy a specific version of SkyWalking with an existing Elasticsearch
 
-1. Modify the connection information to the existing elasticsearch cluster in file [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml).
-1. Execute the command.
+Modify the connection information to the existing elasticsearch cluster in file [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml).
+
 ```shell script
 helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  -f ./skywalking/values.yaml \
   -f ./skywalking/values-my-es.yaml
-```
-
-OR, if your existing Elasticsearch version is 7.x.x
-
-```shell script
-helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  -f ./skywalking/values.yaml \
-  -f ./skywalking/values-es7.yaml \
-  -f ./skywalking/values-my-es.yaml
-```
-
-You can also add `--set oap.image.tag=<oap.tag> --set ui.image.tag=<ui.tag>` to deploy a specific version of SkyWalking with
-the existing Elasticsearch, as [mentioned above](#deploy-a-specific-version-of-skywalking--elasticsearch), for example:
-
-```shell script
-helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  -f ./skywalking/values.yaml \
-  -f ./skywalking/values-es7.yaml \
-  -f ./skywalking/values-my-es.yaml \
-  --set oap.image.tag=8.1.0-es7 \
-  --set ui.image.tag=8.1.0
 ```
 
 ## Structure of repository

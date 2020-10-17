@@ -19,8 +19,12 @@
 
 oap:
   image:
-    tag: 8.1.0-es7  # TODO: give a tag "latest-es7"
+    tag: 8.1.0-es7
   storageType: elasticsearch7
+
+ui:
+  image:
+    tag: 8.1.0
 
 elasticsearch:
   imageTag: "7.5.1"
