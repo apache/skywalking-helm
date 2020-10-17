@@ -33,6 +33,9 @@ jobs:
         tag:
           - 8.1.0-es6
           - 8.0.1-es6
+          - 7.0.0-es6
+          - 6.6.0-es6
+          - 6.5.0
     env:
       TAG: ${{ matrix.tag }}
     name: ${{ matrix.tag }}
