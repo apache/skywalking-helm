@@ -14,18 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Test
+name: Test Compatibility
 
 on:
   pull_request:
-  push:
-    branches:
-      - master
 
 env:
-  SKIP_TEST: true
   ISTIO_VERSION: 1.7.1
-  TAG: ${{ github.sha }}
   SCRIPTS_DIR: main/test/e2e-mesh/e2e-istio/scripts
   SW_OAP_BASE_IMAGE: openjdk:8-jre-alpine
 
@@ -34,6 +29,13 @@ jobs:
     runs-on: ubuntu-16.04
     timeout-minutes: 60
     name: Istio+Envoy Access Log Service
+    strategy:
+      matrix:
+        tag:
+          - 8.1.0-es6
+          - 8.0.1-es6
+    env:
+      TAG: ${{ matrix.tag }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/checkout@v2
@@ -41,15 +43,6 @@ jobs:
           repository: apache/skywalking
           submodules: true
           path: main
-
-      - uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
-
-      - name: Build Docker Image
-        run: cd main && make docker && cd ..
 
       - name: Prepare envrionment
         run: bash ${SCRIPTS_DIR}/pre.sh
@@ -67,6 +60,7 @@ jobs:
           helm -n istio-system install skywalking skywalking \
                --set fullnameOverride=skywalking \
                --set elasticsearch.replicas=1 \
+               --set elasticsearch.minimumMasterNodes=1 \
                --set oap.env.SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS=k8s-mesh \
                --set oap.envoy.als.enabled=true \
                --set oap.replicas=1 \
@@ -119,9 +113,3 @@ jobs:
       - name: Clean up
         if: ${{ always() }}
         run: minikube delete
-  build:
-    runs-on: ubuntu-16.04
-    needs: [als]
-    steps:
-      - name: dummy
-        run: echo

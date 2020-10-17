@@ -23,7 +23,7 @@ There are required values that you must set explicitly when deploying SkyWalking
 | ---- | ----------- | ------- |
 | `oap.image.tag` | the OAP docker image tag | `8.1.0-es6`, `8.1.0-es7`, etc. |
 | `oap.storageType` | the storage type of the OAP | `elasticsearch`, `elasticsearch7`, etc. |
-| `ui.image.tag` | the UI docker image tag | `8.1.0`, `8.1.0`, ect. |
+| `ui.image.tag` | the UI docker image tag | `8.0.1`, `8.1.0`, ect. |
 
 You can set these required values via command line (e.g. `--set oap.image.tag=8.1.0-es6 --set oap.storageType=elasticsearch`),
 or edit them in a separate file(e.g. [`values-es6.yaml`](chart/skywalking/values-es6.yaml), [`values-es7.yaml`](chart/skywalking/values-es7.yaml))
