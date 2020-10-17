@@ -28,7 +28,6 @@ jobs:
   als:
     runs-on: ubuntu-16.04
     timeout-minutes: 60
-    name: Istio+Envoy Access Log Service
     strategy:
       matrix:
         tag:
@@ -36,6 +35,7 @@ jobs:
           - 8.0.1-es6
     env:
       TAG: ${{ matrix.tag }}
+    name: ${{ matrix.tag }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/checkout@v2
@@ -64,9 +64,7 @@ jobs:
                --set oap.env.SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS=k8s-mesh \
                --set oap.envoy.als.enabled=true \
                --set oap.replicas=1 \
-               --set ui.image.repository=skywalking/ui \
-               --set ui.image.tag=$TAG \
-               --set oap.image.repository=skywalking/oap \
+               --set ui.image.tag=${TAG//-es*} \
                --set oap.image.tag=$TAG \
                --set oap.storageType=elasticsearch
           kubectl -n istio-system get pods
