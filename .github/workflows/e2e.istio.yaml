@@ -119,3 +119,9 @@ jobs:
       - name: Clean up
         if: ${{ always() }}
         run: minikube delete
+  build:
+    runs-on: ubuntu-16.04
+    needs: [als]
+    steps:
+      - name: dummy
+        run: echo
