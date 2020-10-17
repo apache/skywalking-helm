@@ -70,8 +70,8 @@ jobs:
                --set oap.env.SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS=k8s-mesh \
                --set oap.envoy.als.enabled=true \
                --set oap.replicas=1 \
-               --set oap.ui.repository=skywalking/ui \
-               --set oap.ui.tag=$TAG \
+               --set ui.image.repository=skywalking/ui \
+               --set ui.image.tag=$TAG \
                --set oap.image.repository=skywalking/oap \
                --set oap.image.tag=$TAG \
                --set oap.storageType=elasticsearch
