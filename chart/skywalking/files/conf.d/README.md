@@ -6,4 +6,7 @@ For now, we support the following files which will override the counterparts in 
 
 | File | Override |
 | ---- | -------- |
-| `oap/application.yml` | The `application.yml` in the OAP Docker image |
+| `oap/application.yml`                 | `/skywalking/config/application.yml`                  |
+| `oap/log4j2.xml`                      | `/skywalking/config/log4j2.xml`                       |
+| `oap/alarm-settings.yml`              | `/skywalking/config/alarm-settings.yml`               |
+| `oap/endpoint-name-grouping.yml`      | `/skywalking/config/endpoint-name-grouping.yml`       |
