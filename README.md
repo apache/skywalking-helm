@@ -97,10 +97,19 @@ helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NA
   -f ./skywalking/values-my-es.yaml
 ```
 
-#### Pass environment variables to OAP
+#### Customization
+
+- Use your own configuration files
+
+Put your own configuration files according to [the overridable files](chart/skywalking/files/conf.d/README.md) under the
+working directory, `files/conf.d`, they will override the counterparts in the Docker image.
+
+- Pass environment variables to OAP
 
 The SkyWalking OAP exposes many configurations that can be specified by environment variables, as listed in [the main repo](https://github.com/apache/skywalking/blob/master/docs/en/setup/backend/configuration-vocabulary.md).
 You can set those environment variables by `--set oap.env.<ENV_NAME>=<ENV_VALUE>`, such as `--set oap.env.SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS=k8s-mesh`.
+
+> The environment variables take priority over the overrode configuration files.
 
 # Contact Us
 * Submit an [issue](https://github.com/apache/skywalking/issues)
