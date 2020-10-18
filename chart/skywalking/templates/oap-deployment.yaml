@@ -142,3 +142,17 @@ spec:
         - name: {{ $key }}
           value: {{ $value | quote }}
         {{- end }}
+
+        volumeMounts:
+          {{- if (.Files.Glob "files/conf.d/oap/application.yml") }}
+          - name: skywalking-override-application-yml
+            mountPath: /skywalking/ext-config/application.yml
+            subPath: application.yml
+          {{- end }}
+
+      volumes:
+        {{- if (.Files.Glob "files/conf.d/oap/application.yml") }}
+        - name: skywalking-override-application-yml
+          configMap:
+            name: {{ template "skywalking.fullname" . }}-override-application-yml
+        {{- end }}
