@@ -77,7 +77,9 @@ spec:
 {{ toYaml .Values.oap.tolerations | indent 8 }}
 {{- end }}
       initContainers:
-      {{- include "skywalking.containers.wait-for-es" . | nindent 6 }}
+        {{- if hasPrefix .Values.oap.storageType "elasticsearch" }}
+        {{- include "skywalking.containers.wait-for-es" . | nindent 6 }}
+        {{- end }}
       containers:
       - name: {{ .Values.oap.name }}
         image: {{ .Values.oap.image.repository }}:{{ required "oap.image.tag is required" .Values.oap.image.tag }}
@@ -103,7 +105,7 @@ spec:
 {{- end }}
         env:
         - name: JAVA_OPTS
-          value: "{{ .Values.oap.javaOpts }} -Dmode=no-init"
+          value: "-Dmode=no-init {{ .Values.oap.javaOpts }}"
         - name: SW_CLUSTER
           value: kubernetes
         - name: SW_CLUSTER_K8S_NAMESPACE
@@ -144,51 +146,17 @@ spec:
         {{- end }}
 
         volumeMounts:
-          {{- if (.Files.Glob "files/conf.d/oap/application.yml") }}
-          - name: skywalking-override-application-yml
-            mountPath: /skywalking/config/application.yml
-            subPath: application.yml
+          {{- if (.Files.Glob "files/conf.d/oap/**") }}
+          {{ range $path, $bytes := .Files.Glob "files/conf.d/oap/**" }}
+          - name: skywalking-oap-override
+            mountPath: {{ print "/skywalking/config/" ($path | replace "files/conf.d/oap/" "") }}
+            subPath: {{ $path | replace "files/conf.d/oap/" "" | b64enc | replace "=" "-" }}
           {{- end }}
-
-          {{- if (.Files.Glob "files/conf.d/oap/log4j2.xml") }}
-          - name: skywalking-override-log4j2-xml
-            mountPath: /skywalking/config/log4j2.xml
-            subPath: log4j2.xml
-          {{- end }}
-
-          {{- if (.Files.Glob "files/conf.d/oap/alarm-settings.yml") }}
-          - name: skywalking-override-alarm-settings-yml
-            mountPath: /skywalking/config/alarm-settings.yml
-            subPath: alarm-settings.yml
-          {{- end }}
-
-          {{- if (.Files.Glob "files/conf.d/oap/endpoint-name-grouping.yml") }}
-          - name: skywalking-override-endpoint-name-grouping-yml
-            mountPath: /skywalking/config/endpoint-name-grouping.yml
-            subPath: endpoint-name-grouping.yml
           {{- end }}
 
       volumes:
-        {{- if (.Files.Glob "files/conf.d/oap/application.yml") }}
-        - name: skywalking-override-application-yml
+        {{- if (.Files.Glob "files/conf.d/oap/**") }}
+        - name: skywalking-oap-override
           configMap:
-            name: {{ template "skywalking.fullname" . }}-override-application-yml
-        {{- end }}
-
-        {{- if (.Files.Glob "files/conf.d/oap/log4j2.xml") }}
-        - name: skywalking-override-log4j2-xml
-          configMap:
-            name: {{ template "skywalking.fullname" . }}-override-log4j2-xml
-        {{- end }}
-
-        {{- if (.Files.Glob "files/conf.d/oap/alarm-settings.yml") }}
-        - name: skywalking-override-alarm-settings-yml
-          configMap:
-            name: {{ template "skywalking.fullname" . }}-override-alarm-settings-yml
-        {{- end }}
-
-        {{- if (.Files.Glob "files/conf.d/oap/endpoint-name-grouping.yml") }}
-        - name: skywalking-override-endpoint-name-grouping-yml
-          configMap:
-            name: {{ template "skywalking.fullname" . }}-override-endpoint-name-grouping-yml
+            name: {{ template "skywalking.fullname" . }}-oap-cm-override
         {{- end }}

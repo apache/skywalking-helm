@@ -14,6 +14,8 @@
 # limitations under the License.
 
 # https://docs.sentry.io/server/installation/docker/#running-migrations
+
+{{- if hasPrefix .Values.oap.storageType "elasticsearch" }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -35,7 +37,7 @@ spec:
     spec:
       restartPolicy: Never
       initContainers:
-      {{- include "skywalking.containers.wait-for-es" . | nindent 6 }}
+        {{- include "skywalking.containers.wait-for-es" . | nindent 6 }}
       containers:
       - name: {{ .Values.oap.name }}
         image: {{ .Values.oap.image.repository }}:{{ required "oap.image.tag is required" .Values.oap.image.tag }}
@@ -69,3 +71,4 @@ spec:
         - name: {{ $key }}
           value: {{ $value | quote }}
         {{- end }}
+{{- end}}
