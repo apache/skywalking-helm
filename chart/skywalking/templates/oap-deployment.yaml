@@ -77,7 +77,7 @@ spec:
 {{ toYaml .Values.oap.tolerations | indent 8 }}
 {{- end }}
       initContainers:
-        {{- if hasPrefix .Values.oap.storageType "elasticsearch" }}
+        {{- if hasPrefix "elasticsearch" .Values.oap.storageType }}
         {{- include "skywalking.containers.wait-for-es" . | nindent 6 }}
         {{- end }}
       containers:
