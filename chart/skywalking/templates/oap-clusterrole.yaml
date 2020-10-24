@@ -25,7 +25,7 @@ metadata:
     heritage: "{{ .Release.Service }}"
 rules:
 - apiGroups: [""]
-  resources: ["pods"]
+  resources: ["pods", "endpoints"]
   verbs: ["get", "watch", "list"]
 - apiGroups: ["extensions"]
   resources: ["deployments", "replicasets"]
