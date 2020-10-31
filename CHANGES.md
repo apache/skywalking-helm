@@ -2,6 +2,15 @@ Changes by Version
 ==================
 Release Notes.
 
+4.0.0
+------------------
+
+#### Features
+- Allow overriding configurations files under /skywalking/config
+- Unify the usages of different SkyWalking versions 
+- Add Values for init container in case of using private regestry
+- Add `services`, `endpoints` resources in ClusterRole
+
 3.1.0
 ------------------
 
