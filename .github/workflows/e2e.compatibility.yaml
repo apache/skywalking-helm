@@ -18,6 +18,8 @@ name: Test Compatibility
 
 on:
   pull_request:
+    path:
+      - '!**.md'
 
 env:
   ISTIO_VERSION: 1.7.1
