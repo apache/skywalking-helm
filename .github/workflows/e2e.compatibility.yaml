@@ -46,7 +46,7 @@ jobs:
           repository: apache/skywalking
           submodules: true
           path: main
-          ref: c95a9134925cbe8101dc72dbaca38269eb3dc3b1
+          ref: 5ff81cfaed414161e4a311d7f6cc810771a21503
 
       - name: Prepare envrionment
         run: bash ${SCRIPTS_DIR}/pre.sh
