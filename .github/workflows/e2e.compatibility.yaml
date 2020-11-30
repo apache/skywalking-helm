@@ -34,8 +34,6 @@ jobs:
       matrix:
         tag:
           - 8.2.0-es6
-          - 8.1.0-es6
-          - 8.0.1-es6
     env:
       TAG: ${{ matrix.tag }}
     name: ${{ matrix.tag }}
@@ -46,7 +44,7 @@ jobs:
           repository: apache/skywalking
           submodules: true
           path: main
-          ref: 5ff81cfaed414161e4a311d7f6cc810771a21503
+          ref: b26598b5d53a34feeb59af7e7f5f0e3bf1f58d99
 
       - name: Prepare envrionment
         run: bash ${SCRIPTS_DIR}/pre.sh
