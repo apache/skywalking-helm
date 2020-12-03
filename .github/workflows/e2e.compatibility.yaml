@@ -33,7 +33,7 @@ jobs:
     strategy:
       matrix:
         tag:
-          - 8.2.0-es6
+          - 8.3.0-es6
     env:
       TAG: ${{ matrix.tag }}
     name: ${{ matrix.tag }}
