@@ -43,7 +43,7 @@ jobs:
           repository: apache/skywalking
           submodules: true
           path: main
-          ref: c95a9134925cbe8101dc72dbaca38269eb3dc3b1
+          ref: 5e4b16cbfc96f80bd86eb6a98ddcf60f0959c9b1
 
       - uses: actions/cache@v2
         with:
