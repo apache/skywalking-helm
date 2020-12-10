@@ -20,7 +20,7 @@ kind: adapter
 metadata:
   name: skywalking-adapter
 spec:
-  description:
+  description: "skywaling-adapter"
   session_based: false
   templates:
     - metric
