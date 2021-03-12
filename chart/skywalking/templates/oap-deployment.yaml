@@ -76,6 +76,10 @@ spec:
       tolerations:
 {{ toYaml .Values.oap.tolerations | indent 8 }}
 {{- end }}
+{{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | indent 8 }}
+{{- end }}
       initContainers:
         {{- if hasPrefix "elasticsearch" .Values.oap.storageType }}
         {{- include "skywalking.containers.wait-for-es" . | nindent 6 }}
