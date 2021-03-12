@@ -35,6 +35,25 @@ spec:
         component: "{{ template "skywalking.fullname" . }}-job"
         release: {{ .Release.Name }}
     spec:
+      {{- if .Values.esInit.nodeAffinity }}
+      affinity:
+      {{- end }}
+      {{- with .Values.esInit.nodeAffinity }}
+        nodeAffinity:
+{{ toYaml . | indent 10 }}
+      {{- end }}
+{{- if .Values.esInit.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.esInit.nodeSelector | indent 8 }}
+{{- end }}
+{{- if .Values.esInit.tolerations }}
+      tolerations:
+{{ toYaml .Values.esInit.tolerations | indent 8 }}
+{{- end }}
+{{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | indent 8 }}
+{{- end }}
       restartPolicy: Never
       initContainers:
         {{- include "skywalking.containers.wait-for-es" . | nindent 6 }}

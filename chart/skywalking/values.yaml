@@ -20,6 +20,8 @@
 serviceAccounts:
   oap:
 
+imagePullSecrets: []
+
 initContainer:
   image: busybox
   tag: '1.30'
@@ -75,6 +77,9 @@ ui:
     pullPolicy: IfNotPresent
   # podAnnotations:
   #   example: oap-foo
+  nodeAffinity: {}
+  nodeSelector: {}
+  tolerations: []
   ingress:
     enabled: false
     annotations: {}
@@ -107,6 +112,11 @@ ui:
     annotations: {}
     ## Limit load balancer source ips to list of CIDRs (where available)
     # loadBalancerSourceRanges: []
+
+esInit:
+  nodeAffinity: {}
+  nodeSelector: {}
+  tolerations: []
 
 elasticsearch:
   enabled: true
