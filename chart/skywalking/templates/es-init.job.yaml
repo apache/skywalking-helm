@@ -91,3 +91,17 @@ spec:
           value: {{ $value | quote }}
         {{- end }}
 {{- end}}
+        volumeMounts:
+          {{- if (.Files.Glob "files/conf.d/oap/**") }}
+            {{ range $path, $bytes := .Files.Glob "files/conf.d/oap/**" }}
+            - name: skywalking-oap-override
+              mountPath: {{ print "/skywalking/config/" ($path | replace "files/conf.d/oap/" "") }}
+              subPath: {{ $path | replace "files/conf.d/oap/" "" | b64enc | replace "=" "-" }}
+            {{- end }}
+            {{- end }}
+      volumes:
+        {{- if (.Files.Glob "files/conf.d/oap/**") }}
+        - name: skywalking-oap-override
+          configMap:
+            name: {{ template "skywalking.fullname" . }}-oap-cm-override
+        {{- end }}
