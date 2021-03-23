@@ -97,6 +97,10 @@ ui:
     # clusterIP: None
     externalPort: 80
     internalPort: 8080
+    ## nodePort is the port on each node on which this service is exposed when type=NodePort
+    ## Default: auto-allocated port if not specified. 30080 is just an example
+    ##
+    # nodePort: 30080
     ## External IP addresses of service
     ## Default: nil
     ##
