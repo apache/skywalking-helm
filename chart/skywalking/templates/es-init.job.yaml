@@ -35,6 +35,7 @@ spec:
         component: "{{ template "skywalking.fullname" . }}-job"
         release: {{ .Release.Name }}
     spec:
+      serviceAccountName: {{ template "skywalking.serviceAccountName.oap" . }}
       {{- if .Values.esInit.nodeAffinity }}
       affinity:
       {{- end }}
