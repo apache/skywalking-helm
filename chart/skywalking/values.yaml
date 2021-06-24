@@ -38,8 +38,10 @@ oap:
     pullPolicy: IfNotPresent
   storageType: null
   ports:
+    # add more ports here if you need
     grpc: 11800
     rest: 12800
+    zabbix: 10051
   replicas: 2
   service:
     type: ClusterIP
