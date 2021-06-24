@@ -99,10 +99,10 @@ spec:
           initialDelaySeconds: 15
           periodSeconds: 20
         ports:
-        - containerPort: 11800
-          name: grpc
-        - containerPort: 12800
-          name: rest
+        {{- range $key, $value :=  .Values.oap.ports }}
+        - containerPort: {{ $value }}
+          name: {{ $key }}
+        {{- end }}
 {{- if .Values.oap.resources }}
         resources:
 {{ toYaml .Values.oap.resources | indent 10 }}
