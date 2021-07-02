@@ -33,7 +33,7 @@ oap:
   # Sync period in seconds. Defaults to 60 seconds. env: SW_CONFIG_CONFIGMAP_PERIOD
   dynamicConfigEnabled: false
   image:
-    repository: apache/skywalking-oap-server
+    repository: skywalking.docker.scarf.sh/apache/skywalking-oap-server
     tag: null  # Must be set explicitly
     pullPolicy: IfNotPresent
   storageType: null
@@ -74,7 +74,7 @@ ui:
   name: ui
   replicas: 1
   image:
-    repository: apache/skywalking-ui
+    repository: skywalking.docker.scarf.sh/apache/skywalking-ui
     tag: null  # Must be set explicitly
     pullPolicy: IfNotPresent
   # podAnnotations:
