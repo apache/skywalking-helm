@@ -45,7 +45,7 @@ The following table lists the configurable parameters of the Skywalking chart an
 | `imagePullSecrets`                                           | Image pull secrets                                                                               | `[]`                                 |
 | `oap.name`                                                   | OAP deployment name                                                                              | `oap`                                |
 | `oap.dynamicConfigEnabled`                                     | Enable oap dynamic configuration through k8s configmap                                           | `false`                              |
-| `oap.image.repository`                                       | OAP container image name                                                                         | `apache/skywalking-oap-server`       |
+| `oap.image.repository`                                       | OAP container image name                                                                         | `skywalking.docker.scarf.sh/apache/skywalking-oap-server`       |
 | `oap.image.tag`                                              | OAP container image tag                                                                          | `6.1.0`                              |
 | `oap.image.pullPolicy`                                       | OAP container image pull policy                                                                  | `IfNotPresent`                       |
 | `oap.ports.grpc`                                             | OAP grpc port for tracing or metric                                                              | `11800`                              |
@@ -62,7 +62,7 @@ The following table lists the configurable parameters of the Skywalking chart an
 | `oap.env`                                                    | OAP environment variables                                                                        | `[]`                                 |
 | `ui.name`                                                    | Web UI deployment name                                                                           | `ui`                                 |
 | `ui.replicas`                                                | Web UI k8s deployment replicas                                                                   | `1`                                  |
-| `ui.image.repository`                                        | Web UI container image name                                                                      | `apache/skywalking-ui`               |
+| `ui.image.repository`                                        | Web UI container image name                                                                      | `skywalking.docker.scarf.sh/apache/skywalking-ui`               |
 | `ui.image.tag`                                               | Web UI container image tag                                                                       | `6.1.0`                              |
 | `ui.image.pullPolicy`                                        | Web UI container image pull policy                                                               | `IfNotPresent`                       |
 | `ui.nodeAffinity`                                            | Web UI node affinity policy                                                                      | `{}`                                 |
