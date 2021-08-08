@@ -2,6 +2,17 @@ Changes by Version
 ==================
 Release Notes.
 
+4.1.0
+------------------
+
+- Add missing service account to init job.
+- Improve notes.txt and `nodePort` configuration.
+- Improve ingress compatibility.
+- Fix bug that customized config files are not loaded into es-init job.
+- Add `imagePullSecrets` and node selector.
+- Fix istio adapter description.
+- Enhancement: allow mounting binary data files.
+
 4.0.0
 ------------------
 
