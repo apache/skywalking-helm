@@ -1,7 +1,7 @@
 Apache SkyWalking Kubernetes
 ==========
 
-<img src="http://skywalking.apache.org/assets/logo.svg" alt="Sky Walking logo" height="90px" align="right" />
+<img src="https://skywalking.apache.org/assets/logo.svg" alt="Sky Walking logo" height="90px" align="right" />
 
 [![GitHub stars](https://img.shields.io/github/stars/apache/skywalking.svg?style=for-the-badge&label=Stars&logo=github)](https://github.com/apache/skywalking)
 [![Twitter Follow](https://img.shields.io/twitter/follow/asfskywalking.svg?style=for-the-badge&label=Follow&logo=twitter)](https://twitter.com/AsfSkyWalking)
@@ -9,13 +9,9 @@ Apache SkyWalking Kubernetes
 SkyWalking Kubernetes repository provides ways to install and configure SkyWalking in a Kubernetes cluster.
 The scripts are written in Helm 3.
 
-## Documentation
-
-### Chart Detailed Configuration
+# Chart Detailed Configuration
 
 Chart detailed configuration can be found at [Chart Readme](./chart/skywalking/README.md)
-
-### Deploy SkyWalking in a Kubernetes cluster
 
 There are required values that you must set explicitly when deploying SkyWalking.
 
@@ -27,20 +23,42 @@ There are required values that you must set explicitly when deploying SkyWalking
 
 You can set these required values via command line (e.g. `--set oap.image.tag=8.1.0-es6 --set oap.storageType=elasticsearch`),
 or edit them in a separate file(e.g. [`values-es6.yaml`](chart/skywalking/values-es6.yaml), [`values-es7.yaml`](chart/skywalking/values-es7.yaml))
-and use `-f <filename>` or `--values=<filename>`.
+and use `-f <filename>` or `--values=<filename>` to set them.
 
-#### Prerequisites
+# Install
 
-```shell script
-git clone https://github.com/apache/skywalking-kubernetes
-cd skywalking-kubernetes/chart
-helm repo add elastic https://helm.elastic.co
-helm dep up skywalking
+Let's set some variables for convenient use later.
+
+```shell
 export SKYWALKING_RELEASE_NAME=skywalking  # change the release name according to your scenario
-export SKYWALKING_RELEASE_NAMESPACE=default  # change the namespace according to your scenario
+export SKYWALKING_RELEASE_NAMESPACE=default  # change the namespace to where you want to install SkyWalking
 ```
 
-#### Deploy a specific version of SkyWalking & Elasticsearch
+## Install released version using Helm repository
+
+```shell
+export REPO=skywalking
+helm repo add ${REPO} https://apache.jfrog.io/artifactory/skywalking-helm                                
+helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  --set oap.image.tag=8.0.1-es6 \
+  --set oap.storageType=elasticsearch \
+  --set ui.image.tag=8.0.1 \
+  --set elasticsearch.imageTag=6.8.6
+```
+
+## Install development version using master branch
+
+This is needed **only** when you want to install from master branch.
+
+```shell script
+export REPO=chart
+git clone https://github.com/apache/skywalking-kubernetes
+cd skywalking-kubernetes
+helm repo add elastic https://helm.elastic.co
+helm dep up ${REPO}/skywalking
+```
+
+## Install a specific version of SkyWalking & Elasticsearch
 
 In theory, you can deploy all versions of SkyWalking that are >= 6.0.0-GA, by specifying the desired `oap.image.tag`/`ui.image.tag`.
 
@@ -52,7 +70,7 @@ here are some examples.
 - Deploy SkyWalking 8.0.1 & Elasticsearch 6.8.6
 
 ```shell script
-helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=8.0.1-es6 \
   --set oap.storageType=elasticsearch \
   --set ui.image.tag=8.0.1 \
@@ -61,7 +79,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NA
 
 - Deploy SkyWalking 8.1.0 & Elasticsearch 7.5.1
 ```shell script
-helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=8.1.0-es7 \
   --set oap.storageType=elasticsearch7 \
   --set ui.image.tag=8.1.0 \
@@ -71,7 +89,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NA
 - Deploy SkyWalking 6.6.0 with Elasticsearch 7
 
 ```shell script
-helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=6.6.0-es7 \
   --set oap.storageType=elasticsearch7 \
   --set ui.image.tag=6.6.0
@@ -80,7 +98,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NA
 - Deploy SkyWalking 6.5.0
 
 ```shell script
-helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=6.5.0 \
   --set oap.storageType=elasticsearch \
   --set ui.image.tag=6.5.0
@@ -88,16 +106,16 @@ helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NA
 
 **NOTE**: Please make sure the specified OAP image tag supports the specified Elasticsearch version. 
 
-#### Deploy a specific version of SkyWalking with an existing Elasticsearch
+## Install a specific version of SkyWalking with an existing Elasticsearch
 
 Modify the connection information to the existing elasticsearch cluster in file [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml).
 
 ```shell script
-helm install "${SKYWALKING_RELEASE_NAME}" skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   -f ./skywalking/values-my-es.yaml
 ```
 
-#### Customization
+## Customization
 
 - Use your own configuration files
 
