@@ -69,6 +69,11 @@ oap:
   env:
     # more env, please refer to https://hub.docker.com/r/apache/skywalking-oap-server
     # or https://github.com/apache/skywalking-docker/blob/master/6/6.4/oap/README.md#sw_telemetry
+  secretKeyRefs:
+
+  secretVolumes:
+    # - name: test
+    #   secretName: test-tls
 
 ui:
   name: ui

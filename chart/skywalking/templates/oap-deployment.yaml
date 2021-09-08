@@ -148,6 +148,13 @@ spec:
         - name: {{ $key }}
           value: {{ $value | quote }}
         {{- end }}
+        {{- range .Values.oap.secretKeyRefs }}
+        - name: {{ .name }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .secretName }}
+              key: {{ .key }}
+        {{- end }}
 
         volumeMounts:
           {{- if (.Files.Glob "files/conf.d/oap/**") }}
@@ -157,10 +164,24 @@ spec:
             subPath: {{ $path | replace "files/conf.d/oap/" "" | b64enc | replace "=" "-" }}
           {{- end }}
           {{- end }}
+          {{- range .Values.oap.secretVolumes }}
+          - name: {{ .name }}
+            readOnly: true
+            mountPath: {{ .mountPath | default "/skywalking/certs" }}
+          {{- end }}
 
       volumes:
         {{- if (.Files.Glob "files/conf.d/oap/**") }}
         - name: skywalking-oap-override
           configMap:
             name: {{ template "skywalking.fullname" . }}-oap-cm-override
+        {{- end }}
+        {{- range .Values.oap.secretVolumes }}
+        - name: {{ .name }}
+          secret:
+            secretName: {{ .secretName }}
+            {{- if .items }}
+            items:
+              {{- toYaml .items | nindent 8}}
+            {{- end }}
         {{- end }}
