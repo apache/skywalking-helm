@@ -45,7 +45,7 @@ spec:
         paths:
           - path: /{{ rest $url | join "/" }}
             backend:
-              {{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1/Ingress" }}
+              {{- if $.Capabilities.APIVersions.Has "networking.k8s.io/v1/Ingress" }}
               service:
                 name: {{ $serviceName }}
                 port:
@@ -54,7 +54,7 @@ spec:
               serviceName: {{ $serviceName }}
               servicePort: {{ $servicePort }}
               {{- end }}
-            {{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1/Ingress" }}
+            {{- if $.Capabilities.APIVersions.Has "networking.k8s.io/v1/Ingress" }}
             pathType: Prefix
             {{- end }}
     {{- end -}}
