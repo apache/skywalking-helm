@@ -182,6 +182,6 @@ spec:
             secretName: {{ .secretName }}
             {{- if .items }}
             items:
-              {{- toYaml .items | nindent 8}}
+              {{- toYaml .items | nindent 14 }}
             {{- end }}
         {{- end }}

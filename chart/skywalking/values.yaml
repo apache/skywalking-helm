@@ -72,8 +72,11 @@ oap:
   secretKeyRefs:
 
   secretVolumes:
-    # - name: test
-    #   secretName: test-tls
+#    - name: test
+#      secretName: test-tls
+#      items:
+#        - key: tls.crt
+#          path: /certs/tls.crt
 
 ui:
   name: ui

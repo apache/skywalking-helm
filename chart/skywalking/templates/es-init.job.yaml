@@ -100,12 +100,12 @@ spec:
         {{- end }}
         volumeMounts:
           {{- if (.Files.Glob "files/conf.d/oap/**") }}
-            {{ range $path, $bytes := .Files.Glob "files/conf.d/oap/**" }}
-            - name: skywalking-oap-override
-              mountPath: {{ print "/skywalking/config/" ($path | replace "files/conf.d/oap/" "") }}
-              subPath: {{ $path | replace "files/conf.d/oap/" "" | b64enc | replace "=" "-" }}
-            {{- end }}
-            {{- end }}
+          {{ range $path, $bytes := .Files.Glob "files/conf.d/oap/**" }}
+          - name: skywalking-oap-override
+            mountPath: {{ print "/skywalking/config/" ($path | replace "files/conf.d/oap/" "") }}
+            subPath: {{ $path | replace "files/conf.d/oap/" "" | b64enc | replace "=" "-" }}
+          {{- end }}
+          {{- end }}
           {{- range .Values.oap.secretVolumes }}
           - name: {{ .name }}
             readOnly: true
@@ -123,8 +123,7 @@ spec:
             secretName: {{ .secretName }}
             {{- if .items }}
             items:
-              {{- toYaml .items | nindent 8}}
+              {{- toYaml .items | nindent 14 }}
             {{- end }}
-          {{- end }}
         {{- end}}
 {{- end}}
