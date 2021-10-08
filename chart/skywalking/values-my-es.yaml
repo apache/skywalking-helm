@@ -19,12 +19,12 @@
 
 oap:
   image:
-    tag: 8.1.0-es7      # Set the right tag according to the existing Elasticsearch version
-  storageType: elasticsearch7
+    tag: 8.8.1
+  storageType: elasticsearch
 
 ui:
   image:
-    tag: 8.1.0
+    tag: 8.8.1
 
 elasticsearch:
   enabled: false
