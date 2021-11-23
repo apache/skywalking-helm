@@ -13,27 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- if not .Values.oap.envoy.als.enabled }}
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+{{- if .Values.satellite.enabled }}
+apiVersion: v1
+kind: Service
 metadata:
-  name: {{ template "skywalking.fullname" . }}
+  name: {{ template "skywalking.satellite.fullname" . }}
   labels:
     app: {{ template "skywalking.name" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: "{{ .Release.Name }}"
-    heritage: "{{ .Release.Service }}"
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: {{ template "skywalking.fullname" . }}
-subjects:
-  - kind: ServiceAccount
-    name: {{ template "skywalking.serviceAccountName.oap" . }}
-    namespace: {{ .Release.Namespace }}
-  {{- if .Values.satellite.enabled }}
-  - kind: ServiceAccount
-    name: {{ template "skywalking.serviceAccountName.satellite" . }}
-    namespace: {{ .Release.Namespace }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    component: "{{ .Values.satellite.name }}"
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+spec:
+  type: {{ .Values.satellite.service.type }}
+  ports:
+  {{- range $key, $value :=  .Values.satellite.ports }}
+  - port: {{ $value }}
+    name: {{ $key }}
   {{- end }}
+  selector:
+    app: {{ template "skywalking.name" . }}
+    component: "{{ .Values.satellite.name }}"
+    release: {{ .Release.Name }}
 {{- end }}
