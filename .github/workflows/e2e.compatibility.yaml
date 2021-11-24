@@ -18,14 +18,13 @@ name: Test Compatibility
 
 on:
   pull_request:
-  push:
     paths:
       - '!**.md'
-    branches:
-      - master
 
 env:
   ISTIO_VERSION: 1.7.1
+  SATELLITE_TAG: v4b97fd255b6459fe9d3fc4f88c0d8f682fc2a364
+  SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
 
 jobs:
   als:
@@ -59,13 +58,11 @@ jobs:
           path: satellite
           ref: 4b97fd255b6459fe9d3fc4f88c0d8f682fc2a364
 
-      - name: Build SkyWalking Satellite Docker Image
-        run: cd satellite && make docker && cd ..
-
       - name: Load SkyWalking OAP And UI Image
         run: |
           docker pull $OAP_REPO:$OAP_TAG
           docker pull $UI_REPO:$UI_TAG
+          docker pull $SATELLITE_REPO:$SATELLITE_TAG
 
       - name: Setup go
         uses: actions/setup-go@v2

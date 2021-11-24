@@ -400,7 +400,7 @@ satellite:
   podAnnotations:
     # example: oap-foo
   env:
-    # more env, please refer to https://hub.docker.com/r/apache/skywalking-satellite
+    # more env, please refer to https://skywalking.apache.org/docs/skywalking-satellite/latest/en/setup/readme/#satellite_configyaml
 
 nameOverride: ""
 fullnameOverride: ""

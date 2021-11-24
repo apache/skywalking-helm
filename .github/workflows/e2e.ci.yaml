@@ -27,11 +27,12 @@ on:
 env:
   SKIP_TEST: true
   ISTIO_VERSION: 1.7.1
-  TAG: ${{ github.sha }}
-  OAP_TAG: ${{ github.sha }}
-  OAP_REPO: skywalking/oap
-  UI_TAG: ${{ github.sha }}
-  UI_REPO: skywalking/ui
+  OAP_TAG: latest
+  OAP_REPO: ghcr.io/apache/skywalking/oap
+  UI_TAG: latest
+  UI_REPO: ghcr.io/apache/skywalking/ui
+  SATELLITE_TAG: v4b97fd255b6459fe9d3fc4f88c0d8f682fc2a364
+  SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
 
 jobs:
   als:
@@ -46,24 +47,12 @@ jobs:
           submodules: true
           path: main
           ref: 8436135dc919351a6d0ab42ff48c85e1b3104b53
-      - uses: actions/checkout@v2
-        with:
-          repository: apache/skywalking-satellite
-          submodules: true
-          path: satellite
-          ref: 4b97fd255b6459fe9d3fc4f88c0d8f682fc2a364
 
       - uses: actions/cache@v2
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
-
-      - name: Build SkyWalking OAP Docker Image
-        run: cd main && make docker && cd ..
-
-      - name: Build SkyWalking Satellite Docker Image
-        run: cd satellite && make docker && cd ..
 
       - name: Setup go
         uses: actions/setup-go@v2
