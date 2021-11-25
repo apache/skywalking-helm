@@ -45,24 +45,6 @@ jobs:
     name: als_${{ matrix.images.oap-tag }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/checkout@v2
-        with:
-          repository: apache/skywalking
-          submodules: true
-          path: main
-          ref: 8436135dc919351a6d0ab42ff48c85e1b3104b53
-      - uses: actions/checkout@v2
-        with:
-          repository: apache/skywalking-satellite
-          submodules: true
-          path: satellite
-          ref: 4b97fd255b6459fe9d3fc4f88c0d8f682fc2a364
-
-      - name: Load SkyWalking OAP And UI Image
-        run: |
-          docker pull $OAP_REPO:$OAP_TAG
-          docker pull $UI_REPO:$UI_TAG
-          docker pull $SATELLITE_REPO:$SATELLITE_TAG
 
       - name: Setup go
         uses: actions/setup-go@v2

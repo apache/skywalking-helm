@@ -49,6 +49,13 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
+Create a oap full labels value.
+*/}}
+{{- define "skywalking.oap.labels" -}}
+app={{ template "skywalking.name" . }},release={{ .Release.Name }},component={{ .Values.oap.name }}
+{{- end -}}
+
+{{/*
 Create a default fully qualified ui name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}

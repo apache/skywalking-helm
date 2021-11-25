@@ -121,7 +121,7 @@ spec:
           value: "60"
 {{- end }}
         - name: SW_CLUSTER_K8S_LABEL
-          value: "app={{ template "skywalking.name" . }},release={{ .Release.Name }},component={{ .Values.oap.name }}"
+          value: "{{ template "skywalking.oap.labels" . }}"
         - name: SKYWALKING_COLLECTOR_UID
           valueFrom:
             fieldRef:

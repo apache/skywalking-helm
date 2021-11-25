@@ -31,9 +31,4 @@ subjects:
 - kind: ServiceAccount
   name: {{ template "skywalking.serviceAccountName.oap" . }}
   namespace: {{ .Release.Namespace }}
-{{- if .Values.satellite.enabled }}
-- kind: ServiceAccount
-  name: {{ template "skywalking.serviceAccountName.satellite" . }}
-  namespace: {{ .Release.Namespace }}
-{{- end }}
 {{- end }}

@@ -107,7 +107,7 @@ spec:
         - name: SATELLITE_GRPC_CLIENT_KUBERNETES_KIND
           value: pod
         - name: SATELLITE_GRPC_CLIENT_KUBERNETES_SELECTOR_LABEL
-          value: "app={{ template "skywalking.name" . }},release={{ .Release.Name }},component={{ .Values.oap.name }}"
+          value: "{{ template "skywalking.oap.labels" . }}"
         - name: SATELLITE_GRPC_CLIENT_KUBERNETES_EXTRA_PORT_PORT
           value: "{{ .Values.oap.ports.grpc }}"
         {{- range $key, $value :=  .Values.satellite.env }}
