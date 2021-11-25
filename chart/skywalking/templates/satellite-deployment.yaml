@@ -85,9 +85,9 @@ spec:
       - name: {{ .Values.satellite.name }}
         image: {{ .Values.satellite.image.repository }}:{{ required "satellite.image.tag is required" .Values.satellite.image.tag }}
         imagePullPolicy: {{ .Values.satellite.image.pullPolicy }}
-        livenessProbe:
+        readinessProbe:
           tcpSocket:
-            port: 11800
+            port: {{ .Values.oap.ports.grpc }}
           initialDelaySeconds: 15
           periodSeconds: 20
         ports:
@@ -108,7 +108,7 @@ spec:
           value: pod
         - name: SATELLITE_GRPC_CLIENT_KUBERNETES_SELECTOR_LABEL
           value: "{{ template "skywalking.oap.labels" . }}"
-        - name: SATELLITE_GRPC_CLIENT_KUBERNETES_EXTRA_PORT_PORT
+        - name: SATELLITE_GRPC_CLIENT_KUBERNETES_EXTRA_PORT
           value: "{{ .Values.oap.ports.grpc }}"
         {{- range $key, $value :=  .Values.satellite.env }}
         - name: {{ $key }}

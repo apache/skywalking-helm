@@ -83,7 +83,7 @@ setup:
           resource: pod
           for: condition=Ready
     - name: Generate traffic
-      path: ../../main/test/e2e-v2/cases/istio/traffic-gen.yaml
+      path: traffic-gen.yaml
       wait:
         - namespace: default
           resource: pod

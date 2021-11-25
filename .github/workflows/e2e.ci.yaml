@@ -31,7 +31,7 @@ env:
   OAP_REPO: ghcr.io/apache/skywalking/oap
   UI_TAG: cef4f6dcac5b14cd67f51a64ad08052bbc046653
   UI_REPO: ghcr.io/apache/skywalking/ui
-  SATELLITE_TAG: v4b97fd255b6459fe9d3fc4f88c0d8f682fc2a364
+  SATELLITE_TAG: v64f1938e118e95b8d8f50756f666e4777ce6aca2
   SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
 
 jobs:
