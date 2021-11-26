@@ -38,7 +38,27 @@ jobs:
   als:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    name: Istio+Envoy Access Log Service
+    strategy:
+      matrix:
+        images:
+          - name: recent
+            oap-repo: ghcr.io/apache/skywalking/oap
+            oap-tag: cef4f6dcac5b14cd67f51a64ad08052bbc046653
+            ui-repo: ghcr.io/apache/skywalking/ui
+            ui-tag: cef4f6dcac5b14cd67f51a64ad08052bbc046653
+          - name: 8.6.0
+            oap-repo: skywalking.docker.scarf.sh/apache/skywalking-oap-server
+            oap-tag: 8.6.0-es6
+            ui-repo: skywalking.docker.scarf.sh/apache/skywalking-ui
+            ui-tag: 8.6.0
+    name: Istio+Envoy Access Log Service(${{ matrix.images.name }})
+    env:
+      OAP_TAG: ${{ matrix.images.oap-tag }}
+      OAP_REPO: ${{ matrix.images.oap-repo }}
+      UI_TAG: ${{ matrix.images.ui-tag }}
+      UI_REPO: ${{ matrix.images.ui-repo }}
+      SATELLITE_TAG: v64f1938e118e95b8d8f50756f666e4777ce6aca2
+      SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
     steps:
       - uses: actions/checkout@v2
 
