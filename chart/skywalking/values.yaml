@@ -373,5 +373,34 @@ elasticsearch:
 
   keystore: []
 
+satellite:
+  name: satellite
+  replicas: 1
+  enabled: false
+  image:
+    repository: skywalking.docker.scarf.sh/apache/skywalking-satellite
+    tag: null # Must be set explicitly
+    pullPolicy: IfNotPresent
+  ports:
+    grpc: 11800
+    prometheus: 1234
+  service:
+    type: ClusterIP
+  antiAffinity: "soft"
+  nodeAffinity: {}
+  nodeSelector: {}
+  tolerations: []
+  resources: {}
+    # limits:
+    #   cpu: 4
+    #   memory: 8Gi
+    # requests:
+    #   cpu: 4
+    #   memory: 4Gi
+  podAnnotations:
+    # example: oap-foo
+  env:
+    # more env, please refer to https://skywalking.apache.org/docs/skywalking-satellite/latest/en/setup/readme/#satellite_configyaml
+
 nameOverride: ""
 fullnameOverride: ""

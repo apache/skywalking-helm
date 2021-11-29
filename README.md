@@ -116,6 +116,18 @@ helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RE
   -f ./skywalking/values-my-es.yaml
 ```
 
+## Install SkyWalking with Satellite
+
+Enable the satellite as gateway, and set the satellite image tag.
+
+```shell script
+helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  --set satellite.enabled=true \
+  --set satellite.image.tag=v0.3.0
+```
+
+After satellite have been installed, you should replace the `oap` address to the `satellite` address, the address from agent or `istio`, such as `skywalking-satellite.istio-system:11800`.
+
 ## Customization
 
 - Use your own configuration files

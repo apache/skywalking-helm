@@ -27,114 +27,56 @@ on:
 env:
   SKIP_TEST: true
   ISTIO_VERSION: 1.7.1
-  TAG: ${{ github.sha }}
-  SCRIPTS_DIR: main/test/e2e-mesh/e2e-istio/scripts
-  SW_OAP_BASE_IMAGE: openjdk:8-jre-alpine
+  OAP_TAG: cef4f6dcac5b14cd67f51a64ad08052bbc046653
+  OAP_REPO: ghcr.io/apache/skywalking/oap
+  UI_TAG: cef4f6dcac5b14cd67f51a64ad08052bbc046653
+  UI_REPO: ghcr.io/apache/skywalking/ui
+  SATELLITE_TAG: v64f1938e118e95b8d8f50756f666e4777ce6aca2
+  SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
 
 jobs:
   als:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    name: Istio+Envoy Access Log Service
+    strategy:
+      matrix:
+        images:
+          - name: recent
+            oap-repo: ghcr.io/apache/skywalking/oap
+            oap-tag: cef4f6dcac5b14cd67f51a64ad08052bbc046653
+            ui-repo: ghcr.io/apache/skywalking/ui
+            ui-tag: cef4f6dcac5b14cd67f51a64ad08052bbc046653
+          - name: 8.6.0
+            oap-repo: skywalking.docker.scarf.sh/apache/skywalking-oap-server
+            oap-tag: 8.6.0-es6
+            ui-repo: skywalking.docker.scarf.sh/apache/skywalking-ui
+            ui-tag: 8.6.0
+    name: Istio+Envoy Access Log Service(${{ matrix.images.name }})
+    env:
+      OAP_TAG: ${{ matrix.images.oap-tag }}
+      OAP_REPO: ${{ matrix.images.oap-repo }}
+      UI_TAG: ${{ matrix.images.ui-tag }}
+      UI_REPO: ${{ matrix.images.ui-repo }}
+      SATELLITE_TAG: v64f1938e118e95b8d8f50756f666e4777ce6aca2
+      SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/checkout@v2
+
+      - name: Setup go
+        uses: actions/setup-go@v2
         with:
-          repository: apache/skywalking
-          submodules: true
-          path: main
-          ref: 6228d450e1b0792dd9875ad68984c89c81ece742
-
-      - uses: actions/cache@v2
+          go-version: '1.16'
+      - name: Run E2E Test
+        uses: apache/skywalking-infra-e2e@45584853d6f660102c523b1e9cb5815d12ae55d3
         with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
-
-      - name: Build Docker Image
-        run: cd main && make docker && cd ..
-
-      - name: Prepare envrionment
-        run: bash ${SCRIPTS_DIR}/pre.sh
-
-      - name: Install Minikube
-        run: bash ${SCRIPTS_DIR}/minikube.sh start
-
-      - name: Install Istio
-        run: bash ${SCRIPTS_DIR}/istio.sh --set profile=demo --set meshConfig.defaultConfig.envoyAccessLogService.address=skywalking-oap.istio-system:11800 --set meshConfig.enableEnvoyAccessLogService=true
-
-      - name: Install SkyWalking
-        run: |
-          cd chart
-          helm dep up skywalking
-          helm -n istio-system install skywalking skywalking \
-               --set fullnameOverride=skywalking \
-               --set elasticsearch.replicas=1 \
-               --set elasticsearch.minimumMasterNodes=1 \
-               --set oap.env.SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS=k8s-mesh \
-               --set oap.env.SW_ENVOY_METRIC_ALS_TCP_ANALYSIS=k8s-mesh \
-               --set oap.env.K8S_SERVICE_NAME_RULE='e2e::${service.metadata.name}' \
-               --set oap.envoy.als.enabled=true \
-               --set oap.replicas=1 \
-               --set ui.image.repository=skywalking/ui \
-               --set ui.image.tag=$TAG \
-               --set oap.image.repository=skywalking/oap \
-               --set oap.image.tag=$TAG \
-               --set oap.storageType=elasticsearch
-          kubectl -n istio-system get pods
-
-          sleep 3
-          kubectl -n istio-system wait --for=condition=available deployments/skywalking-oap --timeout=1200s
-          kubectl get pods -A -o wide --show-labels
-          kubectl get services -A -o wide
-
-      - name: Deploy demo services
-        run: |
-          bash ${SCRIPTS_DIR}/demo.sh
-          # Enable TCP services
-          kubectl apply -f https://raw.githubusercontent.com/istio/istio/$ISTIO_VERSION/samples/bookinfo/platform/kube/bookinfo-ratings-v2.yaml
-          kubectl apply -f https://raw.githubusercontent.com/istio/istio/$ISTIO_VERSION/samples/bookinfo/platform/kube/bookinfo-db.yaml
-          kubectl apply -f https://raw.githubusercontent.com/istio/istio/$ISTIO_VERSION/samples/bookinfo/networking/destination-rule-all.yaml
-          kubectl apply -f https://raw.githubusercontent.com/istio/istio/$ISTIO_VERSION/samples/bookinfo/networking/virtual-service-ratings-db.yaml
-
-      - name: Cluster Info
+          e2e-file: $GITHUB_WORKSPACE/test/e2e/e2e.yaml
+      - uses: actions/upload-artifact@v2
         if: ${{ failure() }}
-        run: |
-          df -h
-          minikube logs
-          minikube status
+        name: Upload Logs
+        with:
+          name: logs
+          path: "${{ env.SW_INFRA_E2E_LOG_DIR }}"
 
-      - name: Set up Minikube tunnel
-        run: |
-          mkdir /tmp/minikube-tunnel
-          minikube tunnel > /tmp/minikube-tunnel/a.log &
-          export POD_NAME=$(kubectl get pods -n istio-system -l "app=skywalking,release=skywalking,component=ui" -o jsonpath="{.items[0].metadata.name}")
-          echo $POD_NAME
-          kubectl -n istio-system port-forward $POD_NAME 8080:8080 > /tmp/minikube-tunnel/b.log &
-
-      - name: Run E2E test
-        run: |
-          export GATEWAY_HOST=$(minikube ip)
-          export GATEWAY_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')
-          export WEBAPP_HOST=127.0.0.1
-          export WEBAPP_PORT=8080
-
-          cd main
-          ./mvnw -q -DskipTests install
-          ./mvnw -q -f apm-application-toolkit -DskipTests -am install
-          SW_VERSION=$(./mvnw -q -DforceStdout -N org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version)
-          ./mvnw -q --batch-mode -f test/e2e/pom.xml -am -DfailIfNoTests=false -Dsw.version=${SW_VERSION} verify -Dit.test=org.apache.skywalking.e2e.mesh.ALSE2E
-
-      - name: Logs
-        if: ${{ failure() }}
-        run: |
-          kubectl -n istio-system logs --tail=10000 -l "app=skywalking,release=skywalking,component=ui"
-          kubectl -n istio-system logs --tail=10000 -l "app=skywalking,release=skywalking,component=oap"
-          cat /tmp/minikube-tunnel/*
-
-      - name: Clean up
-        if: ${{ always() }}
-        run: minikube delete
 
   build:
     runs-on: ubuntu-latest
