@@ -119,7 +119,7 @@ spec:
           {{- if (.Files.Glob "files/conf.d/satellite/**") }}
           {{ range $path, $bytes := .Files.Glob "files/conf.d/satellite/**" }}
           - name: skywalking-satellite-override
-            mountPath: {{ print "/skywalking/config/" ($path | replace "files/conf.d/satellite/" "") }}
+            mountPath: {{ print "/skywalking/configs/" ($path | replace "files/conf.d/satellite/" "") }}
             subPath: {{ $path | replace "files/conf.d/satellite/" "" | b64enc | replace "=" "-" }}
           {{- end }}
           {{- end }}
