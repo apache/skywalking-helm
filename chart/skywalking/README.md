@@ -149,7 +149,7 @@ The following table lists the configurable parameters of the Skywalking chart an
 | `satellite.replicas`                        | Satellite k8s deployment replicas                                                                   | `1`                                 |
 | `satellite.enabled`                         | Is enable Satellite                                                                                 | `false`                             |
 | `satellite.image.repository`                | Satellite container image name                                                                      | `skywalking.docker.scarf.sh/apache/skywalking-satellite`            |
-| `satellite.image.tag`                       | Satellite container image tag                                                                       | `v0.3.0`                            |
+| `satellite.image.tag`                       | Satellite container image tag                                                                       | `v0.4.0`                            |
 | `satellite.image.pullPolicy`                | Satellite container image pull policy                                                               | `IfNotPresent`                      |
 | `satellite.antiAffinity`                    | Satellite anti-affinity policy                                                                      | `soft`                              |
 | `satellite.nodeAffinity`                    | Satellite node affinity policy                                                                      | `{}`                                |

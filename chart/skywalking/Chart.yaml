@@ -16,7 +16,7 @@
 apiVersion: v2
 name: skywalking
 home: https://skywalking.apache.org
-version: 4.1.0
+version: 4.2.0
 description: Apache SkyWalking APM System
 icon: https://raw.githubusercontent.com/apache/skywalking-kubernetes/master/logo/sw-logo-for-chart.jpg
 sources:
