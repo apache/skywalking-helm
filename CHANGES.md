@@ -2,6 +2,15 @@ Changes by Version
 ==================
 Release Notes.
 
+4.2.0
+------------------
+
+- Fix Can't evaluate field Capabilities in type interface{}.
+- Update the document let that all docker images use the latest version.
+- Fix missing `nodes` resource permission when the OAP using `k8s-mesh` analyzer.
+- Fix bug that customized config files are not loaded into es-init job.
+- Add skywalking satellite support.
+
 4.1.0
 ------------------
 
