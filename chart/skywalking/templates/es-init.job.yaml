@@ -15,7 +15,7 @@
 
 # https://docs.sentry.io/server/installation/docker/#running-migrations
 
-{{- if hasPrefix "elasticsearch" .Values.oap.storageType }}
+{{- if contains "elasticsearch" .Values.oap.storageType }}
 apiVersion: batch/v1
 kind: Job
 metadata:
