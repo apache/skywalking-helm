@@ -17,11 +17,11 @@ There are required values that you must set explicitly when deploying SkyWalking
 
 | name | description | example |
 | ---- | ----------- | ------- |
-| `oap.image.tag` | the OAP docker image tag | `8.8.1` |
+| `oap.image.tag` | the OAP docker image tag | `9.1.0` |
 | `oap.storageType` | the storage type of the OAP | `elasticsearch`, `postgresql`, etc. |
-| `ui.image.tag` | the UI docker image tag | `8.8.1` |
+| `ui.image.tag` | the UI docker image tag | `9.1.0` |
 
-You can set these required values via command line (e.g. `--set oap.image.tag=8.8.1 --set oap.storageType=elasticsearch`),
+You can set these required values via command line (e.g. `--set oap.image.tag=9.1.0 --set oap.storageType=elasticsearch`),
 or edit them in a separate file(e.g. [`values.yaml`](chart/skywalking/values-es6.yaml), [`values-es7.yaml`](chart/skywalking/values-es7.yaml))
 and use `-f <filename>` or `--values=<filename>` to set them.
 
@@ -38,11 +38,11 @@ export SKYWALKING_RELEASE_NAMESPACE=default  # change the namespace to where you
 
 ```shell
 export REPO=skywalking
-helm repo add ${REPO} https://apache.jfrog.io/artifactory/skywalking-helm                                
+helm repo add ${REPO} https://apache.jfrog.io/artifactory/skywalking-helm
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=8.8.1 \
+  --set oap.image.tag=9.1.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=8.8.1 \
+  --set ui.image.tag=9.1.0 \
   --set elasticsearch.imageTag=6.8.6
 ```
 
@@ -65,26 +65,26 @@ In theory, you can deploy all versions of SkyWalking that are >= 6.0.0-GA, by sp
 Please note that some configurations that are added in the later versions of SkyWalking may not work in earlier versions, and thus if you
 specify those configurations, they may take no effect.
 
-here are some examples. 
+here are some examples.
 
-- Deploy SkyWalking 8.8.1 & Elasticsearch 6.8.6
+- Deploy SkyWalking 9.1.0 & Elasticsearch 6.8.6
 
 ```shell script
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=8.8.1 \
+  --set oap.image.tag=9.1.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=8.8.1 \
+  --set ui.image.tag=9.1.0 \
   --set elasticsearch.imageTag=6.8.6
 ```
 
-- Deploy SkyWalking 8.8.1 & Elasticsearch 7.5.1
+- Deploy SkyWalking 9.1.0 & Elasticsearch 7.5.1
 ```shell script
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=8.8.1 \
+  --set oap.image.tag=9.1.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=8.8.1 \
+  --set ui.image.tag=9.1.0 \
   --set elasticsearch.imageTag=7.5.1
-``` 
+```
 
 - Deploy SkyWalking 6.6.0 with Elasticsearch 7
 
