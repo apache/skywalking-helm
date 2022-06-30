@@ -37,6 +37,7 @@ oap:
     tag: null  # Must be set explicitly
     pullPolicy: IfNotPresent
   storageType: null
+  initEs: true # Whether need to initial ES
   ports:
     # add more ports here if you need, for example
     # zabbix: 10051

@@ -45,6 +45,7 @@ The following table lists the configurable parameters of the Skywalking chart an
 | `imagePullSecrets`                                           | Image pull secrets                                                                               | `[]`                                 |
 | `oap.name`                                                   | OAP deployment name                                                                              | `oap`                                |
 | `oap.dynamicConfigEnabled`                                     | Enable oap dynamic configuration through k8s configmap                                           | `false`                              |
+| `oap.initEs`                                                 | Need to initial ElasticSearch                                                                    | `true`                              |
 | `oap.image.repository`                                       | OAP container image name                                                                         | `skywalking.docker.scarf.sh/apache/skywalking-oap-server`       |
 | `oap.image.tag`                                              | OAP container image tag                                                                          | `6.1.0`                              |
 | `oap.image.pullPolicy`                                       | OAP container image pull policy                                                                  | `IfNotPresent`                       |
