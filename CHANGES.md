@@ -2,6 +2,13 @@ Changes by Version
 ==================
 Release Notes.
 
+4.3.0
+------------------
+
+- Remove Istio adapter.
+- Add `.Values.oap.initEs` to work with ElasticSearch init job.
+- Add "pods/log" to OAP so on-demand Pod log can work.
+
 4.2.0
 ------------------
 
@@ -27,7 +34,7 @@ Release Notes.
 
 #### Features
 - Allow overriding configurations files under /skywalking/config
-- Unify the usages of different SkyWalking versions 
+- Unify the usages of different SkyWalking versions
 - Add Values for init container in case of using private regestry
 - Add `services`, `endpoints` resources in ClusterRole
 
@@ -47,7 +54,7 @@ Release Notes.
 #### Features
 - Support SkyWalking 8.0.1
 
-##### Note: 
+##### Note:
 - 8.0.0 image is not suitable as chart image, ISSUE: https://github.com/apache/skywalking/issues/4953
 
 2.0.0
