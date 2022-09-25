@@ -52,6 +52,50 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
 ```shell
 export REPO=skywalking
 helm repo add ${REPO} https://apache.jfrog.io/artifactory/skywalking-helm
+## Install development version of Skywalking using master branch
+
+This is needed **only** when you want to install Skywalking from master branch.
+
+```shell script
+export REPO=chart
+git clone https://github.com/apache/skywalking-kubernetes
+cd skywalking-kubernetes
+helm repo add elastic https://helm.elastic.co
+helm dep up ${REPO}/skywalking
+```
+
+## Install development version of Skywalking-SWCK using master branch
+
+This is needed **only** when you want to install Skywalking-SWCK from master branch. 
+
+Before installing Skywalking-SWCK, you have to install [cert-manager](https://cert-manager.io/) at first.
+
+```shell script
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
+```
+
+Then install the Skywalking-SWCK as follows.
+
+```shell script
+export REPO=chart
+git clone https://github.com/apache/skywalking-kubernetes
+cd skywalking-kubernetes
+helm -n skywalking-swck-system install skywalking-swck ${REPO}/skywalking-swck \
+                       --create-namespace
+```
+
+## Install a specific version of SkyWalking & Elasticsearch
+
+In theory, you can deploy all versions of SkyWalking that are >= 6.0.0-GA, by specifying the desired `oap.image.tag`/`ui.image.tag`.
+
+Please note that some configurations that are added in the later versions of SkyWalking may not work in earlier versions, and thus if you
+specify those configurations, they may take no effect.
+
+here are some examples.
+
+- Deploy SkyWalking 9.2.0 & Elasticsearch 6.8.6
+
+```shell script
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=9.2.0 \
   --set oap.storageType=elasticsearch \

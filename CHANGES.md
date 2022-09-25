@@ -2,6 +2,11 @@ Changes by Version
 ==================
 Release Notes.
 
+4.5.0
+------------------
+
+- Add helm chart for swck v0.7.0.
+
 4.4.0
 ------------------
 
