@@ -17,9 +17,9 @@ SHELL = /bin/bash -eo pipefail
 
 CHART_DIR = chart/skywalking
 VERSION = $(shell cat ${CHART_DIR}/Chart.yaml | grep -p '^version: ' | awk '{print $$2}')
-CHART_NAME = skywalking-${VERSION}
+CHART_NAME = $(shell cat ${CHART_DIR}/Chart.yaml | grep -p '^name: ' | awk '{print $$2}')
 
-RELEASE_SRC = skywalking-kubernetes-${VERSION}-src
+RELEASE_SRC = ${CHART_NAME}-${VERSION}-src
 
 prepare:
 	cp -R NOTICE ${CHART_DIR}/NOTICE
@@ -37,9 +37,9 @@ clean:
 	rm -rf ${CHART_DIR}/LICENSE \
 	rm -rf ${CHART_DIR}/Chart.lock \
 	rm -rf ${CHART_DIR}/charts \
-	rm -rf ${CHART_NAME}.tgz \
-	rm -rf ${CHART_NAME}.tgz.asc \
-	rm -rf ${CHART_NAME}.tgz.sha512 \
+	rm -rf ${CHART_NAME}-${VERSION}.tgz \
+	rm -rf ${CHART_NAME}-${VERSION}.tgz.asc \
+	rm -rf ${CHART_NAME}-${VERSION}.tgz.sha512 \
 	rm -rf ${RELEASE_SRC}.tgz \
 	rm -rf ${RELEASE_SRC}.tgz.asc \
 	rm -rf ${RELEASE_SRC}.tgz.sha512
@@ -57,5 +57,8 @@ release-src:
 release: release-src package
 	gpg --batch --yes --armor --detach-sig $(RELEASE_SRC).tgz
 	shasum -a 512 $(RELEASE_SRC).tgz > $(RELEASE_SRC).tgz.sha512
-	gpg --batch --yes --armor --detach-sig $(CHART_NAME).tgz
-	shasum -a 512 $(CHART_NAME).tgz > $(CHART_NAME).tgz.sha512
+	gpg --batch --yes --armor --detach-sig $(CHART_NAME)-$(VERSION).tgz
+	shasum -a 512 $(CHART_NAME)-$(VERSION).tgz > $(CHART_NAME)-$(VERSION).tgz.sha512
+
+publish: package
+	helm push ${CHART_NAME}-${VERSION}.tgz oci://registry-1.docker.io/apache

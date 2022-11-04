@@ -14,10 +14,10 @@
 # limitations under the License.
 
 apiVersion: v2
-name: skywalking
+name: skywalking-helm
 home: https://skywalking.apache.org
 version: 4.3.0
-description: Apache SkyWalking APM System
+description: Helm Chart for Apache SkyWalking
 icon: https://raw.githubusercontent.com/apache/skywalking-kubernetes/master/logo/sw-logo-for-chart.jpg
 sources:
   - https://github.com/apache/skywalking-kubernetes
