@@ -15,7 +15,6 @@
 
 # https://docs.sentry.io/server/installation/docker/#running-migrations
 
-{{- if and .Values.oap.initEs (contains "elasticsearch" .Values.oap.storageType) }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -26,6 +25,9 @@ metadata:
     component: "{{ template "skywalking.fullname" . }}-job"
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "1"
 spec:
   template:
     metadata:
@@ -105,4 +107,3 @@ spec:
           configMap:
             name: {{ template "skywalking.fullname" . }}-oap-cm-override
         {{- end }}
-{{- end}}

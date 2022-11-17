@@ -19,7 +19,6 @@ There are required values that you must set explicitly when deploying SkyWalking
 | ---- | ----------- | ------- |
 | `oap.image.tag` | the OAP docker image tag | `9.2.0` |
 | `oap.storageType` | the storage type of the OAP | `elasticsearch`, `postgresql`, etc. |
-| `oap.initEs`   | need to initial ElasticSearch  | `true`, `false` |
 | `ui.image.tag` | the UI docker image tag | `9.2.0` |
 
 You can set these required values via command line (e.g. `--set oap.image.tag=9.2.0 --set oap.storageType=elasticsearch`),
