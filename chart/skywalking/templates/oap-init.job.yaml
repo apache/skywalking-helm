@@ -18,7 +18,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ .Release.Name }}-es-init"
+  name: "{{ .Release.Name }}-oap-init"
   labels:
     app: {{ template "skywalking.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
@@ -31,27 +31,27 @@ metadata:
 spec:
   template:
     metadata:
-      name: "{{ .Release.Name }}-es-init"
+      name: "{{ .Release.Name }}-oap-init"
       labels:
         app: {{ template "skywalking.name" . }}
         component: "{{ template "skywalking.fullname" . }}-job"
         release: {{ .Release.Name }}
     spec:
       serviceAccountName: {{ template "skywalking.serviceAccountName.oap" . }}
-      {{- if .Values.esInit.nodeAffinity }}
+      {{- if .Values.oapInit.nodeAffinity }}
       affinity:
       {{- end }}
-      {{- with .Values.esInit.nodeAffinity }}
+      {{- with .Values.oapInit.nodeAffinity }}
         nodeAffinity:
 {{ toYaml . | indent 10 }}
       {{- end }}
-{{- if .Values.esInit.nodeSelector }}
+{{- if .Values.oapInit.nodeSelector }}
       nodeSelector:
-{{ toYaml .Values.esInit.nodeSelector | indent 8 }}
+{{ toYaml .Values.oapInit.nodeSelector | indent 8 }}
 {{- end }}
-{{- if .Values.esInit.tolerations }}
+{{- if .Values.oapInit.tolerations }}
       tolerations:
-{{ toYaml .Values.esInit.tolerations | indent 8 }}
+{{ toYaml .Values.oapInit.tolerations | indent 8 }}
 {{- end }}
 {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -59,7 +59,7 @@ spec:
 {{- end }}
       restartPolicy: Never
       initContainers:
-        {{- include "skywalking.containers.wait-for-es" . | nindent 6 }}
+        {{- include "skywalking.containers.wait-for-storage" . | nindent 6 }}
       containers:
       - name: {{ .Values.oap.name }}
         image: {{ .Values.oap.image.repository }}:{{ required "oap.image.tag is required" .Values.oap.image.tag }}
@@ -71,24 +71,7 @@ spec:
         env:
         - name: JAVA_OPTS
           value: "{{ .Values.oap.javaOpts }} -Dmode=init"
-        - name: SW_STORAGE
-          value: {{ required "oap.storageType is required" .Values.oap.storageType }}
-        - name: SW_STORAGE_ES_CLUSTER_NODES
-{{- if .Values.elasticsearch.enabled }}
-          value: "{{ .Values.elasticsearch.clusterName }}-{{ .Values.elasticsearch.nodeGroup }}:{{ .Values.elasticsearch.httpPort }}"
-{{- else }}
-          value: "{{ .Values.elasticsearch.config.host }}:{{ .Values.elasticsearch.config.port.http }}"
-{{- end }}
-{{- if not .Values.elasticsearch.enabled }}
-        {{- if .Values.elasticsearch.config.user }}
-        - name: SW_ES_USER
-          value: "{{ .Values.elasticsearch.config.user }}"
-        {{- end }}
-        {{- if .Values.elasticsearch.config.password }}
-        - name: SW_ES_PASSWORD
-          value: "{{ .Values.elasticsearch.config.password }}"
-        {{- end }}
-{{- end }}
+        {{- include "skywalking.oap.envs.storage" . | nindent 8 }}
         {{- range $key, $value :=  .Values.oap.env }}
         - name: {{ $key }}
           value: {{ $value | quote }}
