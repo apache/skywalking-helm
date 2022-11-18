@@ -117,7 +117,7 @@ ui:
     ## Limit load balancer source ips to list of CIDRs (where available)
     # loadBalancerSourceRanges: []
 
-esInit:
+oapInit:
   nodeAffinity: {}
   nodeSelector: {}
   tolerations: []
@@ -370,6 +370,24 @@ elasticsearch:
     enabled: true
 
   keystore: []
+
+postgresql:
+  enabled: false # Whether to start a demo postgresql deployment, don't use this for production.
+  config:
+    # The hostname of your own postgresql service, this only takes effect when postgresql.enabled is false.
+    host: postgresql-service.your-awesome-company.com
+  auth:
+    username: postgres
+    password: "123456"
+    database: skywalking
+  containerPorts:
+    postgresql: 5432
+  primary:
+    persistence:
+      enabled: false
+  readReplicas:
+    persistence:
+      enabled: false
 
 satellite:
   name: satellite
