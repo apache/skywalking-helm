@@ -46,11 +46,6 @@ jobs:
             oap-tag: cef4f6dcac5b14cd67f51a64ad08052bbc046653
             ui-repo: ghcr.io/apache/skywalking/ui
             ui-tag: cef4f6dcac5b14cd67f51a64ad08052bbc046653
-          - name: 8.6.0
-            oap-repo: skywalking.docker.scarf.sh/apache/skywalking-oap-server
-            oap-tag: 8.6.0-es6
-            ui-repo: skywalking.docker.scarf.sh/apache/skywalking-ui
-            ui-tag: 8.6.0
     name: Istio+Envoy Access Log Service(${{ matrix.images.name }})
     env:
       OAP_TAG: ${{ matrix.images.oap-tag }}
