@@ -31,7 +31,7 @@ maintainers:
 
 dependencies:
   - name: elasticsearch
-    version: ~7.5.1
+    version: ~7.17.1
     repository: https://helm.elastic.co/
     condition: elasticsearch.enabled
   - name: postgresql
