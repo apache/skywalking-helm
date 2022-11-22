@@ -42,10 +42,8 @@ setup:
       command: bash test/e2e/setup-e2e-shell/install.sh helm
     - name: Install SkyWalking
       command: |
-        cd chart
-        mkdir -p skywalking/files/conf.d/oap/ && cp ../test/e2e/metadata-service-mapping.yaml skywalking/files/conf.d/oap/metadata-service-mapping.yaml
-        helm dep up skywalking
-        helm -n istio-system install skywalking skywalking \
+        helm dep up chart/skywalking
+        helm -n istio-system install skywalking chart/skywalking \
                        --set fullnameOverride=skywalking \
                        --set elasticsearch.replicas=1 \
                        --set elasticsearch.minimumMasterNodes=1 \
@@ -61,7 +59,8 @@ setup:
                        --set oap.storageType=elasticsearch \
                        --set satellite.enabled=true \
                        --set satellite.image.repository=$SATELLITE_REPO \
-                       --set satellite.image.tag=$SATELLITE_TAG
+                       --set satellite.image.tag=$SATELLITE_TAG \
+                       -f test/e2e/values.yaml
       wait:
         - namespace: istio-system
           resource: deployments/skywalking-oap
