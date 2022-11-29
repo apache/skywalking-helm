@@ -109,10 +109,10 @@ After satellite have been installed, you should replace the `oap` address to the
 
 ## Customization
 
-- Use your own configuration files
+- Override configuration files
 
-Put your own configuration files according to [the overridable files](chart/skywalking/files/conf.d/README.md) under the
-working directory, `files/conf.d`, they will override the counterparts in the Docker image.
+You can override the configuration files for OAP or Satellite by adding configuration section `oap.config` and `satellite.config`,
+check [the examples](chart/skywalking/values.yaml), search keyword `config: {}`.
 
 - Pass environment variables to OAP
 
