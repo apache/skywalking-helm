@@ -57,6 +57,16 @@ oap:
     # requests:
     #   cpu: 8
     #   memory: 4Gi
+  livenessProbe: {}
+    # tcpSocket:
+    #   port: 12800
+    # initialDelaySeconds: 15
+    # periodSeconds: 20
+  readinessProbe: {}
+    # tcpSocket:
+    #   port: 12800
+    # initialDelaySeconds: 15
+    # periodSeconds: 20
   # podAnnotations:
   #   example: oap-foo
   envoy:
