@@ -43,6 +43,11 @@ spec:
         {{- end }}
     spec:
       serviceAccountName: {{ template "skywalking.serviceAccountName.satellite" . }}
+      {{- with .Values.satellite.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
       affinity:
       {{- if eq .Values.satellite.antiAffinity "hard" }}
         podAntiAffinity:

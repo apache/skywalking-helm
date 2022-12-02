@@ -41,6 +41,11 @@ spec:
 {{ toYaml .Values.ui.podAnnotations | indent 8 }}
         {{- end }}
     spec:
+      {{- with .Values.ui.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
       affinity:
       {{- with .Values.ui.nodeAffinity }}
         nodeAffinity:

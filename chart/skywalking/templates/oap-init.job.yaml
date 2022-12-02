@@ -38,6 +38,10 @@ spec:
         release: {{ .Release.Name }}
     spec:
       serviceAccountName: {{ template "skywalking.serviceAccountName.oap" . }}
+      {{- with .Values.oap.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- if .Values.oapInit.nodeAffinity }}
       affinity:
       {{- end }}

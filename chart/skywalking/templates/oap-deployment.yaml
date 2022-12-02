@@ -42,6 +42,10 @@ spec:
         {{- end }}
     spec:
       serviceAccountName: {{ template "skywalking.serviceAccountName.oap" . }}
+      {{- with .Values.oap.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       affinity:
       {{- if eq .Values.oap.antiAffinity "hard" }}
         podAntiAffinity:

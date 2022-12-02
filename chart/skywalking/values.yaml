@@ -59,6 +59,10 @@ oap:
     #   memory: 4Gi
   # podAnnotations:
   #   example: oap-foo
+  securityContext: {}
+    # runAsUser: 1000
+    # runAsGroup: 1000
+    # fsGroup: 1000
   envoy:
     als:
       enabled: false
@@ -132,6 +136,10 @@ ui:
     annotations: {}
     ## Limit load balancer source ips to list of CIDRs (where available)
     # loadBalancerSourceRanges: []
+  securityContext: {}
+    # runAsUser: 1000
+    # runAsGroup: 1000
+    # fsGroup: 1000
 
 oapInit:
   nodeAffinity: {}
@@ -433,7 +441,10 @@ satellite:
   config: {}
     # satellite_config.yaml: |
     #   key: val
-
+  securityContext: {}
+    # runAsUser: 1000
+    # runAsGroup: 1000
+    # fsGroup: 1000
 
 nameOverride: ""
 fullnameOverride: ""
