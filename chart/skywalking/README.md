@@ -62,6 +62,7 @@ The following table lists the configurable parameters of the Skywalking chart an
 | `oap.readinessProbe`                                         | Configuration fields for the [readinessProbe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/) | `tcpSocket.port: 12800` <br> `initialDelaySeconds: 15` <br> `periodSeconds: 20`
 | `oap.envoy.als.enabled`                                      | Open envoy als                                                                                   | `false`                              |
 | `oap.env`                                                    | OAP environment variables                                                                        | `[]`                                 |
+| `oap.securityContext`                                        | Allows you to set the [securityContext](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod) for the pod | `fsGroup: 1000`<br>`runAsUser: 1000`   |
 | `ui.name`                                                    | Web UI deployment name                                                                           | `ui`                                 |
 | `ui.replicas`                                                | Web UI k8s deployment replicas                                                                   | `1`                                  |
 | `ui.image.repository`                                        | Web UI container image name                                                                      | `skywalking.docker.scarf.sh/apache/skywalking-ui`               |
@@ -82,6 +83,7 @@ The following table lists the configurable parameters of the Skywalking chart an
 | `ui.service.loadBalancerIP`                                  | Load Balancer IP address                                                                         | `nil`                                |
 | `ui.service.annotations`                                     | Kubernetes service annotations                                                                   | `{}`                                 |
 | `ui.service.loadBalancerSourceRanges`                        | Limit load balancer source IPs to list of CIDRs (where available))                               | `[]`                                 |
+| `ui.securityContext`                                         | Allows you to set the [securityContext](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod) for the pod | `fsGroup: 1000`<br>`runAsUser: 1000`   |
 | `oapInit.nodeAffinity`                                       | OAP init job node affinity policy                                                                | `{}`                                 |
 | `oapInit.nodeSelector`                                       | OAP init job labels for master pod assignment                                                    | `{}`                                 |
 | `oapInit.tolerations`                                        | OAP init job tolerations                                                                         | `[]`                                 |
@@ -163,6 +165,7 @@ The following table lists the configurable parameters of the Skywalking chart an
 | `satellite.resources`                       | Satellite node resources requests & limits                                                          | `{} - cpu limit must be an integer` |
 | `satellite.podAnnotations`                  | Configurable [annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) applied to all Satellite pods                                                                                                                                                                               | `{}`                                                                                                                      |
 | `satellite.env`                             | Satellite environment variables                                                                     | `[]`                                |
+| `satellite.securityContext`                 | Allows you to set the [securityContext](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod) for the pod | `fsGroup: 1000`<br>`runAsUser: 1000`   |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
