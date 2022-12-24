@@ -17,12 +17,16 @@ limitations under the License.
 
 ************************************************************************
 *                                                                      *
-*               SkyWalking-SWCK Helm Chart by SkyWalking Team          *
+*            Skywalking Adapter Helm Chart by SkyWalking Team          *
 *                                                                      *
 ************************************************************************
 
 Thank you for installing {{ .Chart.Name }}.
 
-Your release is named {{ .Release.Name }}.
+Your release is named {{ .Release.Name }} in the namespace {{ .Release.Namespace }}.
 
-Learn more, please visit https://github.com/apache/skywalking-swck/tree/master/docs
+To get all info about the release, try:
+
+  $ helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}   # get all deployment yaml files
+
+Learn more details, please visit https://github.com/apache/skywalking-swck/tree/master/adapter

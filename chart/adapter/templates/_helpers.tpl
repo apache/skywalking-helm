@@ -18,7 +18,7 @@ limitations under the License.
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "skywalking-swck.name" -}}
+{{- define "adapter.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -27,7 +27,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "skywalking-swck.fullname" -}}
+{{- define "adapter.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -43,16 +43,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "skywalking-swck.chart" -}}
+{{- define "adapter.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "skywalking-swck.labels" -}}
-helm.sh/chart: {{ include "skywalking-swck.chart" . }}
-{{ include "skywalking-swck.selectorLabels" . }}
+{{- define "adapter.labels" -}}
+helm.sh/chart: {{ include "adapter.chart" . }}
+{{ include "adapter.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -62,8 +62,8 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "skywalking-swck.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "skywalking-swck.name" . }}
+{{- define "adapter.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "adapter.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 

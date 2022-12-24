@@ -26,22 +26,26 @@ setup:
         - namespace: cert-manager
           resource: pod
           for: condition=Ready
-    - name: Install operator and adapter
+    - name: Install adapter
       command: |
-        helm -n skywalking-swck-system install skywalking-swck chart/skywalking-swck \
+        helm install adapter chart/adapter --namespace=skywalking-custom-metrics-system \
                        --create-namespace \
                        --set fullnameOverride=skywalking-swck \
-                       --set adapter.enabled=true \
-                       --set adapter.namespace=skywalking-custom-metrics-system \
-                       --set adapter.oap.service.name=skywalking-system-oap \
-                       --set adapter.oap.service.namespace=skywalking-system \
-                       --set adapter.oap.service.port=12800
+                       --set oap.service.name=skywalking-system-oap \
+                       --set oap.service.namespace=skywalking-system \
+                       --set oap.service.port=12800
+      wait:
+        - namespace: skywalking-custom-metrics-system
+          resource: deployment/skywalking-swck-adapter
+          for: condition=Available       
+    - name: Install operator
+      command: |
+        helm install operator chart/operator --namespace=skywalking-swck-system \
+                       --create-namespace \
+                       --set fullnameOverride=skywalking-swck
       wait:
         - namespace: skywalking-swck-system
           resource: deployment/skywalking-swck-operator
-          for: condition=Available
-        - namespace: skywalking-custom-metrics-system
-          resource: deployment/skywalking-swck-adapter
           for: condition=Available
     - name: Setup oapserver and ui
       command: |
@@ -79,9 +83,9 @@ verify:
   # verify with retry strategy
   retry:
     # max retry count
-    count: 10
+    count: 20
     # the interval between two attempts, e.g. 10s, 1m.
-    interval: 10s
+    interval: 20s
   cases:
     - query: swctl --display yaml --base-url=http://${service_skywalking_system_oap_host}:${service_skywalking_system_oap_12800}/graphql metrics linear --name service_cpm --service-name Your_ApplicationName | yq e 'to_entries' -
       expected: ../expected/hpa-metrics.yaml

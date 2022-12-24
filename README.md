@@ -64,24 +64,40 @@ helm repo add elastic https://helm.elastic.co
 helm dep up ${REPO}/skywalking
 ```
 
-## Install development version of Skywalking-SWCK using master branch
+## Install development version of SWCK Adapter using master branch
 
-This is needed **only** when you want to install Skywalking-SWCK from master branch. 
+This is needed **only** when you want to install [SWCK Adapter](https://github.com/apache/skywalking-swck/tree/master/adapter) from master branch. 
 
-Before installing Skywalking-SWCK, you have to install [cert-manager](https://cert-manager.io/) at first.
+SWCK Adapter chart detailed configuration can be found at [Adapter Chart Readme](./chart/adapter/README.md).
 
-```shell script
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
-```
-
-Then install the Skywalking-SWCK as follows.
+You can install the Adapter with the default configuration as follows.
 
 ```shell script
 export REPO=chart
 git clone https://github.com/apache/skywalking-kubernetes
 cd skywalking-kubernetes
-helm -n skywalking-swck-system install skywalking-swck ${REPO}/skywalking-swck \
-                       --create-namespace
+helm -n skywalking-custom-metrics-system install adapter ${REPO}/adapter --create-namespace
+```
+
+## Install development version of SWCK Operator using master branch
+
+This is needed **only** when you want to install [SWCK Operator](https://github.com/apache/skywalking-swck/tree/master/operator) from master branch. 
+
+Before installing Operator, you have to install [cert-manager](https://cert-manager.io/) at first.
+
+```shell script
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
+```
+
+SWCK Operator chart detailed configuration can be found at [Operator Chart Readme](./chart/operator/README.md).
+
+You can install the Operator with the default configuration as follows.
+
+```shell script
+export REPO=chart
+git clone https://github.com/apache/skywalking-kubernetes
+cd skywalking-kubernetes
+helm -n skywalking-swck-system install operator ${REPO}/operator
 ```
 
 ## Install a specific version of SkyWalking & Elasticsearch

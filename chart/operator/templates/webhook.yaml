@@ -13,18 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+{{- if .Values.webhook.enable }}
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "skywalking-swck.fullname" . }}-serving-cert
-  name: {{ include "skywalking-swck.fullname" . }}-mutating-webhook-configuration
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . }}-serving-cert
+  name: {{ include "operator.fullname" . }}-mutating-webhook-configuration
 webhooks:
 - admissionReviewVersions:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /mutate-v1-pod
   failurePolicy: Fail
@@ -47,7 +48,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /mutate-operator-skywalking-apache-org-v1alpha1-fetcher
   failurePolicy: Fail
@@ -67,7 +68,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /mutate-operator-skywalking-apache-org-v1alpha1-javaagent
   failurePolicy: Fail
@@ -87,7 +88,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /mutate-operator-skywalking-apache-org-v1alpha1-oapserver
   failurePolicy: Fail
@@ -107,7 +108,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /mutate-operator-skywalking-apache-org-v1alpha1-oapserverconfig
   failurePolicy: Fail
@@ -127,7 +128,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /mutate-operator-skywalking-apache-org-v1alpha1-oapserverdynamicconfig
   failurePolicy: Fail
@@ -147,7 +148,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /mutate-operator-skywalking-apache-org-v1alpha1-satellite
   failurePolicy: Fail
@@ -167,7 +168,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /mutate-operator-skywalking-apache-org-v1alpha1-storage
   failurePolicy: Fail
@@ -187,7 +188,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /mutate-operator-skywalking-apache-org-v1alpha1-swagent
   failurePolicy: Fail
@@ -207,7 +208,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /mutate-operator-skywalking-apache-org-v1alpha1-ui
   failurePolicy: Fail
@@ -228,14 +229,14 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "skywalking-swck.fullname" . }}-serving-cert
-  name: {{ include "skywalking-swck.fullname" . }}-validating-webhook-configuration
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . }}-serving-cert
+  name: {{ include "operator.fullname" . }}-validating-webhook-configuration
 webhooks:
 - admissionReviewVersions:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /validate-operator-skywalking-apache-org-v1alpha1-fetcher
   failurePolicy: Fail
@@ -255,7 +256,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /validate-operator-skywalking-apache-org-v1alpha1-javaagent
   failurePolicy: Fail
@@ -275,7 +276,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /validate-operator-skywalking-apache-org-v1alpha1-oapserver
   failurePolicy: Fail
@@ -295,7 +296,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /validate-operator-skywalking-apache-org-v1alpha1-oapserverconfig
   failurePolicy: Fail
@@ -315,7 +316,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /validate-operator-skywalking-apache-org-v1alpha1-oapserverdynamicconfig
   failurePolicy: Fail
@@ -335,7 +336,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /validate-operator-skywalking-apache-org-v1alpha1-satellite
   failurePolicy: Fail
@@ -355,7 +356,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /validate-operator-skywalking-apache-org-v1alpha1-storage
   failurePolicy: Fail
@@ -375,7 +376,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /validate-operator-skywalking-apache-org-v1alpha1-swagent
   failurePolicy: Fail
@@ -395,7 +396,7 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /validate-operator-skywalking-apache-org-v1alpha1-ui
   failurePolicy: Fail
@@ -411,3 +412,4 @@ webhooks:
     resources:
     - uis
   sideEffects: None
+{{- end }}

@@ -13,31 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: Service
+{{- if .Values.webhook.enable }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
 metadata:
-  labels:
-    control-plane: {{ include "skywalking-swck.fullname" . }}-controller-manager
-  name: {{ include "skywalking-swck.fullname" . }}-controller-manager-metrics-service
+  name: {{ include "operator.fullname" . }}-serving-cert
   namespace: {{ .Release.Namespace }}
 spec:
-  ports:
-  - name: https
-    port: {{ .Values.operator.metrics.service.port }}
-    protocol: TCP
-    targetPort: https
-  selector:
-    control-plane: {{ include "skywalking-swck.fullname" . }}-controller-manager
+  dnsNames:
+  - {{ include "operator.fullname" . }}-webhook-service.{{ .Release.Namespace }}.svc
+  - {{ include "operator.fullname" . }}-webhook-service.{{ .Release.Namespace }}.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: {{ include "operator.fullname" . }}-selfsigned-issuer
+  secretName: {{ include "operator.fullname" . }}-controller-manager-cert
 ---
-apiVersion: v1
-kind: Service
+apiVersion: cert-manager.io/v1
+kind: Issuer
 metadata:
-  name: {{ include "skywalking-swck.fullname" . }}-webhook-service
+  name: {{ include "operator.fullname" . }}-selfsigned-issuer
   namespace: {{ .Release.Namespace }}
 spec:
-  ports:
-  - port: 443
-    protocol: TCP
-    targetPort: {{ .Values.operator.webhook.service.port }}
-  selector:
-    control-plane: {{ include "skywalking-swck.fullname" . }}-controller-manager
+  selfSigned: {}
+{{- end }}

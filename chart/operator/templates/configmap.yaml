@@ -15,7 +15,7 @@
 
 kind: ConfigMap
 metadata:
-  name: {{ include "skywalking-swck.fullname" . }}-manager-config
+  name: {{ include "operator.fullname" . }}-manager-config
   namespace: {{ .Release.Namespace }}
 apiVersion: v1
 data:
@@ -41,10 +41,14 @@ data:
     kind: ControllerManagerConfig
     health:
       healthProbeBindAddress: :8081
+    {{- if .Values.webhook.enable }}
     metrics:
       bindAddress: 127.0.0.1:8080
+    {{- end }}
+    {{- if .Values.webhook.enable }}
     webhook:
-      port: {{ .Values.operator.webhook.service.port }}
+      port: {{ .Values.webhook.service.port }}
+    {{- end }}
     leaderElection:
       leaderElect: true
       resourceName: v1alpha1.swck.skywalking.apache.org

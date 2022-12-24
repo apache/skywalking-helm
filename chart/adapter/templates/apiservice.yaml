@@ -13,16 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v2
-name: skywalking-swck
-home: https://github.com/apache/skywalking-swck
-version: 0.7.0
-description: Apache SkyWalking Cloud on Kubernetes
-icon: https://raw.githubusercontent.com/apache/skywalking-kubernetes/master/logo/sw-logo-for-chart.jpg
-sources:
-  - https://github.com/apache/skywalking-kubernetes
-maintainers:
-  - name: hanahmily
-    email: hanahmily@gmail.com
-  - name: dashanji
-    email: dashanjic@gmail.com
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1beta1.external.metrics.k8s.io
+spec:
+  group: external.metrics.k8s.io
+  groupPriorityMinimum: 100
+  insecureSkipTLSVerify: true
+  service:
+    name: {{ include "adapter.fullname" . }}-custom-metrics-apiserver
+    namespace: {{ .Release.Namespace }}
+  version: v1beta1
+  versionPriority: 100

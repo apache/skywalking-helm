@@ -13,17 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- if .Values.adapter.enabled }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ .Values.adapter.serviceAccountName }}
-  namespace: {{ .Values.adapter.namespace }}
+  name: {{ .Values.serviceAccountName }}
+  namespace: {{ .Release.Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "skywalking-swck.fullname" . }}-custom-metrics-resource-reader
+  name: {{ include "adapter.fullname" . }}-custom-metrics-resource-reader
 rules:
 - apiGroups:
   - ""
@@ -39,7 +38,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "skywalking-swck.fullname" . }}-custom-metrics-server-resources
+  name: {{ include "adapter.fullname" . }}-custom-metrics-server-resources
 rules:
 - apiGroups:
   - custom.metrics.k8s.io
@@ -52,7 +51,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "skywalking-swck.fullname" . }}-custom-metrics-auth-reader
+  name: {{ include "adapter.fullname" . }}-custom-metrics-auth-reader
   namespace: kube-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -60,17 +59,17 @@ roleRef:
   name: extension-apiserver-authentication-reader
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.adapter.serviceAccountName }}
-  namespace: {{ .Values.adapter.namespace }}
+  name: {{ .Values.serviceAccountName }}
+  namespace: {{ .Release.Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "skywalking-swck.fullname" . }}-custom-metrics-hpa-controller
+  name: {{ include "adapter.fullname" . }}-custom-metrics-hpa-controller
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "skywalking-swck.fullname" . }}-custom-metrics-server-resources
+  name: {{ include "adapter.fullname" . }}-custom-metrics-server-resources
 subjects:
 - kind: ServiceAccount
   name: horizontal-pod-autoscaler
@@ -79,26 +78,25 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "skywalking-swck.fullname" . }}-custom-metrics-resource-reader
+  name: {{ include "adapter.fullname" . }}-custom-metrics-resource-reader
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "skywalking-swck.fullname" . }}-custom-metrics-resource-reader
+  name: {{ include "adapter.fullname" . }}-custom-metrics-resource-reader
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.adapter.serviceAccountName }}
-  namespace: {{ .Values.adapter.namespace }}
+  name: {{ .Values.serviceAccountName }}
+  namespace: {{ .Release.Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "skywalking-swck.fullname" . }}-custom-metrics-system:auth-delegator
+  name: {{ include "adapter.fullname" . }}-custom-metrics-system:auth-delegator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: system:auth-delegator
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.adapter.serviceAccountName }}
-  namespace: {{ .Values.adapter.namespace }}
-{{ end }}
+  name: {{ .Values.serviceAccountName }}
+  namespace: {{ .Release.Namespace }}
