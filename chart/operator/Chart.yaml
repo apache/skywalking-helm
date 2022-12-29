@@ -14,7 +14,7 @@
 # limitations under the License.
 
 apiVersion: v2
-name: operator
+name: skywalking-swck-operator
 home: https://github.com/apache/skywalking-swck/tree/master/operator
 version: 0.7.0
 description: Provision and maintain SkyWalking backend components
