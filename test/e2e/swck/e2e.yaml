@@ -1,0 +1,94 @@
+setup:
+  env: kind
+  file: ../kind.yaml
+  init-system-environment: ../env
+  kind:
+    expose-ports:
+      - namespace: skywalking-system
+        resource: service/demo
+        port: 8085
+      - namespace: skywalking-system
+        resource: service/skywalking-system-oap
+        port: 12800
+  steps:
+    - name: Install yq
+      command: bash test/e2e/setup-e2e-shell/install.sh yq
+    - name: Install swctl
+      command: bash test/e2e/setup-e2e-shell/install.sh swctl
+    - name: Install kubectl
+      command: bash test/e2e/setup-e2e-shell/install.sh kubectl
+    - name: Install helm
+      command: bash test/e2e/setup-e2e-shell/install.sh helm
+    - name: Install cert-manager
+      command: |
+        kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
+      wait:
+        - namespace: cert-manager
+          resource: pod
+          for: condition=Ready
+    - name: Install adapter
+      command: |
+        helm install adapter chart/adapter --namespace=skywalking-custom-metrics-system \
+                       --create-namespace \
+                       --set fullnameOverride=skywalking-swck \
+                       --set oap.service.name=skywalking-system-oap \
+                       --set oap.service.namespace=skywalking-system \
+                       --set oap.service.port=12800
+      wait:
+        - namespace: skywalking-custom-metrics-system
+          resource: deployment/skywalking-swck-adapter
+          for: condition=Available       
+    - name: Install operator
+      command: |
+        helm install operator chart/operator --namespace=skywalking-swck-system \
+                       --create-namespace \
+                       --set fullnameOverride=skywalking-swck
+      wait:
+        - namespace: skywalking-swck-system
+          resource: deployment/skywalking-swck-operator
+          for: condition=Available
+    - name: Setup oapserver and ui
+      command: |
+        kubectl create namespace skywalking-system
+        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.7.0/test/e2e/skywalking-components.yaml | grep -B20 "\-\-\-" | kubectl apply -f -
+      wait:
+        - namespace: skywalking-system
+          resource: OAPServer/skywalking-system
+          for: condition=Available
+    - name: Setup java agent demo
+      command: |
+        kubectl label namespace skywalking-system swck-injection=enabled
+        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.7.0/test/e2e/demo.yaml | sed 's/oap-service/skywalking-system-oap.skywalking-system/' | kubectl apply -f -
+      wait:
+        - namespace: skywalking-system
+          resource: deployment/demo
+          for: condition=Available
+    - name: Setup the hpa of java agent demo
+      command: |
+        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.7.0/test/e2e/hpa-demo.yaml | kubectl apply -f -
+  timeout: 20m
+
+cleanup:
+  # always never success failure
+  on: always
+
+trigger:
+  action: http
+  interval: 30s
+  times: 30
+  url: http://${service_demo_host}:${service_demo_8085}/hello
+  method: GET
+
+verify:
+  # verify with retry strategy
+  retry:
+    # max retry count
+    count: 20
+    # the interval between two attempts, e.g. 10s, 1m.
+    interval: 20s
+  cases:
+    - query: swctl --display yaml --base-url=http://${service_skywalking_system_oap_host}:${service_skywalking_system_oap_12800}/graphql metrics linear --name service_cpm --service-name Your_ApplicationName | yq e 'to_entries' -
+      expected: ../expected/hpa-metrics.yaml
+    # the trigger will do 30 times, as the hpa's value is set as 5, so the deployment's replicas will be 3(maxReplicas).
+    - query: 'kubectl get deployment demo -n skywalking-system -o jsonpath=''{.status.replicas}'' | yq e ''{"replicas": .}'' - | yq e ''to_entries'' -'
+      expected: ../expected/replicas.yaml

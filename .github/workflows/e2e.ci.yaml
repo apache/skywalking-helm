@@ -19,8 +19,8 @@ name: Test
 on:
   pull_request:
   push:
-    paths:
-      - '!**.md'
+    paths-ignore:
+      - '**.md'
     branches:
       - master
 
@@ -61,10 +61,14 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '1.16'
-      - name: Run E2E Test
+      - name: Run Skywalking E2E Test
         uses: apache/skywalking-infra-e2e@45584853d6f660102c523b1e9cb5815d12ae55d3
         with:
           e2e-file: $GITHUB_WORKSPACE/test/e2e/e2e.yaml
+      - name: Run SWCK E2E Test
+        uses: apache/skywalking-infra-e2e@afdf1cca0519d65bc480d8680b7a27f9b41fc421
+        with:
+          e2e-file: $GITHUB_WORKSPACE/test/e2e/swck/e2e.yaml
       - uses: actions/upload-artifact@v2
         if: ${{ failure() }}
         name: Upload Logs
