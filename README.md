@@ -47,6 +47,13 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   --set ui.image.tag=9.2.0
 ```
 
+## Install released version using Apache Jfrog Helm repository (<= 4.3.0)
+
+```shell
+export REPO=skywalking
+helm repo add ${REPO} https://apache.jfrog.io/artifactory/skywalking-helm
+```
+
 ## Install development version of SkyWalking using master branch
 
 This is needed **only** when you want to install SkyWalking from master branch.
@@ -57,13 +64,6 @@ git clone https://github.com/apache/skywalking-kubernetes
 cd skywalking-kubernetes
 helm repo add elastic https://helm.elastic.co
 helm dep up ${REPO}/skywalking
-```
-
-## Install released version using Apache Jfrog Helm repository (<= 4.3.0)
-
-```shell
-export REPO=skywalking
-helm repo add ${REPO} https://apache.jfrog.io/artifactory/skywalking-helm
 ```
 
 ## Install development version of SWCK Adapter using master branch
