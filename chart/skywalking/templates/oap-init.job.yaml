@@ -18,7 +18,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ .Release.Name }}-oap-init"
+  name: "{{ template "skywalking.oap.fullname" . }}-init"
   labels:
     app: {{ template "skywalking.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
