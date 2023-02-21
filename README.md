@@ -52,9 +52,11 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
 ```shell
 export REPO=skywalking
 helm repo add ${REPO} https://apache.jfrog.io/artifactory/skywalking-helm
-## Install development version of Skywalking using master branch
+```
 
-This is needed **only** when you want to install Skywalking from master branch.
+## Install development version of SkyWalking using master branch
+
+This is needed **only** when you want to install SkyWalking from master branch.
 
 ```shell script
 export REPO=chart
@@ -139,11 +141,7 @@ helm -n istio-system install skywalking \
 This is needed **only** when you want to install source codes.
 
 ```shell script
-export REPO=chart
-git clone https://github.com/apache/skywalking-kubernetes
-cd skywalking-kubernetes
-helm repo add elastic https://helm.elastic.co
-helm dep up ${REPO}/skywalking
+helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" 
 ```
 
 ## Install a specific version of SkyWalking with an existing Elasticsearch
