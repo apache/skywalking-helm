@@ -28,10 +28,6 @@ initContainer:
 
 oap:
   name: oap
-  # When 'dynamicConfigEnabled' set to true, enable oap dynamic configuration through k8s configmap，
-  # Note: The default configmap data is empty, please refer to the detailed documentation (https://github.com/apache/skywalking/blob/master/docs/en/setup/backend/dynamic-config.md)
-  # Sync period in seconds. Defaults to 60 seconds. env: SW_CONFIG_CONFIGMAP_PERIOD
-  dynamicConfigEnabled: false
   image:
     repository: skywalking.docker.scarf.sh/apache/skywalking-oap-server
     tag: null  # Must be set explicitly
@@ -96,7 +92,25 @@ oap:
     #   <Configuration status="DEBUG">
     #     <!-- ... -->
     #   </Configuration>
-
+  # When 'dynamicConfig.enabled' set to true, enable oap dynamic configuration through k8s configmap，
+  # Note: The default configmap data is empty, please refer to the detailed documentation (https://github.com/apache/skywalking/blob/master/docs/en/setup/backend/dynamic-config.md)
+  # Sync period in seconds. Defaults to 60 seconds.
+  dynamicConfig:
+    enabled: false
+    period: 60
+    config: {}
+    #  agent-analyzer.default.slowDBAccessThreshold: default:200,mongodb:50
+    #  alarm.default.alarm-settings: |
+    #   rules:
+    #     # Rule unique name, must be ended with `_rule`.
+    #     service_resp_time_rule:
+    #       metrics-name: service_resp_time
+    #       op: ">"
+    #       threshold: 1000
+    #       period: 10
+    #       count: 3
+    #       silence-period: 5
+    #       Response time of service {name} is more than 1000ms in 3 minutes of last 10 minutes.
 
 ui:
   name: ui
