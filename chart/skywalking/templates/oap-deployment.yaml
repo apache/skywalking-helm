@@ -96,8 +96,12 @@ spec:
 {{ else }}
           tcpSocket:
             port: 12800
-          initialDelaySeconds: 15
-          periodSeconds: 20
+          initialDelaySeconds: 5
+          periodSeconds: 10
+{{ end }}
+        startupProbe:
+{{- if .Values.oap.startupProbe}}
+{{ toYaml .Values.oap.startupProbe | indent 10 }}
 {{ end }}
         readinessProbe:
 {{- if .Values.oap.readinessProbe}}
@@ -105,8 +109,8 @@ spec:
 {{ else }}
           tcpSocket:
             port: 12800
-          initialDelaySeconds: 15
-          periodSeconds: 20
+          initialDelaySeconds: 5
+          periodSeconds: 10
 {{ end }}
         ports:
         {{- range $key, $value :=  .Values.oap.ports }}
