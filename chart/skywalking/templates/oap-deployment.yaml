@@ -91,27 +91,32 @@ spec:
         image: {{ .Values.oap.image.repository }}:{{ required "oap.image.tag is required" .Values.oap.image.tag }}
         imagePullPolicy: {{ .Values.oap.image.pullPolicy }}
         livenessProbe:
-{{- if .Values.oap.livenessProbe}}
+{{- if .Values.oap.livenessProbe }}
 {{ toYaml .Values.oap.livenessProbe | indent 10 }}
 {{ else }}
           tcpSocket:
             port: 12800
           initialDelaySeconds: 5
           periodSeconds: 10
-{{ end }}
+{{- end }}
         startupProbe:
-{{- if .Values.oap.startupProbe}}
+{{- if .Values.oap.startupProbe }}
 {{ toYaml .Values.oap.startupProbe | indent 10 }}
-{{ end }}
+{{ else }}
+          tcpSocket:
+            port: 12800
+          failureThreshold: 9
+          periodSeconds: 10
+{{- end }}
         readinessProbe:
-{{- if .Values.oap.readinessProbe}}
+{{- if .Values.oap.readinessProbe }}
 {{ toYaml .Values.oap.readinessProbe | indent 10 }}
 {{ else }}
           tcpSocket:
             port: 12800
           initialDelaySeconds: 5
           periodSeconds: 10
-{{ end }}
+{{- end }}
         ports:
         {{- range $key, $value :=  .Values.oap.ports }}
         - containerPort: {{ $value }}
