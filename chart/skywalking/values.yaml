@@ -56,12 +56,19 @@ oap:
   livenessProbe: {}
     # tcpSocket:
     #   port: 12800
-    # initialDelaySeconds: 15
+    # initialDelaySeconds: 5
     # periodSeconds: 20
+  startupProbe:
+  # Time to boot the applciation is set to:
+  # 9 (failureThreshold) * 10 (periodSeconds) = 90 seconds in this case.
+    tcpSocket:
+      port: 12800
+    failureThreshold: 9
+    periodSeconds: 10
   readinessProbe: {}
     # tcpSocket:
     #   port: 12800
-    # initialDelaySeconds: 15
+    # initialDelaySeconds: 5
     # periodSeconds: 20
   # podAnnotations:
   #   example: oap-foo
