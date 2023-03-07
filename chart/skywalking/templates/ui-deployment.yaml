@@ -76,4 +76,4 @@ spec:
 {{- end }}
         env:
         - name: SW_OAP_ADDRESS
-          value: http://{{ template "skywalking.oap.fullname" . }}:{{ .Values.oap.ports.rest }}
+          value: "http://{{ template "skywalking.oap.fullname" . }}:{{ .Values.oap.ports.rest }}"
