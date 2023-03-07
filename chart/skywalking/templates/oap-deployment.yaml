@@ -23,6 +23,9 @@ metadata:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
   name: {{ template "skywalking.oap.fullname" . }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "2"
 spec:
   replicas: {{ .Values.oap.replicas }}
   selector:
