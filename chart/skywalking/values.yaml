@@ -58,13 +58,13 @@ oap:
     #   port: 12800
     # initialDelaySeconds: 5
     # periodSeconds: 20
-  startupProbe:
-  # Time to boot the applciation is set to:
+  startupProbe: {}
+  # Time to boot the application is set to:
   # 9 (failureThreshold) * 10 (periodSeconds) = 90 seconds in this case.
-    tcpSocket:
-      port: 12800
-    failureThreshold: 9
-    periodSeconds: 10
+    # tcpSocket:
+    #   port: 12800
+    # failureThreshold: 9
+    # periodSeconds: 10
   readinessProbe: {}
     # tcpSocket:
     #   port: 12800
