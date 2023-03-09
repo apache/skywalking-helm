@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- if not .Values.oap.envoy.als.enabled }}
+{{- if .Values.serviceAccounts.oap.create }}
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
