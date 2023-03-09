@@ -232,7 +232,6 @@ If you want to open envoy ALS, you can do this by modifying values.yaml. default
 serviceAccounts:
   oap:
     create: true
-    useClusterRole: true
 ```
 
 When envoy als ,will give ServiceAccount clusterrole permission.
