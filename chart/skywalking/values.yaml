@@ -21,10 +21,6 @@ serviceAccounts:
   oap:
     # By default, create SkyWalking's ServiceAccount. If set to false, you also need to change `serviceAccounts.oap.name` value to a custom ServiceAccount name.
     create: true
-    # If set to false. Some functions will not be available, such as: envoy ALS, monitoring k8s(oltp)
-    # more envoy ALS, please refer to https://github.com/apache/skywalking/blob/master/docs/en/setup/envoy/als_setting.md#observe-service-mesh-through-als
-    # when needs to monitoring k8s (oltp), refer to https://skywalking.apache.org/docs/main/v9.0.0/en/setup/backend/backend-k8s-monitoring/
-    useClusterRole: true
     name: ""
 
 imagePullSecrets: []
