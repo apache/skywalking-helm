@@ -75,7 +75,11 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 Create the name of the service account to use for the oap cluster
 */}}
 {{- define "skywalking.serviceAccountName.oap" -}}
-{{ default (include "skywalking.oap.fullname" .) .Values.serviceAccounts.oap }}
+{{- if .Values.serviceAccounts.oap.create -}}
+    {{ default (include "skywalking.oap.fullname" .) .Values.serviceAccounts.oap.name }}
+{{- else -}}
+    {{ default "default" .Values.serviceAccounts.oap.name }}
+{{- end -}}
 {{- end -}}
 
 {{/*

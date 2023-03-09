@@ -13,15 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- if and .Values.oap.rbac.enabled .Values.oap.rbac.useClusterRole }}
+{{- if and .Values.serviceAccounts.oap.create .Values.serviceAccounts.oap.useClusterRole }}
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  {{- if .Values.oap.rbac.useExistingClusterRole }}
-  name: {{ .Values.oap.rbac.useExistingClusterRole }}
-  {{- else }}
   name: {{ template "skywalking.fullname" . }}
-  {{- end }}
   labels:
     app: {{ template "skywalking.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"

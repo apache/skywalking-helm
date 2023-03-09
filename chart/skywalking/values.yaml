@@ -19,6 +19,13 @@
 
 serviceAccounts:
   oap:
+    # By default, create SkyWalking's ServiceAccount. If set to false, you also need to change `serviceAccounts.oap.name` value to a custom ServiceAccount name.
+    create: true
+    # If set to false. Some functions will not be available, such as: envoy ALS, monitoring k8s(oltp)
+    # more envoy ALS, please refer to https://github.com/apache/skywalking/blob/master/docs/en/setup/envoy/als_setting.md#observe-service-mesh-through-als
+    # when needs to monitoring k8s (oltp), refer to https://skywalking.apache.org/docs/main/v9.0.0/en/setup/backend/backend-k8s-monitoring/
+    useClusterRole: true
+    name: ""
 
 imagePullSecrets: []
 
@@ -76,20 +83,6 @@ oap:
     # runAsUser: 1000
     # runAsGroup: 1000
     # fsGroup: 1000
-  rbac:
-    # If true, create & use RBAC resources
-    enabled: true
-
-    # Set to a rolename to use existing role - skipping role creating - but still doing serviceaccount and rolebinding to it, rolename set here.
-    # useExistingRole: your-existing-role
-
-    # If set to false. Some functions will not be available, such as: envoy ALS, monitoring k8s(oltp)
-    # more envoy ALS, please refer to https://github.com/apache/skywalking/blob/master/docs/en/setup/envoy/als_setting.md#observe-service-mesh-through-als
-    # when needs to monitoring k8s (oltp), refer to https://skywalking.apache.org/docs/main/v9.0.0/en/setup/backend/backend-k8s-monitoring/
-    useClusterRole: true
-
-    # Set to a clusterrolename to use existing clusterRole - Usage is similar to `useExistingRole`
-    # useExistingClusterRole: your-existing-cluster-role
   env:
     # more env, please refer to https://hub.docker.com/r/apache/skywalking-oap-server
     # or https://github.com/apache/skywalking-docker/blob/master/6/6.4/oap/README.md#sw_telemetry
