@@ -50,7 +50,6 @@ setup:
                        --set oap.env.SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS=k8s-mesh \
                        --set oap.env.SW_ENVOY_METRIC_ALS_TCP_ANALYSIS=k8s-mesh \
                        --set oap.env.K8S_SERVICE_NAME_RULE='e2e::${service.metadata.name}' \
-                       --set oap.envoy.als.enabled=true \
                        --set oap.replicas=1 \
                        --set ui.image.repository=$UI_REPO \
                        --set ui.image.tag=$UI_TAG \

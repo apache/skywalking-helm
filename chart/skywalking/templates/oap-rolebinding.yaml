@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- if not .Values.oap.envoy.als.enabled }}
+{{- if .Values.oap.rbac.enabled }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -26,7 +26,11 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
+  {{- if .Values.oap.rbac.useExistingRole }}
+  name: {{ .Values.oap.rbac.useExistingRole }}
+  {{- else }}
   name: {{ template "skywalking.fullname" . }}
+  {{- end }}
 subjects:
   - kind: ServiceAccount
     name: {{ template "skywalking.serviceAccountName.oap" . }}

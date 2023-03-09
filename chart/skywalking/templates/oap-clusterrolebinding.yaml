@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- if .Values.oap.envoy.als.enabled }}
+{{- if and .Values.oap.rbac.enabled .Values.oap.rbac.useClusterRole }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -26,7 +26,11 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
+  {{- if .Values.oap.rbac.useExistingClusterRole }}
+  name: {{ .Values.oap.rbac.useExistingClusterRole }}
+  {{- else }}
   name: {{ template "skywalking.fullname" . }}
+  {{- end }}
 subjects:
 - kind: ServiceAccount
   name: {{ template "skywalking.serviceAccountName.oap" . }}

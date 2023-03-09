@@ -76,10 +76,19 @@ oap:
     # runAsUser: 1000
     # runAsGroup: 1000
     # fsGroup: 1000
-  envoy:
-    als:
-      enabled: false
-      # more envoy ALS ,please refer to https://github.com/apache/skywalking/blob/master/docs/en/setup/envoy/als_setting.md#observe-service-mesh-through-als
+  rbac:
+    # If true, create & use RBAC resources
+    enabled: true
+
+    # Set to a rolename to use existing role - skipping role creating - but still doing serviceaccount and rolebinding to it, rolename set here.
+    # useExistingRole: your-existing-role
+
+    # If set to false. Some functions will not be available, such as: envoy ALS, oltp
+    # more envoy ALS ,please refer to https://github.com/apache/skywalking/blob/master/docs/en/setup/envoy/als_setting.md#observe-service-mesh-through-als
+    useClusterRole: true
+
+    # Set to a clusterrolename to use existing clusterRole - Usage is similar to `useExistingRole`
+    # useExistingClusterRole: your-existing-cluster-role
   env:
     # more env, please refer to https://hub.docker.com/r/apache/skywalking-oap-server
     # or https://github.com/apache/skywalking-docker/blob/master/6/6.4/oap/README.md#sw_telemetry

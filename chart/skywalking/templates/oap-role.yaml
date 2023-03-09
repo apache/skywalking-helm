@@ -13,11 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- if not .Values.oap.envoy.als.enabled }}
+{{- if .Values.oap.rbac.enabled }}
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
+  {{- if .Values.oap.rbac.useExistingRole }}
+  name: {{ .Values.oap.rbac.useExistingRole }}
+  {{- else }}
   name: {{ template "skywalking.fullname" . }}
+  {{- end }}
   labels:
     app: {{ template "skywalking.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
