@@ -23,6 +23,7 @@ on:
 
 env:
   HUB: ghcr.io/apache/skywalking-kubernetes
+  VERSION: 0.0.0-${{ github.sha }}
 
 jobs:
   publish:
@@ -32,6 +33,15 @@ jobs:
       packages: write
     timeout-minutes: 20
     name: Publish Snapshot Helm Chart
+    strategy:
+      matrix:
+        chart:
+          - path: chart/adapter
+            name: skywalking-helm-swck-adapter
+          - path: chart/operator
+            name: skywalking-helm-swck-operator
+          - path: chart/skywalking
+            name: skywalking-helm
     steps:
       - uses: actions/checkout@v3
       - name: Log in to the Container registry
@@ -40,9 +50,9 @@ jobs:
           registry: ${{ env.HUB }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Deploy Helm Chart
+      - name: Deploy SkyWalking Helm Chart
         run: |
-          sed -i "s/^version: .*/version: 0.0.0-${{ github.sha }}/" chart/skywalking/Chart.yaml
-          helm dep up chart/skywalking
-          helm package chart/skywalking
-          helm push skywalking-helm-*.tgz oci://${{ env.HUB }}
+          sed -i "s/^version: .*/version: $VERSION/" ${{ matrix.chart.path }}/Chart.yaml
+          helm dep up ${{ matrix.chart.path }}
+          helm package ${{ matrix.chart.path }}
+          helm push ${{ matrix.chart.name }}-$VERSION.tgz oci://${{ env.HUB }}
