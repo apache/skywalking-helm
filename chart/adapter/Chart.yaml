@@ -14,7 +14,7 @@
 # limitations under the License.
 
 apiVersion: v2
-name: skywalking-swck-adapter
+name: skywalking-helm-swck-adapter
 home: https://github.com/apache/skywalking-swck/tree/master/adapter
 version: 0.7.0
 description: Provide custom metrics coming from SkyWalking OAP cluster for autoscaling by Kubernetes HPA
