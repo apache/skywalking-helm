@@ -47,7 +47,7 @@ spec:
           initialDelaySeconds: 15
           periodSeconds: 20
         name: manager
-        {{- if .Values.webhook.enable }}
+        {{- if .Values.webhook.enabled }}
         ports:
         - containerPort: {{ .Values.webhook.service.port }}
           name: webhook-server
@@ -64,7 +64,7 @@ spec:
         securityContext:
           {{- toYaml .Values.securityContext | nindent 10 }}
         volumeMounts:
-        {{- if .Values.webhook.enable }}
+        {{- if .Values.webhook.enabled }}
         - mountPath: /tmp/k8s-webhook-server/serving-certs
           name: cert
           readOnly: true
@@ -73,7 +73,7 @@ spec:
           name: manager-config
           subPath: controller_manager_config.yaml
       - args:
-        {{- if .Values.metrics.enable }}
+        {{- if .Values.metrics.enabled }}
         - --secure-listen-address=0.0.0.0:{{ .Values.metrics.service.port }}
         {{- end }}
         - --upstream=http://127.0.0.1:8080/
@@ -81,7 +81,7 @@ spec:
         - --v=10
         image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
         name: kube-rbac-proxy
-        {{- if .Values.metrics.enable }}
+        {{- if .Values.metrics.enabled }}
         ports:
         - containerPort: {{ .Values.metrics.service.port }}
           name: https
@@ -92,7 +92,7 @@ spec:
       serviceAccountName: {{ include "operator.fullname" . }}-controller-manager
       terminationGracePeriodSeconds: 10
       volumes:
-      {{- if .Values.webhook.enable }}
+      {{- if .Values.webhook.enabled }}
       - name: cert
         secret:
           defaultMode: 420

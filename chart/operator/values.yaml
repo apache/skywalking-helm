@@ -27,7 +27,7 @@ image:
 securityContext:
   allowPrivilegeEscalation: false
 metrics:
-  enable: true
+  enabled: true
   service:
     port: 8443
 # install crds
@@ -36,7 +36,7 @@ crds:
 # enable webhook.
 webhook:
   # If set to false, java agent injector is disabled.
-  enable: true
+  enabled: true
   service:
     port: 9443
 resources:
@@ -51,3 +51,10 @@ resources:
     cpu: 200m
     memory: 300Mi
 affinity: {}
+
+nameOverride: ""
+fullnameOverride: ""
+
+cert-manager:
+  enabled: false
+  installCRDs: true

@@ -26,3 +26,8 @@ maintainers:
     email: hanahmily@gmail.com
   - name: dashanji
     email: dashanjic@gmail.com
+dependencies:
+  - name: cert-manager
+    version: 1.9.1
+    repository: https://charts.jetstack.io
+    condition: cert-manager.enabled

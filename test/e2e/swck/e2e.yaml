@@ -40,6 +40,7 @@ setup:
           for: condition=Available       
     - name: Install operator
       command: |
+        helm dep up chart/operator
         helm install operator chart/operator --namespace=skywalking-swck-system \
                        --create-namespace \
                        --set fullnameOverride=skywalking-swck
