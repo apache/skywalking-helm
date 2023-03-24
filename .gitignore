@@ -4,4 +4,8 @@
 .vscode
 chart/skywalking/charts/
 chart/skywalking/Chart.lock
+chart/operator/charts
+chart/operator/Chart.lock
+chart/adapter/charts
+chart/adapter/Chart.lock
 *.tgz

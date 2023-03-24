@@ -41,11 +41,11 @@ data:
     kind: ControllerManagerConfig
     health:
       healthProbeBindAddress: :8081
-    {{- if .Values.webhook.enable }}
+    {{- if .Values.webhook.enabled }}
     metrics:
       bindAddress: 127.0.0.1:8080
     {{- end }}
-    {{- if .Values.webhook.enable }}
+    {{- if .Values.webhook.enabled }}
     webhook:
       port: {{ .Values.webhook.service.port }}
     {{- end }}

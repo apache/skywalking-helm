@@ -13,12 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- if .Values.webhook.enable }}
+{{- if .Values.webhook.enabled }}
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: {{ include "operator.fullname" . }}-serving-cert
   namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "2"
 spec:
   dnsNames:
   - {{ include "operator.fullname" . }}-webhook-service.{{ .Release.Namespace }}.svc
@@ -33,6 +36,9 @@ kind: Issuer
 metadata:
   name: {{ include "operator.fullname" . }}-selfsigned-issuer
   namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "1"
 spec:
   selfSigned: {}
 {{- end }}
