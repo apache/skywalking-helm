@@ -6,6 +6,7 @@ Release Notes.
 ------------------
 
 - Add helm chart for swck v0.7.0.
+- Add `pprof` port export in satellite.
 
 4.4.0
 ------------------
