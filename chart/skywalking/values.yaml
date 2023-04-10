@@ -451,7 +451,8 @@ satellite:
   ports:
     grpc: 11800
     prometheus: 1234
-    pprof: 6060
+    # Disable the pprof port by default, only enabled it when you need to debug the satellite.
+    #pprof: 6060
   service:
     type: ClusterIP
   antiAffinity: "soft"
