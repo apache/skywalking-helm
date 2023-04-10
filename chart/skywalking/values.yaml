@@ -451,6 +451,7 @@ satellite:
   ports:
     grpc: 11800
     prometheus: 1234
+    pprof: 6060
   service:
     type: ClusterIP
   antiAffinity: "soft"
