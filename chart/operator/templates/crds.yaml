@@ -18,7 +18,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . }}-serving-cert
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . | trunc (int (sub 63 (len "-serving-cert"))) | printf "%s-serving-cert" }} 
     controller-gen.kubebuilder.io/version: v0.7.0
   name: fetchers.operator.skywalking.apache.org
 spec:
@@ -130,7 +130,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . }}-serving-cert
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . | trunc (int (sub 63 (len "-serving-cert"))) | printf "%s-serving-cert" }} 
     controller-gen.kubebuilder.io/version: v0.7.0
   name: javaagents.operator.skywalking.apache.org
 spec:
@@ -236,7 +236,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . }}-serving-cert
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . | trunc (int (sub 63 (len "-serving-cert"))) | printf "%s-serving-cert" }} 
     controller-gen.kubebuilder.io/version: v0.7.0
   name: oapserverconfigs.operator.skywalking.apache.org
 spec:
@@ -549,7 +549,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . }}-serving-cert
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . | trunc (int (sub 63 (len "-serving-cert"))) | printf "%s-serving-cert" }} 
     controller-gen.kubebuilder.io/version: v0.7.0
   name: oapservers.operator.skywalking.apache.org
 spec:
@@ -1117,7 +1117,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . }}-serving-cert
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . | trunc (int (sub 63 (len "-serving-cert"))) | printf "%s-serving-cert" }} 
     controller-gen.kubebuilder.io/version: v0.7.0
   name: satellites.operator.skywalking.apache.org
 spec:
@@ -1462,7 +1462,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . }}-serving-cert
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . | trunc (int (sub 63 (len "-serving-cert"))) | printf "%s-serving-cert" }} 
     controller-gen.kubebuilder.io/version: v0.7.0
   name: storages.operator.skywalking.apache.org
 spec:
@@ -1980,7 +1980,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . }}-serving-cert
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . | trunc (int (sub 63 (len "-serving-cert"))) | printf "%s-serving-cert" }} 
     controller-gen.kubebuilder.io/version: v0.7.0
   name: uis.operator.skywalking.apache.org
 spec:

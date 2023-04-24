@@ -17,24 +17,24 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "operator.fullname" . }}-serving-cert
+  name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-serving-cert"))) | printf "%s-serving-cert" }} 
   namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "2"
 spec:
   dnsNames:
-  - {{ include "operator.fullname" . }}-webhook-service.{{ .Release.Namespace }}.svc
-  - {{ include "operator.fullname" . }}-webhook-service.{{ .Release.Namespace }}.svc.cluster.local
+  - {{ include "operator.fullname" . | trunc (int (sub 63 (len "-webhook-service"))) | printf "%s-webhook-service" }}.{{ .Release.Namespace }}.svc
+  - {{ include "operator.fullname" . | trunc (int (sub 63 (len "-webhook-service"))) | printf "%s-webhook-service" }}.{{ .Release.Namespace }}.svc.cluster.local
   issuerRef:
     kind: Issuer
-    name: {{ include "operator.fullname" . }}-selfsigned-issuer
-  secretName: {{ include "operator.fullname" . }}-controller-manager-cert
+    name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-selfsigned-issuer"))) | printf "%s-selfsigned-issuer" }} 
+  secretName: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-controller-manager-cert"))) | printf "%s-controller-manager-cert" }} 
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: {{ include "operator.fullname" . }}-selfsigned-issuer
+  name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-selfsigned-issuer"))) | printf "%s-selfsigned-issuer" }} 
   namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade

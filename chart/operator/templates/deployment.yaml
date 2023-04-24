@@ -16,21 +16,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "operator.fullname" . }}-operator
+  name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-operator"))) | printf "%s-operator" }} 
   namespace: {{ .Release.Namespace }}
   labels:
-    control-plane: {{ include "operator.fullname" . }}-controller-manager
+    control-plane: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-controller-manager"))) | printf "%s-controller-manager" }} 
     {{- include "operator.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      control-plane: {{ include "operator.fullname" . }}-controller-manager
+      control-plane: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-controller-manager"))) | printf "%s-controller-manager" }} 
       {{- include "operator.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        control-plane: {{ include "operator.fullname" . }}-controller-manager
+        control-plane: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-controller-manager"))) | printf "%s-controller-manager" }} 
         {{- include "operator.selectorLabels" . | nindent 8 }}
     spec:
       containers:
@@ -89,17 +89,17 @@ spec:
         {{- end }}
       securityContext:
         runAsNonRoot: true
-      serviceAccountName: {{ include "operator.fullname" . }}-controller-manager
+      serviceAccountName: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-controller-manager"))) | printf "%s-controller-manager" }} 
       terminationGracePeriodSeconds: 10
       volumes:
       {{- if .Values.webhook.enabled }}
       - name: cert
         secret:
           defaultMode: 420
-          secretName: {{ include "operator.fullname" . }}-controller-manager-cert
+          secretName: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-controller-manager-cert"))) | printf "%s-controller-manager-cert" }}
       {{- end }}
       - configMap:
-          name: {{ include "operator.fullname" . }}-manager-config
+          name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-manager-config"))) | printf "%s-manager-config" }} 
         name: manager-config
       {{- with .Values.affinity }}
       affinity:

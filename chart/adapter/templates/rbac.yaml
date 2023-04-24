@@ -22,7 +22,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "adapter.fullname" . }}-custom-metrics-resource-reader
+  name: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-custom-metrics-resource-reader"))) | printf "%s-custom-metrics-resource-reader" }} 
 rules:
 - apiGroups:
   - ""
@@ -38,7 +38,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "adapter.fullname" . }}-custom-metrics-server-resources
+  name: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-custom-metrics-server-resources"))) | printf "%s-custom-metrics-server-resources" }} 
 rules:
 - apiGroups:
   - custom.metrics.k8s.io
@@ -51,7 +51,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "adapter.fullname" . }}-custom-metrics-auth-reader
+  name: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-custom-metrics-auth-reader"))) | printf "%s-custom-metrics-auth-reader" }} 
   namespace: kube-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -65,11 +65,11 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "adapter.fullname" . }}-custom-metrics-hpa-controller
+  name: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-custom-metrics-hpa-controller"))) | printf "%s-custom-metrics-hpa-controller" }} 
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "adapter.fullname" . }}-custom-metrics-server-resources
+  name: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-custom-metrics-server-resources"))) | printf "%s-custom-metrics-server-resources" }} 
 subjects:
 - kind: ServiceAccount
   name: horizontal-pod-autoscaler
@@ -78,11 +78,11 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "adapter.fullname" . }}-custom-metrics-resource-reader
+  name: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-custom-metrics-resource-reader"))) | printf "%s-custom-metrics-resource-reader" }} 
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "adapter.fullname" . }}-custom-metrics-resource-reader
+  name: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-custom-metrics-resource-reader"))) | printf "%s-custom-metrics-resource-reader" }} 
 subjects:
 - kind: ServiceAccount
   name: {{ .Values.serviceAccountName }}
@@ -91,7 +91,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "adapter.fullname" . }}-custom-metrics-system:auth-delegator
+  name: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-custom-metrics-system:auth-delegator"))) | printf "%s-custom-metrics-system:auth-delegator" }} 
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

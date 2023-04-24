@@ -15,7 +15,7 @@
 
 kind: ConfigMap
 metadata:
-  name: {{ include "operator.fullname" . }}-manager-config
+  name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-manager-config"))) | printf "%s-manager-config" }} 
   namespace: {{ .Release.Namespace }}
 apiVersion: v1
 data:
