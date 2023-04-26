@@ -17,20 +17,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: {{ include "adapter.fullname" . }}-custom-metrics-apiserver
+    app: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-custom-metrics-apiserver"))) | printf "%s-custom-metrics-apiserver" }} 
     {{- include "adapter.labels" . | nindent 4 }}
-  name: {{ include "adapter.fullname" . }}-adapter
+  name: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-adapter"))) | printf "%s-adapter" }} 
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
-      app: {{ include "adapter.fullname" . }}-custom-metrics-apiserver
+      app: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-custom-metrics-apiserver"))) | printf "%s-custom-metrics-apiserver" }} 
       {{- include "adapter.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ include "adapter.fullname" . }}-custom-metrics-apiserver
+        app: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-custom-metrics-apiserver"))) | printf "%s-custom-metrics-apiserver" }} 
         {{- include "adapter.selectorLabels" . | nindent 8 }}
       name: custom-metrics-apiserver
     spec:

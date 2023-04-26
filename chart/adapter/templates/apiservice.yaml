@@ -22,7 +22,7 @@ spec:
   groupPriorityMinimum: 100
   insecureSkipTLSVerify: true
   service:
-    name: {{ include "adapter.fullname" . }}-custom-metrics-apiserver
+    name: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-custom-metrics-apiserver"))) | printf "%s-custom-metrics-apiserver" }} 
     namespace: {{ .Release.Namespace }}
   version: v1beta1
   versionPriority: 100

@@ -7,6 +7,7 @@ Release Notes.
 
 - Add helm chart for swck v0.7.0.
 - Add `pprof` port export in satellite.
+- Trunc the resource name in swck's helm chart to no more than 63 characters.
 
 4.4.0
 ------------------
