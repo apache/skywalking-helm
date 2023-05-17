@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "operator.fullname" . }}-java-agent-configmap
+  name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-java-agent-configmap"))) | printf "%s-java-agent-configmap"  }}
   namespace: {{ .Release.Namespace }}
 data:
   agent.config: |-

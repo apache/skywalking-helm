@@ -16,7 +16,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "adapter.fullname" . }}-custom-metrics-apiserver
+  name: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-custom-metrics-apiserver"))) | printf "%s-custom-metrics-apiserver" }} 
   namespace: {{ .Release.Namespace }}
 spec:
   ports:
@@ -24,4 +24,4 @@ spec:
     port: 443
     targetPort: {{ .Values.service.port }}
   selector:
-    app: {{ include "adapter.fullname" . }}-custom-metrics-apiserver
+    app: {{ include "adapter.fullname" . | trunc (int (sub 63 (len "-custom-metrics-apiserver"))) | printf "%s-custom-metrics-apiserver" }} 
