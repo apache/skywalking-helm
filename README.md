@@ -102,7 +102,7 @@ cd skywalking-kubernetes
 helm -n skywalking-swck-system install operator ${REPO}/operator
 ```
 
-## Install a specific version of SkyWalking & Elasticsearch
+## Install a specific version of SkyWalking
 
 In theory, you can deploy all versions of SkyWalking that are >= 6.0.0-GA, by specifying the desired `oap.image.tag`/`ui.image.tag`.
 
@@ -111,13 +111,30 @@ specify those configurations, they may take no effect.
 
 here are some examples.
 
-- Deploy SkyWalking 9.2.0 & Elasticsearch 6.8.6
+- Deploy SkyWalking 9.2.0
 
 ```shell script
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=9.2.0 \
   --set oap.storageType=elasticsearch \
   --set ui.image.tag=9.2.0
+```
+
+Because ElasticSearch recommends to use the corresponding Helm Chart version of the ElasticSearch version,
+if you want to use a specific version of ElasticSearch, you have to change the ElasticSearch Helm Chart version in
+`dependencies` section in `Chart.yaml` file, which requires you to install from the source codes.
+Or you should deploy the desired ElasticSearch version first by yourself, and then deploy SkyWalking to use the
+existing ElasticSearch by setting the following section:
+
+```yaml
+elasticsearch:
+  enabled: true
+  config:               # For users of an existing elasticsearch cluster,takes effect when `elasticsearch.enabled` is false
+    port:
+      http: 9200
+    host: elasticsearch # es service on kubernetes or host
+    user: "xxx"         # [optional]
+    password: "xxx"     # [optional]
 ```
 
 ## Install development version using ghcr.io Helm repository
