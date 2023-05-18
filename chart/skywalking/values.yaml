@@ -178,7 +178,7 @@ oapInit:
   tolerations: []
 
 elasticsearch:
-  enabled: true
+  enabled: false
   config:               # For users of an existing elasticsearch cluster,takes effect when `elasticsearch.enabled` is false
     port:
       http: 9200
@@ -423,7 +423,7 @@ elasticsearch:
   keystore: []
 
 postgresql:
-  enabled: false # Whether to start a demo postgresql deployment, don't use this for production.
+  enabled: true # Whether to start a demo postgresql deployment, don't use this for production.
   config:
     # The hostname of your own postgresql service, this only takes effect when postgresql.enabled is false.
     host: postgresql-service.your-awesome-company.com
