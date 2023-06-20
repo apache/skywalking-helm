@@ -30,4 +30,7 @@ rules:
 - apiGroups: ["extensions"]
   resources: ["deployments", "replicasets"]
   verbs: ["get", "watch", "list"]
+- apiGroups: ["networking.istio.io"]
+  resources: ["serviceentries"]
+  verbs: ["get", "watch", "list"]
 {{- end }}
