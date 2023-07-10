@@ -16,7 +16,7 @@
 apiVersion: v2
 name: skywalking-helm
 home: https://skywalking.apache.org
-version: 4.4.0
+version: 4.5.0
 description: Helm Chart for Apache SkyWalking
 icon: https://raw.githubusercontent.com/apache/skywalking-kubernetes/master/logo/sw-logo-for-chart.jpg
 sources:
