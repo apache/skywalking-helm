@@ -115,6 +115,16 @@ Create the name of the service account to use for the satellite cluster
         echo "Waiting for postgresql..."
         sleep 3
       done
+{{- else if eq .Values.oap.storageType "banyandb" -}}
+{{- $banyandbHost := print (include "skywalking.name" .) "-banyandb-grpc" -}}
+{{- if not .Values.banyandb.enabled -}}
+{{- $banyandbHost = .Values.banyandb.config.host -}}
+{{- end }}
+- name: wait-for-banyandb
+  image: anipos/grpc-health-probe:latest
+  imagePullPolicy: IfNotPresent
+  command: ["/bin/grpc_health_probe", "-addr={{ $banyandbHost }}:{{ .Values.banyandb.config.port }}"]
+
 {{- end }}
 {{- end -}}
 
@@ -150,5 +160,14 @@ Create the name of the service account to use for the satellite cluster
   value: "{{ .Values.postgresql.auth.username }}"
 - name: SW_DATA_SOURCE_PASSWORD
   value: "{{ .Values.postgresql.auth.password }}"
+{{- else if eq .Values.oap.storageType "banyandb" }}
+{{- $banyandbHost := print (include "skywalking.name" .) "-banyandb-grpc" -}}
+{{- if not .Values.banyandb.enabled -}}
+{{- $banyandbHost = .Values.banyandb.config.host -}}
+{{- end }}
+- name: SW_STORAGE_BANYANDB_HOST
+  value: "{{ $banyandbHost }}"
+- name: SW_STORAGE_BANYANDB_PORT
+  value: "{{ .Values.banyandb.config.port }}"
 {{- end }}
 {{- end -}}

@@ -14,6 +14,7 @@ Release Notes.
 - Use startup probe option for first initialization of application
 - Allow setting env for UI deployment.
 - Add Istio ServiceEntry permissions.
+- Integrate BanyanDB as storage solution
 
 4.4.0
 ------------------

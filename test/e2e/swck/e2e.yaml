@@ -51,7 +51,7 @@ setup:
     - name: Setup oapserver and ui
       command: |
         kubectl create namespace skywalking-system
-        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.7.0/test/e2e/skywalking-components.yaml | grep -B20 "\-\-\-" | kubectl apply -f -
+        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.7.1/test/e2e/skywalking-components.yaml | grep -B20 "\-\-\-" | kubectl apply -f -
       wait:
         - namespace: skywalking-system
           resource: OAPServer/skywalking-system
@@ -59,14 +59,14 @@ setup:
     - name: Setup java agent demo
       command: |
         kubectl label namespace skywalking-system swck-injection=enabled
-        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.7.0/test/e2e/demo.yaml | sed 's/oap-service/skywalking-system-oap.skywalking-system/' | kubectl apply -f -
+        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.7.1/test/e2e/demo.yaml | sed 's/oap-service/skywalking-system-oap.skywalking-system/' | kubectl apply -f -
       wait:
         - namespace: skywalking-system
           resource: deployment/demo
           for: condition=Available
     - name: Setup the hpa of java agent demo
       command: |
-        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.7.0/test/e2e/hpa-demo.yaml | kubectl apply -f -
+        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.7.1/test/e2e/hpa-demo.yaml | kubectl apply -f -
   timeout: 20m
 
 cleanup:

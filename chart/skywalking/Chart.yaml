@@ -38,3 +38,7 @@ dependencies:
     version: 12.1.2
     repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
     condition: postgresql.enabled
+  - name: banyandb
+    version: 0.1.0
+    repository: file://../banyandb
+    condition: banyandb.enabled

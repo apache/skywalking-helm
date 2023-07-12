@@ -440,6 +440,12 @@ postgresql:
     persistence:
       enabled: false
 
+banyandb:
+  enabled: false
+  config:
+    host: banyandb-grpc
+    port: 17912
+
 satellite:
   name: satellite
   replicas: 1

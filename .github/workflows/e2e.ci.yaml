@@ -27,11 +27,11 @@ on:
 env:
   SKIP_TEST: true
   ISTIO_VERSION: 1.7.1
-  OAP_TAG: cef4f6dcac5b14cd67f51a64ad08052bbc046653
+  OAP_TAG: 14fbd975be077082ed6fa604e05479dd9af0d995
   OAP_REPO: ghcr.io/apache/skywalking/oap
-  UI_TAG: cef4f6dcac5b14cd67f51a64ad08052bbc046653
+  UI_TAG: 14fbd975be077082ed6fa604e05479dd9af0d995
   UI_REPO: ghcr.io/apache/skywalking/ui
-  SATELLITE_TAG: v64f1938e118e95b8d8f50756f666e4777ce6aca2
+  SATELLITE_TAG: v35bfaff6352b4dc351a706772796a1f79b651c14
   SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
 
 jobs:
@@ -43,24 +43,25 @@ jobs:
         images:
           - name: recent
             oap-repo: ghcr.io/apache/skywalking/oap
-            oap-tag: cef4f6dcac5b14cd67f51a64ad08052bbc046653
+            oap-tag: 14fbd975be077082ed6fa604e05479dd9af0d995
             ui-repo: ghcr.io/apache/skywalking/ui
-            ui-tag: cef4f6dcac5b14cd67f51a64ad08052bbc046653
+            ui-tag: 14fbd975be077082ed6fa604e05479dd9af0d995
     name: Istio+Envoy Access Log Service(${{ matrix.images.name }})
     env:
       OAP_TAG: ${{ matrix.images.oap-tag }}
       OAP_REPO: ${{ matrix.images.oap-repo }}
       UI_TAG: ${{ matrix.images.ui-tag }}
       UI_REPO: ${{ matrix.images.ui-repo }}
-      SATELLITE_TAG: v64f1938e118e95b8d8f50756f666e4777ce6aca2
+      SATELLITE_TAG: v35bfaff6352b4dc351a706772796a1f79b651c14
       SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: '1.16'
+          go-version: '1.20'
+      - run: go version
       - name: Run Skywalking E2E Test
         uses: apache/skywalking-infra-e2e@45584853d6f660102c523b1e9cb5815d12ae55d3
         with:

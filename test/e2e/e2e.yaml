@@ -45,8 +45,6 @@ setup:
         helm dep up chart/skywalking
         helm -n istio-system install skywalking chart/skywalking \
                        --set fullnameOverride=skywalking \
-                       --set elasticsearch.replicas=1 \
-                       --set elasticsearch.minimumMasterNodes=1 \
                        --set oap.env.SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS=k8s-mesh \
                        --set oap.env.SW_ENVOY_METRIC_ALS_TCP_ANALYSIS=k8s-mesh \
                        --set oap.env.K8S_SERVICE_NAME_RULE='e2e::${service.metadata.name}' \
@@ -55,7 +53,9 @@ setup:
                        --set ui.image.tag=$UI_TAG \
                        --set oap.image.repository=$OAP_REPO \
                        --set oap.image.tag=$OAP_TAG \
-                       --set oap.storageType=elasticsearch \
+                       --set oap.storageType=banyandb \
+                       --set elasticsearch.enabled=false \
+                       --set banyandb.enabled=true \
                        --set satellite.enabled=true \
                        --set satellite.image.repository=$SATELLITE_REPO \
                        --set satellite.image.tag=$SATELLITE_TAG \
@@ -161,14 +161,14 @@ verify:
     # service endpoint metrics: e2e::productpage GET:/productpage
     - query: swctl --display yaml --base-url=http://${service_skywalking_ui_host}:${service_skywalking_ui_80}/graphql metrics linear --name=endpoint_cpm --endpoint-name=GET:/productpage --service-name=e2e::productpage |yq e 'to_entries' -
       expected: expected/metrics-has-value.yml
-    - query: swctl --display yaml --base-url=http://${service_skywalking_ui_host}:${service_skywalking_ui_80}/graphql metrics linear --name=endpoint_avg --endpoint-name=GET:/productpage --service-name=e2e::productpage |yq e 'to_entries' -
+    - query: swctl --display yaml --base-url=http://${service_skywalking_ui_host}:${service_skywalking_ui_80}/graphql metrics linear --name=endpoint_resp_time --endpoint-name=GET:/productpage --service-name=e2e::productpage |yq e 'to_entries' -
       expected: expected/metrics-has-value.yml
     - query: swctl --display yaml --base-url=http://${service_skywalking_ui_host}:${service_skywalking_ui_80}/graphql metrics linear --name=endpoint_sla --endpoint-name=GET:/productpage --service-name=e2e::productpage |yq e 'to_entries' -
       expected: expected/metrics-has-value.yml
     # service endpoint metrics: e2e::reviews GET:/reviews/0
     - query: swctl --display yaml --base-url=http://${service_skywalking_ui_host}:${service_skywalking_ui_80}/graphql metrics linear --name=endpoint_cpm --endpoint-name=GET:/reviews/0 --service-name=e2e::reviews |yq e 'to_entries' -
       expected: expected/metrics-has-value.yml
-    - query: swctl --display yaml --base-url=http://${service_skywalking_ui_host}:${service_skywalking_ui_80}/graphql metrics linear --name=endpoint_avg --endpoint-name=GET:/reviews/0 --service-name=e2e::reviews |yq e 'to_entries' -
+    - query: swctl --display yaml --base-url=http://${service_skywalking_ui_host}:${service_skywalking_ui_80}/graphql metrics linear --name=endpoint_resp_time --endpoint-name=GET:/reviews/0 --service-name=e2e::reviews |yq e 'to_entries' -
       expected: expected/metrics-has-value.yml
     - query: swctl --display yaml --base-url=http://${service_skywalking_ui_host}:${service_skywalking_ui_80}/graphql metrics linear --name=endpoint_sla --endpoint-name=GET:/reviews/0 --service-name=e2e::reviews |yq e 'to_entries' -
       expected: expected/metrics-has-value.yml

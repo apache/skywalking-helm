@@ -16,7 +16,25 @@
 {{- contains . }}
 - id: {{ notEmpty .id }}
   name: {{ notEmpty .name }}
-  attributes: []
+  attributes:
+  {{- contains .attributes }}
+  - name: pod
+    value: {{ notEmpty .value }}
+  - name: namespace
+    value: default
+  - name: app
+    value: {{ notEmpty .value }}
+  - name: pod-template-hash
+    value: {{ notEmpty .value }}
+  - name: security.istio.io/tlsMode
+    value: istio
+  - name: service.istio.io/canonical-name
+    value: {{ notEmpty .value }}
+  - name: service.istio.io/canonical-revision
+    value: {{ notEmpty .value }}
+  - name: version
+    value: {{ notEmpty .value }}
+  {{- end }}
   language: UNKNOWN
   instanceuuid: {{ notEmpty .instanceuuid }}
 {{- end }}
