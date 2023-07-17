@@ -25,8 +25,8 @@ metadata:
     component: "{{ template "skywalking.fullname" . }}-job"
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-{{- if .Values.oapInit.additionalLabels }}
-{{ toYaml .Values.oapInit.additionalLabels | indent 4 }}
+{{- if .Values.oapInit.extraLabels }}
+{{ toYaml .Values.oapInit.extraLabels | indent 4 }}
 {{- end }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade,post-rollback
