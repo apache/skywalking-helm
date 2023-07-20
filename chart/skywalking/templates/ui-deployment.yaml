@@ -77,6 +77,10 @@ spec:
         env:
         - name: SW_OAP_ADDRESS
           value: "http://{{ template "skywalking.oap.fullname" . }}:{{ .Values.oap.ports.rest }}"
+{{- if .Values.oap.ports.zipkinquery }}
+        - name: SW_ZIPKIN_ADDRESS
+          value: "http://{{ template "skywalking.oap.fullname" . }}:{{ .Values.oap.ports.zipkinquery }}"
+{{- end }}
         {{- range $key, $value :=  .Values.ui.env }}
         - name: {{ $key }}
           value: {{ $value | quote }}

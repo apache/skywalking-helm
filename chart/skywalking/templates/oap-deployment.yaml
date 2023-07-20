@@ -127,6 +127,18 @@ spec:
 {{ toYaml .Values.oap.resources | indent 10 }}
 {{- end }}
         env:
+{{- if .Values.oap.ports.zipkinreceiver }}
+        - name: SW_RECEIVER_ZIPKIN
+          value: default
+        - name: SW_RECEIVER_ZIPKIN_REST_PORT
+          value: "{{ .Values.oap.ports.zipkinreceiver }}"
+{{- end }}
+{{- if .Values.oap.ports.zipkinquery }}
+        - name: SW_QUERY_ZIPKIN
+          value: default
+        - name: SW_QUERY_ZIPKIN_REST_PORT
+          value: "{{ .Values.oap.ports.zipkinquery }}"
+{{- end }}
         - name: JAVA_OPTS
           value: "-Dmode=no-init {{ .Values.oap.javaOpts }}"
         - name: SW_CLUSTER

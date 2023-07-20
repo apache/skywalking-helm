@@ -41,6 +41,8 @@ oap:
     # zabbix: 10051
     grpc: 11800
     rest: 12800
+    # zipkinreceiver: 9411
+    # zipkinquery: 9412
   replicas: 2
   service:
     type: ClusterIP
