@@ -45,7 +45,7 @@ The following table lists the configurable parameters of the adapter chart and t
 | `.serviceAccountName`              | The service account name of adapter                                       | `skywalking-custom-metrics-apiserver` |
 | `.image.repository` | Adapter container image name                | `docker.io/apache/skywalking-swck` |
 | `.image.pullPolicy`               | Adapter container image pull policy                              | `IfNotPresent`                  |
-| `.image.tag`             | Adapter container image tag                    | `v0.7.0` |
+| `.image.tag`             | Adapter container image tag                    | `v0.8.0` |
 | `.service.port`                           | The port for the adapter service                                 | `6.1.0`                              |
 | `.oap.service.name`          | The service name of OAP                                 | `skywalking-system-oap`  |
 | `.oap.service.namespace`                | The service namespace of OAP                          | `skywalking-system`             |

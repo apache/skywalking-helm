@@ -16,7 +16,7 @@
 apiVersion: v2
 name: skywalking-helm-swck-operator
 home: https://github.com/apache/skywalking-swck/tree/master/operator
-version: 0.7.0
+version: 0.8.0
 description: Provision and maintain SkyWalking backend components
 icon: https://raw.githubusercontent.com/apache/skywalking-kubernetes/master/logo/sw-logo-for-chart.jpg
 sources:
