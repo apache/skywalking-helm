@@ -178,7 +178,7 @@ oapInit:
   nodeAffinity: {}
   nodeSelector: {}
   tolerations: []
-  extraPodLabels: []
+  extraPodLabels: {}
   # sidecar.istio.io/inject: false
 
 elasticsearch:
