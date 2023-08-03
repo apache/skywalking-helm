@@ -116,14 +116,14 @@ Create the name of the service account to use for the satellite cluster
         sleep 3
       done
 {{- else if eq .Values.oap.storageType "banyandb" -}}
-{{- $banyandbHost := print (include "skywalking.name" .) "-banyandb-grpc" -}}
+{{- $banyandbHost := print (include "skywalking.name" .) "-banyandb-http" -}}
 {{- if not .Values.banyandb.enabled -}}
-{{- $banyandbHost = .Values.banyandb.config.host -}}
+{{- $banyandbHost = .Values.banyandb.config.httpHost -}}
 {{- end }}
 - name: wait-for-banyandb
-  image: ghcr.io/grpc-ecosystem/grpc-health-probe:v0.4.19
+  image: curlimages/curl
   imagePullPolicy: IfNotPresent
-  command: ["/bin/grpc_health_probe", "-addr={{ $banyandbHost }}:{{ .Values.banyandb.config.port }}"]
+  command: ['sh', '-c', 'for i in $(seq 1 60); do curl {{ $banyandbHost }}:{{ .Values.banyandb.config.httpPort }}/api/healthz && exit 0 || sleep 5; done; exit 1']
 
 {{- end }}
 {{- end -}}
@@ -163,11 +163,11 @@ Create the name of the service account to use for the satellite cluster
 {{- else if eq .Values.oap.storageType "banyandb" }}
 {{- $banyandbHost := print (include "skywalking.name" .) "-banyandb-grpc" -}}
 {{- if not .Values.banyandb.enabled -}}
-{{- $banyandbHost = .Values.banyandb.config.host -}}
+{{- $banyandbHost = .Values.banyandb.config.grpcHost -}}
 {{- end }}
 - name: SW_STORAGE_BANYANDB_HOST
   value: "{{ $banyandbHost }}"
 - name: SW_STORAGE_BANYANDB_PORT
-  value: "{{ .Values.banyandb.config.port }}"
+  value: "{{ .Values.banyandb.config.grpcPort }}"
 {{- end }}
 {{- end -}}
