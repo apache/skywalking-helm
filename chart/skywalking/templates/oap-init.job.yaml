@@ -36,6 +36,9 @@ spec:
         app: {{ template "skywalking.name" . }}
         component: "{{ template "skywalking.fullname" . }}-job"
         release: {{ .Release.Name }}
+{{- if .Values.oapInit.extraPodLabels }}
+{{ toYaml .Values.oapInit.extraPodLabels | indent 8 }}
+{{- end }}
     spec:
       serviceAccountName: {{ template "skywalking.serviceAccountName.oap" . }}
       {{- with .Values.oap.securityContext }}
