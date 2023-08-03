@@ -121,7 +121,7 @@ Create the name of the service account to use for the satellite cluster
 {{- $banyandbHost = .Values.banyandb.config.host -}}
 {{- end }}
 - name: wait-for-banyandb
-  image: anipos/grpc-health-probe:latest
+  image: ghcr.io/grpc-ecosystem/grpc-health-probe:v0.4.19
   imagePullPolicy: IfNotPresent
   command: ["/bin/grpc_health_probe", "-addr={{ $banyandbHost }}:{{ .Values.banyandb.config.port }}"]
 
