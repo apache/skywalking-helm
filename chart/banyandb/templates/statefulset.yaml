@@ -16,7 +16,7 @@
 # under the License.
 
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   labels:
     app: {{ template "banyandb.name" . }}
@@ -26,6 +26,7 @@ metadata:
     release: {{ .Release.Name }}
   name: {{ template "banyandb.fullname" . }}
 spec:
+  serviceName: banyandb
   replicas: {{ .Values.banyandb.replicas }}
   selector:
     matchLabels:
