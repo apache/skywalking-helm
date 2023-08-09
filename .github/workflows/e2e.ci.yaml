@@ -62,10 +62,14 @@ jobs:
         with:
           go-version: '1.20'
       - run: go version
-      - name: Run Skywalking E2E Test
+      - name: Run Skywalking E2E Test (Elasticsearch as database)
         uses: apache/skywalking-infra-e2e@45584853d6f660102c523b1e9cb5815d12ae55d3
         with:
-          e2e-file: $GITHUB_WORKSPACE/test/e2e/e2e.yaml
+          e2e-file: $GITHUB_WORKSPACE/test/e2e/e2e-elasticsearch.yaml
+      - name: Run Skywalking E2E Test (BanyanDB as database)
+        uses: apache/skywalking-infra-e2e@45584853d6f660102c523b1e9cb5815d12ae55d3
+        with:
+          e2e-file: $GITHUB_WORKSPACE/test/e2e/e2e-banyandb.yaml
       - name: Run SWCK E2E Test
         uses: apache/skywalking-infra-e2e@afdf1cca0519d65bc480d8680b7a27f9b41fc421
         with:
