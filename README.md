@@ -1,4 +1,4 @@
-Apache SkyWalking Kubernetes
+Apache SkyWalking Kubernetes Helm
 ==========
 
 <img src="https://skywalking.apache.org/assets/logo.svg" alt="Sky Walking logo" height="90px" align="right" />
@@ -6,7 +6,7 @@ Apache SkyWalking Kubernetes
 [![GitHub stars](https://img.shields.io/github/stars/apache/skywalking.svg?style=for-the-badge&label=Stars&logo=github)](https://github.com/apache/skywalking)
 [![Twitter Follow](https://img.shields.io/twitter/follow/asfskywalking.svg?style=for-the-badge&label=Follow&logo=twitter)](https://twitter.com/AsfSkyWalking)
 
-SkyWalking Kubernetes repository provides ways to install and configure SkyWalking in a Kubernetes cluster.
+SkyWalking Kubernetes Helm repository provides ways to install and configure SkyWalking in a Kubernetes cluster.
 The scripts are written in Helm 3.
 
 # Chart Detailed Configuration
