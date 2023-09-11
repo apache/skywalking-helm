@@ -116,7 +116,7 @@ Create the name of the service account to use for the satellite cluster
         sleep 3
       done
 {{- else if eq .Values.oap.storageType "banyandb" -}}
-{{- $banyandbHost := print (include "skywalking.name" .) "-banyandb-http" -}}
+{{- $banyandbHost := "banyandb-http" -}}
 {{- if not .Values.banyandb.enabled -}}
 {{- $banyandbHost = .Values.banyandb.config.httpHost -}}
 {{- end }}
@@ -161,7 +161,7 @@ Create the name of the service account to use for the satellite cluster
 - name: SW_DATA_SOURCE_PASSWORD
   value: "{{ .Values.postgresql.auth.password }}"
 {{- else if eq .Values.oap.storageType "banyandb" }}
-{{- $banyandbHost := print (include "skywalking.name" .) "-banyandb-grpc" -}}
+{{- $banyandbHost := "banyandb-grpc" -}}
 {{- if not .Values.banyandb.enabled -}}
 {{- $banyandbHost = .Values.banyandb.config.grpcHost -}}
 {{- end }}

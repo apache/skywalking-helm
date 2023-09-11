@@ -118,21 +118,6 @@ cd skywalking-kubernetes
 helm -n skywalking-swck-system install operator ${REPO}/operator
 ```
 
-## Install development version of BanyanDB using main branch
-
-This is needed **only** when you want to install [BanyanDB](https://github.com/apache/skywalking-banyandb/tree/main) from main branch. 
-
-BanyanDB chart detailed configuration can be found at [BanyanDB Chart Readme](./chart/banyandb/README.md).
-
-You can install BanyanDB with the default configuration as follows.
-
-```shell script
-export REPO=chart
-git clone https://github.com/apache/skywalking-kubernetes
-cd skywalking-kubernetes
-helm install banyandb ${REPO}/banyandb
-```
-
 ## Install a specific version of SkyWalking
 
 In theory, you can deploy all versions of SkyWalking that are >= 6.0.0-GA, by specifying the desired `oap.image.tag`/`ui.image.tag`.
@@ -167,15 +152,7 @@ elasticsearch:
     user: "xxx"         # [optional]
     password: "xxx"     # [optional]
 ```
-
-To use a specific version of BanyanDB, change the following section in [`values.yaml`](chart/banyandb/values.yaml), and then run `helm dep up ${REPO}/skywalking`.
-
-```yaml
-image:
-  repository: ghcr.io/apache/skywalking-banyandb
-  tag: xxx
-  pullPolicy: IfNotPresent
-```
+The same goes for PostgreSQL and BanyanDB.
 
 ## Install development version using ghcr.io Helm repository
 
