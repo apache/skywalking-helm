@@ -124,7 +124,6 @@ Create the name of the service account to use for the satellite cluster
   image: curlimages/curl
   imagePullPolicy: IfNotPresent
   command: ['sh', '-c', 'for i in $(seq 1 60); do curl {{ $banyandbHost }}:{{ .Values.banyandb.config.httpPort }}/api/healthz && exit 0 || sleep 5; done; exit 1']
-
 {{- end }}
 {{- end -}}
 
