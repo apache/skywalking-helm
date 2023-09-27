@@ -61,7 +61,6 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.20'
-      - run: go version
       - name: Run Skywalking E2E Test (Elasticsearch as database)
         uses: apache/skywalking-infra-e2e@45584853d6f660102c523b1e9cb5815d12ae55d3
         with:
