@@ -20,7 +20,7 @@ version: 0.7.0
 description: Provision and maintain SkyWalking backend components
 icon: https://raw.githubusercontent.com/apache/skywalking-kubernetes/master/logo/sw-logo-for-chart.jpg
 sources:
-  - https://github.com/apache/skywalking-kubernetes
+  - https://github.com/apache/skywalking-helm
 maintainers:
   - name: hanahmily
     email: hanahmily@gmail.com
