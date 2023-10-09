@@ -18,3 +18,9 @@ oap:
     metadata-service-mapping.yaml: |
       serviceName: e2e::${LABELS."service.istio.io/canonical-name"}
       serviceInstanceName: ${NAME}
+elasticsearch:
+  esConfig:
+    elasticsearch.yml: |
+      cluster.routing.allocation.disk.watermark.low: 90%
+      cluster.routing.allocation.disk.watermark.high: 99%
+      cluster.routing.allocation.disk.watermark.flood_stage: 99%
