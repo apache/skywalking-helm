@@ -22,7 +22,7 @@ on:
       - master
 
 env:
-  HUB: ghcr.io/apache/skywalking-kubernetes
+  HUB: ghcr.io/apache/skywalking-helm
   VERSION: 0.0.0-${{ github.sha }}
 
 jobs:
