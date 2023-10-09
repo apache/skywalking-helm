@@ -60,8 +60,8 @@ This is needed **only** when you want to install SkyWalking from master branch.
 
 ```shell script
 export REPO=chart
-git clone https://github.com/apache/skywalking-kubernetes
-cd skywalking-kubernetes
+git clone https://github.com/apache/skywalking-helm
+cd skywalking-helm
 helm repo add elastic https://helm.elastic.co
 helm dep up ${REPO}/skywalking
 ```
@@ -76,8 +76,8 @@ You can install the Adapter with the default configuration as follows.
 
 ```shell script
 export REPO=chart
-git clone https://github.com/apache/skywalking-kubernetes
-cd skywalking-kubernetes
+git clone https://github.com/apache/skywalking-helm
+cd skywalking-helm
 helm -n skywalking-custom-metrics-system install adapter ${REPO}/adapter --create-namespace
 ```
 
@@ -97,8 +97,8 @@ You can install the Operator with the default configuration as follows.
 
 ```shell script
 export REPO=chart
-git clone https://github.com/apache/skywalking-kubernetes
-cd skywalking-kubernetes
+git clone https://github.com/apache/skywalking-helm
+cd skywalking-helm
 helm -n skywalking-swck-system install operator ${REPO}/operator
 ```
 
