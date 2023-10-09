@@ -74,6 +74,14 @@ jobs:
         uses: apache/skywalking-infra-e2e@afdf1cca0519d65bc480d8680b7a27f9b41fc421
         with:
           e2e-file: $GITHUB_WORKSPACE/test/e2e/swck/e2e.yaml
+      - if: ${{ failure() }}
+        run: |
+          df -h
+          du -sh .
+          for dir in $(find . -type d -not -name '.*'); do
+            du -sh $dir
+          done
+          docker images
       - uses: actions/upload-artifact@v2
         if: ${{ failure() }}
         name: Upload Logs
