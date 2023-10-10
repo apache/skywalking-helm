@@ -55,8 +55,13 @@ jobs:
       SATELLITE_TAG: v35bfaff6352b4dc351a706772796a1f79b651c14
       SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
     steps:
-      - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v2
+      - name: Login to ghcr
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup go
         uses: actions/setup-go@v4
         with:
@@ -73,6 +78,14 @@ jobs:
         uses: apache/skywalking-infra-e2e@afdf1cca0519d65bc480d8680b7a27f9b41fc421
         with:
           e2e-file: $GITHUB_WORKSPACE/test/e2e/swck/e2e.yaml
+      - if: ${{ failure() }}
+        run: |
+          df -h
+          du -sh .
+          for dir in $(find . -type d -not -name '.*'); do
+            du -sh $dir
+          done
+          docker images
       - uses: actions/upload-artifact@v2
         if: ${{ failure() }}
         name: Upload Logs
