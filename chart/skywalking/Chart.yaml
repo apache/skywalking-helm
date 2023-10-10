@@ -38,3 +38,7 @@ dependencies:
     version: 12.1.2
     repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
     condition: postgresql.enabled
+  - name: skywalking-banyandb-helm
+    version: 0.1.0
+    repository: oci://registry-1.docker.io/apache
+    condition: banyandb.enabled

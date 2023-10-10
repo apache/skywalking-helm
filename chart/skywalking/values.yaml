@@ -444,6 +444,14 @@ postgresql:
     persistence:
       enabled: false
 
+banyandb:
+  enabled: false
+  config:
+    grpcHost: banyandb-grpc
+    httpHost: banyandb-http
+    grpcPort: 17912
+    httpPort: 17913
+
 satellite:
   name: satellite
   replicas: 1

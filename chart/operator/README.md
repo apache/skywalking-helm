@@ -44,7 +44,7 @@ The following table lists the configurable parameters of the operator chart and 
 | `.serviceAccountName`        | The service account name of operator                                                                                         | `skywalking-swck-controller-manager` |
 | `.image.repository`          | Operator container image name                                                                                                | `docker.io/apache/skywalking-swck`   |
 | `.image.pullPolicy`          | Operator container image pull policy                                                                                         | `IfNotPresent`                       |
-| `.image.tag`                 | Operator container image tag                                                                                                 | `v0.7.0`                             |
+| `.image.tag`                 | Operator container image tag                                                                                                 | `v0.8.0`                             |
 | `.metrics.service.port`      | The port for the operator metrics service                                                                                    | `8443`                               |
 | `.webhook.service.port`      | The port for the operator web hook service                                                                                   | `9443`                               |
 | `.resources.limits.cpu`      | The limits of cpu in the operator                                                                                            | `200m`                               |

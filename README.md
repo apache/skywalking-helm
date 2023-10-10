@@ -18,7 +18,7 @@ There are required values that you must set explicitly when deploying SkyWalking
 | name | description | example |
 | ---- | ----------- | ------- |
 | `oap.image.tag` | the OAP docker image tag | `9.2.0` |
-| `oap.storageType` | the storage type of the OAP | `elasticsearch`, `postgresql`, etc. |
+| `oap.storageType` | the storage type of the OAP | `elasticsearch`, `postgresql`, `banyandb`, etc. |
 | `ui.image.tag` | the UI docker image tag | `9.2.0` |
 
 You can set these required values via command line (e.g. `--set oap.image.tag=9.2.0 --set oap.storageType=elasticsearch`),
@@ -64,6 +64,22 @@ git clone https://github.com/apache/skywalking-helm
 cd skywalking-helm
 helm repo add elastic https://helm.elastic.co
 helm dep up ${REPO}/skywalking
+```
+
+To use banyandb as storage solution, you can try
+
+```shell
+export REPO=chart
+git clone https://github.com/apache/skywalking-helm
+cd skywalking-helm
+helm install "${SKYWALKING_RELEASE_NAME}" \
+  ${REPO}/skywalking \
+  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  --set oap.image.tag=9.5.0 \
+  --set oap.storageType=banyandb \
+  --set ui.image.tag=9.5.0 \
+  --set elasticsearch.enabled=false \
+  --set banyandb.enabled=true
 ```
 
 ## Install development version of SWCK Adapter using master branch
@@ -136,6 +152,7 @@ elasticsearch:
     user: "xxx"         # [optional]
     password: "xxx"     # [optional]
 ```
+The same goes for PostgreSQL and BanyanDB.
 
 ## Install development version using ghcr.io Helm repository
 
@@ -161,9 +178,9 @@ This is needed **only** when you want to install source codes.
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" 
 ```
 
-## Install a specific version of SkyWalking with an existing Elasticsearch
+## Install a specific version of SkyWalking with an existing database
 
-Modify the connection information to the existing elasticsearch cluster in file [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml).
+If you want to use a specific version of elasticsearch as storage solution, for instance, modify the connection information to the existing elasticsearch cluster in file [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml).
 
 ```shell script
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \

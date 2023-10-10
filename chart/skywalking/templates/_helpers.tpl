@@ -115,6 +115,15 @@ Create the name of the service account to use for the satellite cluster
         echo "Waiting for postgresql..."
         sleep 3
       done
+{{- else if eq .Values.oap.storageType "banyandb" -}}
+{{- $banyandbHost := "banyandb-http" -}}
+{{- if not .Values.banyandb.enabled -}}
+{{- $banyandbHost = .Values.banyandb.config.httpHost -}}
+{{- end }}
+- name: wait-for-banyandb
+  image: curlimages/curl
+  imagePullPolicy: IfNotPresent
+  command: ['sh', '-c', 'for i in $(seq 1 60); do curl {{ $banyandbHost }}:{{ .Values.banyandb.config.httpPort }}/api/healthz && exit 0 || sleep 5; done; exit 1']
 {{- end }}
 {{- end -}}
 
@@ -150,5 +159,14 @@ Create the name of the service account to use for the satellite cluster
   value: "{{ .Values.postgresql.auth.username }}"
 - name: SW_DATA_SOURCE_PASSWORD
   value: "{{ .Values.postgresql.auth.password }}"
+{{- else if eq .Values.oap.storageType "banyandb" }}
+{{- $banyandbHost := "banyandb-grpc" -}}
+{{- if not .Values.banyandb.enabled -}}
+{{- $banyandbHost = .Values.banyandb.config.grpcHost -}}
+{{- end }}
+- name: SW_STORAGE_BANYANDB_HOST
+  value: "{{ $banyandbHost }}"
+- name: SW_STORAGE_BANYANDB_PORT
+  value: "{{ .Values.banyandb.config.grpcPort }}"
 {{- end }}
 {{- end -}}

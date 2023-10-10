@@ -2,6 +2,12 @@ Changes by Version
 ==================
 Release Notes.
 
+4.6.0
+------------------
+
+- Integrate BanyanDB as storage solution
+- Bump up swck to v0.8.0
+
 4.5.0
 ------------------
 
