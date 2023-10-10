@@ -70,8 +70,8 @@ To use banyandb as storage solution, you can try
 
 ```shell
 export REPO=chart
-git clone https://github.com/apache/skywalking-kubernetes
-cd skywalking-kubernetes
+git clone https://github.com/apache/skywalking-helm
+cd skywalking-helm
 helm install "${SKYWALKING_RELEASE_NAME}" \
   ${REPO}/skywalking \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \

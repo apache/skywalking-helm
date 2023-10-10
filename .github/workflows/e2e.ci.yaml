@@ -27,12 +27,6 @@ on:
 env:
   SKIP_TEST: true
   ISTIO_VERSION: 1.7.1
-  OAP_TAG: 14fbd975be077082ed6fa604e05479dd9af0d995
-  OAP_REPO: ghcr.io/apache/skywalking/oap
-  UI_TAG: 14fbd975be077082ed6fa604e05479dd9af0d995
-  UI_REPO: ghcr.io/apache/skywalking/ui
-  SATELLITE_TAG: v35bfaff6352b4dc351a706772796a1f79b651c14
-  SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
 
 jobs:
   als:
@@ -42,16 +36,19 @@ jobs:
       matrix:
         images:
           - name: recent
-            oap-repo: ghcr.io/apache/skywalking/oap
-            oap-tag: 14fbd975be077082ed6fa604e05479dd9af0d995
-            ui-repo: ghcr.io/apache/skywalking/ui
-            ui-tag: 14fbd975be077082ed6fa604e05479dd9af0d995
+        test:
+          - name: Run Skywalking E2E Test (Elasticsearch as database)
+            config: test/e2e/e2e-elasticsearch.yaml
+          - name: Run Skywalking E2E Test (BanyanDB as database)
+            config: test/e2e/e2e-banyandb.yaml
+          - name: Run SWCK E2E Test
+            config: test/e2e/swck/e2e.yaml
     name: Istio+Envoy Access Log Service(${{ matrix.images.name }})
     env:
-      OAP_TAG: ${{ matrix.images.oap-tag }}
-      OAP_REPO: ${{ matrix.images.oap-repo }}
-      UI_TAG: ${{ matrix.images.ui-tag }}
-      UI_REPO: ${{ matrix.images.ui-repo }}
+      OAP_TAG: 14fbd975be077082ed6fa604e05479dd9af0d995
+      OAP_REPO: ghcr.io/apache/skywalking/oap
+      UI_TAG: 14fbd975be077082ed6fa604e05479dd9af0d995
+      UI_REPO: ghcr.io/apache/skywalking/ui
       SATELLITE_TAG: v35bfaff6352b4dc351a706772796a1f79b651c14
       SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
     steps:
@@ -66,18 +63,10 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.20'
-      - name: Run Skywalking E2E Test (Elasticsearch as database)
+      - name: ${{ matrix.test.name }}
         uses: apache/skywalking-infra-e2e@45584853d6f660102c523b1e9cb5815d12ae55d3
         with:
-          e2e-file: $GITHUB_WORKSPACE/test/e2e/e2e-elasticsearch.yaml
-      - name: Run Skywalking E2E Test (BanyanDB as database)
-        uses: apache/skywalking-infra-e2e@45584853d6f660102c523b1e9cb5815d12ae55d3
-        with:
-          e2e-file: $GITHUB_WORKSPACE/test/e2e/e2e-banyandb.yaml
-      - name: Run SWCK E2E Test
-        uses: apache/skywalking-infra-e2e@afdf1cca0519d65bc480d8680b7a27f9b41fc421
-        with:
-          e2e-file: $GITHUB_WORKSPACE/test/e2e/swck/e2e.yaml
+          e2e-file: $GITHUB_WORKSPACE/${{ matrix.test.config }}
       - if: ${{ failure() }}
         run: |
           df -h
