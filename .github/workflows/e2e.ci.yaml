@@ -34,8 +34,6 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        images:
-          - name: recent
         test:
           - name: Run Skywalking E2E Test (Elasticsearch as database)
             config: test/e2e/e2e-elasticsearch.yaml
@@ -43,7 +41,7 @@ jobs:
             config: test/e2e/e2e-banyandb.yaml
           - name: Run SWCK E2E Test
             config: test/e2e/swck/e2e.yaml
-    name: Istio+Envoy Access Log Service(${{ matrix.images.name }})
+    name: ${{ matrix.test.name }}
     env:
       OAP_TAG: 14fbd975be077082ed6fa604e05479dd9af0d995
       OAP_REPO: ghcr.io/apache/skywalking/oap
