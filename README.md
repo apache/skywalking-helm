@@ -162,7 +162,7 @@ deploy the revision that you want to test.
 
 ```shell
 helm -n istio-system install skywalking \
-  oci://ghcr.io/apache/skywalking-kubernetes/skywalking-helm \
+  oci://ghcr.io/apache/skywalking-helm/skywalking-helm \
   --version "0.0.0-b670c41d94a82ddefcf466d54bab5c492d88d772" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=9.2.0 \
