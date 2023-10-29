@@ -23,6 +23,12 @@ metadata:
     component: "{{ .Values.oap.name }}"
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
+  {{- with .Values.oap.service.annotations }}
+    annotations:
+      {{- range $key, $value := . }}
+        {{ $key }}: {{ $value | quote }}
+      {{- end }}
+  {{- end }}
 spec:
   type: {{ .Values.oap.service.type }}
   ports:
