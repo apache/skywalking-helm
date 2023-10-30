@@ -46,6 +46,8 @@ oap:
   replicas: 2
   service:
     type: ClusterIP
+    # add annotations to the oap service
+    annotations: {}
   javaOpts: -Xmx2g -Xms2g
   antiAffinity: "soft"
   nodeAffinity: {}
