@@ -449,10 +449,9 @@ postgresql:
 banyandb:
   enabled: false
   config:
-    grpcHost: banyandb-grpc
     httpHost: banyandb-http
-    grpcPort: 17912
     httpPort: 17913
+    targets: "banyandb-grpc:17912"
 
 satellite:
   name: satellite
