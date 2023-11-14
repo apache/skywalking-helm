@@ -451,7 +451,7 @@ banyandb:
   config:
     httpHost: banyandb-http
     httpPort: 17913
-    targets: "banyandb-grpc:17913"
+    targets: "banyandb-grpc:17912"
 
 satellite:
   name: satellite
