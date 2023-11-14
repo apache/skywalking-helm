@@ -160,11 +160,7 @@ Create the name of the service account to use for the satellite cluster
 - name: SW_DATA_SOURCE_PASSWORD
   value: "{{ .Values.postgresql.auth.password }}"
 {{- else if eq .Values.oap.storageType "banyandb" }}
-{{- $banyandbHost := "banyandb-grpc" -}}
-{{- if not .Values.banyandb.enabled -}}
-{{- $banyandbHost = .Values.banyandb.config.grpcHost -}}
-{{- end }}
 - name: SW_STORAGE_BANYANDB_TARGETS
-  value: "{{ $banyandbHost }}:{{ .Values.banyandb.config.grpcPort }}"
+  value: "{{ .Values.banyandb.config.targets }}"
 {{- end }}
 {{- end -}}
