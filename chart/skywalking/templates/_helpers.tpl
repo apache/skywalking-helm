@@ -164,9 +164,7 @@ Create the name of the service account to use for the satellite cluster
 {{- if not .Values.banyandb.enabled -}}
 {{- $banyandbHost = .Values.banyandb.config.grpcHost -}}
 {{- end }}
-- name: SW_STORAGE_BANYANDB_HOST
-  value: "{{ $banyandbHost }}"
-- name: SW_STORAGE_BANYANDB_PORT
-  value: "{{ .Values.banyandb.config.grpcPort }}"
+- name: SW_STORAGE_BANYANDB_TARGETS
+  value: "{{ $banyandbHost }}:{{ .Values.banyandb.config.grpcPort }}"
 {{- end }}
 {{- end -}}
