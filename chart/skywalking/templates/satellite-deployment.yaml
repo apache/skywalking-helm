@@ -136,7 +136,7 @@ spec:
           {{- end }}
 
       volumes:
-        {{- if (.Files.Glob "files/conf.d/satellite/**") }}
+        {{- if .Values.satellite.config }}
         - name: skywalking-satellite-override
           configMap:
             name: {{ template "skywalking.fullname" . }}-satellite-cm-override
