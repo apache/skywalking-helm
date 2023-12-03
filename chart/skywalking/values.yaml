@@ -102,6 +102,10 @@ oap:
     #   <Configuration status="DEBUG">
     #     <!-- ... -->
     #   </Configuration>
+    # ui-initialized-templates:
+    #   general:
+    #     general-service.json: |
+    #       [{"id":"General-Service" ... }]
   # When 'dynamicConfig.enabled' set to true, enable oap dynamic configuration through k8s configmap，
   # Note: The default configmap data is empty, please refer to the detailed documentation (https://github.com/apache/skywalking/blob/master/docs/en/setup/backend/dynamic-config.md)
   # Sync period in seconds. Defaults to 60 seconds.

@@ -29,9 +29,16 @@ data:
 {{ $config | indent 4 }}
  {{- else }}
   {{- range $subpath, $subconfig := $config }}
+   {{- if typeIs "string" $subconfig }}
  {{ print $path "-" $subpath }}: |
 {{ $subconfig | indent 4 }}
+   {{- else }}
+     {{- range $subsubpath, $subsubconfig := $subconfig }}
+ {{ print $path "-" $subpath "-" $subsubpath }}: |
+{{ $subsubconfig | indent 4 }}
+     {{- end }}
+    {{- end }}
+   {{- end }}
   {{- end }}
  {{- end }}
-{{- end }}
 {{ end }}
