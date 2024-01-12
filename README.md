@@ -22,7 +22,7 @@ There are required values that you must set explicitly when deploying SkyWalking
 | `ui.image.tag` | the UI docker image tag | `9.6.0` |
 
 You can set these required values via command line (e.g. `--set oap.image.tag=9.2.0 --set oap.storageType=elasticsearch`),
-or edit them in a separate file(e.g. [`values.yaml`](chart/skywalking/values-es6.yaml), [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml))
+or edit them in a separate file(e.g. [`values.yaml`](chart/skywalking/values.yaml), [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml))
 and use `-f <filename>` or `--values=<filename>` to set them.
 
 # Install
