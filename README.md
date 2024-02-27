@@ -213,6 +213,24 @@ You can set those environment variables by `--set oap.env.<ENV_NAME>=<ENV_VALUE>
 
 > The environment variables take priority over the overrode configuration files.
 
+## Rerun OAP init job
+
+Kubernetes Job cannot be rerun by default, if you want to rerun the OAP init
+job, you need to delete the Job and recreate it.
+
+```shell
+# Make sure to export the Job manifest to a file before deleting it.
+kubectl get job -n "${SKYWALKING_RELEASE_NAMESPACE}" -l release=$SKYWALKING_RELEASE_NAME -o yaml > oap-init.job.yaml
+# Trim the Job manifest to keep only the Job part, you can either download yq from https://github.com/mikefarah/yq or
+# manually remove the fields that are not needed.
+yq 'del(.items[0].metadata.creationTimestamp,.items[0].metadata.resourceVersion,.items[0].metadata.uid,.items[0].status,.items[0].spec.template.metadata.labels."batch.kubernetes.io/controller-uid",.items[0].spec.template.metadata.labels."controller-uid",.items[0].spec.selector.matchLabels."batch.kubernetes.io/controller-uid")' oap-init.job.yaml > oap-init.job.trimmed.yaml
+# Check the file oap-init.job.trimmed.yaml to make sure it has correct content
+# Delete the Job
+kubectl delete job -n "${SKYWALKING_RELEASE_NAMESPACE}" -l release=$SKYWALKING_RELEASE_NAME
+# Create the Job
+kubectl -n "${SKYWALKING_RELEASE_NAMESPACE}" apply -f oap-init.job.trimmed.yaml
+```
+
 # Contact Us
 * Submit an [issue](https://github.com/apache/skywalking/issues)
 * Mail list: **dev@skywalking.apache.org**. Mail to `dev-subscribe@skywalking.apache.org`, follow the reply to subscribe the mail list.
