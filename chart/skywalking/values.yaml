@@ -456,8 +456,6 @@ banyandb:
     httpHost: banyandb-http
     httpPort: 17913
     targets: "banyandb-grpc:17912"
-
-skywalking-banyandb-helm:
   standalone:
     enabled: true
   cluster:

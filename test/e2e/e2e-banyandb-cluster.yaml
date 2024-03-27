@@ -56,9 +56,9 @@ setup:
                        --set oap.storageType=banyandb \
                        --set elasticsearch.enabled=false \
                        --set banyandb.enabled=true \
-                       --set skywalking-banyandb-helm.standalone.enabled=false \
-                       --set skywalking-banyandb-helm.cluster.enabled=true \
-                       --set skywalking-banyandb-helm.etcd.enabled=true \
+                       --set banyandb.standalone.enabled=false \
+                       --set banyandb.cluster.enabled=true \
+                       --set banyandb.etcd.enabled=true \
                        --set satellite.enabled=true \
                        --set satellite.image.repository=$SATELLITE_REPO \
                        --set satellite.image.tag=$SATELLITE_TAG \
