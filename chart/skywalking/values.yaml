@@ -456,6 +456,8 @@ banyandb:
     httpHost: banyandb-http
     httpPort: 17913
     targets: "banyandb-grpc:17912"
+
+skywalking-banyandb-helm:
   standalone:
     enabled: true
   cluster:
@@ -466,6 +468,7 @@ banyandb:
       replicas: 1
   etcd:
     enabled: false
+    replicaCount: 1
 
 satellite:
   name: satellite
