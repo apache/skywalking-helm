@@ -56,6 +56,9 @@ setup:
                        --set oap.storageType=banyandb \
                        --set elasticsearch.enabled=false \
                        --set banyandb.enabled=true \
+                       --set banyandb.standalone.enabled=true \
+                       --set banyandb.cluster.enabled=false \
+                       --set banyandb.etcd.enabled=false \
                        --set satellite.enabled=true \
                        --set satellite.image.repository=$SATELLITE_REPO \
                        --set satellite.image.tag=$SATELLITE_TAG \
