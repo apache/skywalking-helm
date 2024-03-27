@@ -43,7 +43,7 @@ setup:
     - name: Install SkyWalking
       command: |
         helm dep up chart/skywalking
-        helm -n istio-system install skywalking chart/skywalking \
+        helm -n istio-system install --timeout 10m skywalking chart/skywalking \
                        --set fullnameOverride=skywalking \
                        --set oap.env.SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS=k8s-mesh \
                        --set oap.env.SW_ENVOY_METRIC_ALS_TCP_ANALYSIS=k8s-mesh \
