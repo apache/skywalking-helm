@@ -456,6 +456,16 @@ banyandb:
     httpHost: banyandb-http
     httpPort: 17913
     targets: "banyandb-grpc:17912"
+  standalone:
+    enabled: true
+  cluster:
+    enabled: false
+    liaison:
+      replicas: 1
+    data:
+      replicas: 1
+  etcd:
+    enabled: false
 
 satellite:
   name: satellite
