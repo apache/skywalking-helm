@@ -41,8 +41,16 @@ jobs:
             config: test/e2e/e2e-banyandb-standalone.yaml
           - name: Run Skywalking E2E Test (BanyanDB cluster as database)
             config: test/e2e/e2e-banyandb-cluster.yaml
-          - name: Run SWCK E2E Test
-            config: test/e2e/swck/e2e.yaml
+          - name: Run SWCK oap-agent-adapter-hpa Test
+            config: test/e2e/swck/oap-agent-adapter-hpa.yaml
+          - name: Run SWCK oap-agent-banyandb Test
+            config: test/e2e/swck/oap-agent-banyandb.yaml
+          - name: Run SWCK oap-ui-agent-elasticsearch Test
+            config: test/e2e/swck/oap-ui-agent-elasticsearch.yaml
+          - name: Run SWCK oap-ui-agent-oapserverconfig Test
+            config: test/e2e/swck/oap-ui-agent-oapserverconfig.yaml
+          - name: Run SWCK oap-ui-agent-satellite Test
+            config: test/e2e/swck/oap-ui-agent-satellite.yaml
     name: ${{ matrix.test.name }}
     env:
       OAP_TAG: 965dea898986ed2ab1343559fb20d6faed11ada9

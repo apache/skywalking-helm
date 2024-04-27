@@ -37,7 +37,6 @@ spec:
       containers:
       - args:
         - --secure-port={{ .Values.service.port }}
-        - --logtostderr=true
         - --v=10
         - --oap-addr=http://{{ .Values.oap.service.name }}.{{ .Values.oap.service.namespace }}:{{ .Values.oap.service.port }}/graphql
         - --cert-dir=/tmp

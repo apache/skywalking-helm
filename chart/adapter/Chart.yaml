@@ -16,7 +16,7 @@
 apiVersion: v2
 name: skywalking-helm-swck-adapter
 home: https://github.com/apache/skywalking-swck/tree/master/adapter
-version: 0.8.0
+version: 0.9.0
 description: Provide custom metrics coming from SkyWalking OAP cluster for autoscaling by Kubernetes HPA
 icon: https://raw.githubusercontent.com/apache/skywalking-kubernetes/master/logo/sw-logo-for-chart.jpg
 sources:
