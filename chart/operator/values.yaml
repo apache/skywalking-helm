@@ -23,7 +23,7 @@ serviceAccountName: skywalking-swck-controller-manager
 image:
   repository: docker.io/apache/skywalking-swck
   pullPolicy: IfNotPresent
-  tag: "v0.8.0"
+  tag: "v0.9.0"
 securityContext:
   allowPrivilegeEscalation: false
 metrics:
