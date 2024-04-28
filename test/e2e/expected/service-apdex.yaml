@@ -13,21 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v2
-name: skywalking-helm-swck-operator
-home: https://github.com/apache/skywalking-swck/tree/master/operator
-version: 0.9.0
-description: Provision and maintain SkyWalking backend components
-icon: https://raw.githubusercontent.com/apache/skywalking-kubernetes/master/logo/sw-logo-for-chart.jpg
-sources:
-  - https://github.com/apache/skywalking-helm
-maintainers:
-  - name: hanahmily
-    email: hanahmily@gmail.com
-  - name: dashanji
-    email: dashanjic@gmail.com
-dependencies:
-  - name: cert-manager
-    version: 1.9.1
-    repository: https://charts.jetstack.io
-    condition: cert-manager.enabled
+{{- contains . }}
+- key: {{ notEmpty .key }}
+  value: 
+    value: 0
+    isemptyvalue: true
+- key: {{ notEmpty .key }}
+  value: 
+    value: {{ gt .value.value 0 }} 
+    isemptyvalue: false
+{{- end }}

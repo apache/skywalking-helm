@@ -1,0 +1,111 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+setup:
+  env: kind
+  file: ../kind.yaml
+  init-system-environment: ../env
+  kind:
+    expose-ports:
+      - namespace: skywalking-system
+        resource: service/demo
+        port: 8085
+      - namespace: default
+        resource: service/default-oap
+        port: 12800
+      - namespace: default
+        resource: service/es-out
+        port: 9200
+  steps:
+    - name: Install yq
+      command: bash test/e2e/setup-e2e-shell/install.sh yq
+    - name: Install swctl
+      command: bash test/e2e/setup-e2e-shell/install.sh swctl
+    - name: Install kubectl
+      command: bash test/e2e/setup-e2e-shell/install.sh kubectl
+    - name: Install helm
+      command: bash test/e2e/setup-e2e-shell/install.sh helm
+    - name: Install cert-manager
+      command: |
+        kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
+      wait:
+        - namespace: cert-manager
+          resource: pod
+          for: condition=Ready
+    - name: Install operator
+      command: |
+        helm dep up chart/operator
+        helm install operator chart/operator --namespace=skywalking-swck-system \
+                       --create-namespace \
+                       --set fullnameOverride=skywalking-swck
+      wait:
+        - namespace: skywalking-swck-system
+          resource: deployment/skywalking-swck-operator
+          for: condition=Available
+    - name: setup elasticsearch
+      command: |
+        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.9.0/test/e2e/deploy-elasticsearch.yaml | kubectl apply -f -
+        kubectl rollout status --watch --timeout=120s statefulset/es
+    - name: setup storage(use the external type)
+      command: |
+        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.9.0/test/e2e/external-storage.yaml | kubectl apply -f -
+    - name: setup oapserver and ui
+      command: |
+        kubectl create namespace skywalking-system
+        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.9.0/test/e2e/skywalking-components-with-storage.yaml | kubectl apply -f -
+      wait:
+        - namespace: default
+          resource: OAPServer/default
+          for: condition=Available
+        - namespace: skywalking-system
+          resource: UI/skywalking-system
+          for: condition=Available
+    - name: Setup java agent demo
+      command: |
+        kubectl label namespace skywalking-system swck-injection=enabled
+        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.9.0/test/e2e/demo.yaml | sed 's/oap-service/default-oap.default/' | kubectl apply -f -
+      wait:
+        - namespace: skywalking-system
+          resource: deployment/demo
+          for: condition=Available
+  timeout: 20m
+
+cleanup:
+  # always never success failure
+  on: always
+
+trigger:
+  action: http
+  interval: 10s
+  times: 5
+  url: http://${service_demo_host}:${service_demo_8085}/hello
+  method: GET
+
+verify:
+  # verify with retry strategy
+  retry:
+    # max retry count
+    count: 30
+    # the interval between two attempts, e.g. 10s, 1m.
+    interval: 10s
+  cases:
+    - query: swctl --display yaml --base-url=http://${service_default_oap_host}:${service_default_oap_12800}/graphql service ls
+      expected: ../expected/swck-demo-service.yaml
+    - query: swctl --display yaml --base-url=http://${service_default_oap_host}:${service_default_oap_12800}/graphql metrics linear --name service_cpm --service-name Your_ApplicationName | yq e 'to_entries' -
+      expected: ../expected/metrics.yaml
+    - query: swctl --display yaml --base-url=http://${service_default_oap_host}:${service_default_oap_12800}/graphql endpoint list --keyword=hello --service-name Your_ApplicationName
+      expected: ../expected/endpoint.yaml
+    - query: swctl --display yaml --base-url=http://${service_default_oap_host}:${service_default_oap_12800}/graphql metrics linear --name endpoint_cpm --endpoint-name GET:/hello --service-name Your_ApplicationName | yq e 'to_entries' -
+      expected: ../expected/metrics.yaml

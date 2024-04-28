@@ -50,6 +50,26 @@ webhooks:
     service:
       name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-webhook-service"))) | printf "%s-webhook-service" }} 
       namespace: {{ .Release.Namespace }}
+      path: /mutate-operator-skywalking-apache-org-v1alpha1-banyandb
+  failurePolicy: Fail
+  name: mbanyandb.kb.io
+  rules:
+  - apiGroups:
+    - operator.skywalking.apache.org
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - banyandbs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "operator.fullname" . }}-webhook-service
+      namespace: {{ .Release.Namespace }}
       path: /mutate-operator-skywalking-apache-org-v1alpha1-fetcher
   failurePolicy: Fail
   name: mfetcher.kb.io
@@ -237,6 +257,26 @@ webhooks:
   clientConfig:
     service:
       name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-webhook-service"))) | printf "%s-webhook-service" }} 
+      namespace: {{ .Release.Namespace }}
+      path: /validate-operator-skywalking-apache-org-v1alpha1-banyandb
+  failurePolicy: Fail
+  name: vbanyandb.kb.io
+  rules:
+  - apiGroups:
+    - operator.skywalking.apache.org
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - banyandbs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "operator.fullname" . }}-webhook-service
       namespace: {{ .Release.Namespace }}
       path: /validate-operator-skywalking-apache-org-v1alpha1-fetcher
   failurePolicy: Fail
