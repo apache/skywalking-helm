@@ -53,9 +53,9 @@ jobs:
             config: test/e2e/swck/oap-ui-agent-satellite.yaml
     name: ${{ matrix.test.name }}
     env:
-      OAP_TAG: 965dea898986ed2ab1343559fb20d6faed11ada9
+      OAP_TAG: 14c5778f57cc163b5a7d732555182b14dcff146b
       OAP_REPO: ghcr.io/apache/skywalking/oap
-      UI_TAG: 965dea898986ed2ab1343559fb20d6faed11ada9
+      UI_TAG: 14c5778f57cc163b5a7d732555182b14dcff146b
       UI_REPO: ghcr.io/apache/skywalking/ui
       SATELLITE_TAG: v35bfaff6352b4dc351a706772796a1f79b651c14
       SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
