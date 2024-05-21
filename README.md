@@ -17,11 +17,11 @@ There are required values that you must set explicitly when deploying SkyWalking
 
 | name | description | example |
 | ---- | ----------- | ------- |
-| `oap.image.tag` | the OAP docker image tag | `9.6.0` |
+| `oap.image.tag` | the OAP docker image tag | `10.0.0` |
 | `oap.storageType` | the storage type of the OAP | `elasticsearch`, `postgresql`, `banyandb`, etc. |
-| `ui.image.tag` | the UI docker image tag | `9.6.0` |
+| `ui.image.tag` | the UI docker image tag | `10.0.0` |
 
-You can set these required values via command line (e.g. `--set oap.image.tag=9.2.0 --set oap.storageType=elasticsearch`),
+You can set these required values via command line (e.g. `--set oap.image.tag=10.0.0 --set oap.storageType=elasticsearch`),
 or edit them in a separate file(e.g. [`values.yaml`](chart/skywalking/values.yaml), [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml))
 and use `-f <filename>` or `--values=<filename>` to set them.
 
@@ -42,9 +42,9 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   oci://registry-1.docker.io/apache/skywalking-helm \
   --version "${SKYWALKING_RELEASE_VERSION}" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=9.2.0 \
+  --set oap.image.tag=10.0.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=9.2.0
+  --set ui.image.tag=10.0.0
 ```
 
 ## Install released version using Apache Jfrog Helm repository (<= 4.3.0)
@@ -75,9 +75,9 @@ cd skywalking-helm
 helm install "${SKYWALKING_RELEASE_NAME}" \
   ${REPO}/skywalking \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=9.5.0 \
+  --set oap.image.tag=10.0.0 \
   --set oap.storageType=banyandb \
-  --set ui.image.tag=9.5.0 \
+  --set ui.image.tag=10.0.0 \
   --set elasticsearch.enabled=false \
   --set banyandb.enabled=true
 ```
@@ -127,13 +127,13 @@ specify those configurations, they may take no effect.
 
 here are some examples.
 
-- Deploy SkyWalking 9.2.0
+- Deploy SkyWalking 10.0.0
 
 ```shell script
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=9.2.0 \
+  --set oap.image.tag=10.0.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=9.2.0
+  --set ui.image.tag=10.0.0
 ```
 
 Because ElasticSearch recommends to use the corresponding Helm Chart version of the ElasticSearch version,
@@ -165,9 +165,9 @@ helm -n istio-system install skywalking \
   oci://ghcr.io/apache/skywalking-helm/skywalking-helm \
   --version "0.0.0-b670c41d94a82ddefcf466d54bab5c492d88d772" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=9.2.0 \
+  --set oap.image.tag=10.0.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=9.2.0
+  --set ui.image.tag=10.0.0
 ```
 
 ## Install development version using source codes
