@@ -41,5 +41,5 @@ dependencies:
   - name: skywalking-banyandb-helm
     alias: banyandb
     version: 0.2.0
-    repository: oci://ghcr.io/apache/skywalking-banyandb-helm
+    repository: oci://registry-1.docker.io/apache/skywalking-banyandb-helm
     condition: banyandb.enabled
