@@ -7,6 +7,7 @@ Release Notes.
 
 - Integrate BanyanDB as storage solution
 - Bump up swck to v0.9.0
+- Bump up BanyanDB Helm to v0.2.0
 
 4.5.0
 ------------------
