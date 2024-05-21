@@ -19,12 +19,12 @@
 
 oap:
   image:
-    tag: 9.6.0
+    tag: 10.0.0
   storageType: elasticsearch
 
 ui:
   image:
-    tag: 9.6.0
+    tag: 10.0.0
 
 elasticsearch:
   enabled: false
