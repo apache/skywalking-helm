@@ -34,6 +34,7 @@ package: prepare
 	rm -rf ${CHART_DIR}/LICENSE
 
 clean:
+	rm -f $(TMPDIR)/$(RELEASE_SRC).tgz \
 	rm -rf bin/ \
 	rm -rf ${CHART_DIR}/NOTICE \
 	rm -rf ${CHART_DIR}/LICENSE \
@@ -46,8 +47,7 @@ clean:
 	rm -rf ${RELEASE_SRC}.tgz.asc \
 	rm -rf ${RELEASE_SRC}.tgz.sha512
 
-release-src:
-	rm -f $(TMPDIR)/$(RELEASE_SRC).tgz && \
+release-src: clean
 	tar -zcvf $(TMPDIR)/$(RELEASE_SRC).tgz \
 	--exclude bin \
 	--exclude .git \
