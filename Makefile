@@ -15,9 +15,11 @@
 
 SHELL = /bin/bash -eo pipefail
 
+TMPDIR ?= /tmp
+
 CHART_DIR = chart/skywalking
-VERSION = $(shell cat ${CHART_DIR}/Chart.yaml | grep -p '^version: ' | awk '{print $$2}')
-CHART_NAME = $(shell cat ${CHART_DIR}/Chart.yaml | grep -p '^name: ' | awk '{print $$2}')
+VERSION = $(shell cat ${CHART_DIR}/Chart.yaml | grep '^version: ' | awk '{print $$2}')
+CHART_NAME = $(shell cat ${CHART_DIR}/Chart.yaml | grep '^name: ' | awk '{print $$2}')
 
 RELEASE_SRC = ${CHART_NAME}-${VERSION}-src
 
@@ -32,6 +34,7 @@ package: prepare
 	rm -rf ${CHART_DIR}/LICENSE
 
 clean:
+	rm -f $(TMPDIR)/$(RELEASE_SRC).tgz \
 	rm -rf bin/ \
 	rm -rf ${CHART_DIR}/NOTICE \
 	rm -rf ${CHART_DIR}/LICENSE \
@@ -44,15 +47,16 @@ clean:
 	rm -rf ${RELEASE_SRC}.tgz.asc \
 	rm -rf ${RELEASE_SRC}.tgz.sha512
 
-release-src:
-	tar -zcvf $(RELEASE_SRC).tgz \
+release-src: clean
+	tar -zcvf $(TMPDIR)/$(RELEASE_SRC).tgz \
 	--exclude bin \
 	--exclude .git \
 	--exclude .idea \
 	--exclude .gitignore \
 	--exclude .DS_Store \
 	--exclude .github \
-	.
+	. && \
+	mv $(TMPDIR)/$(RELEASE_SRC).tgz .
 
 release: release-src package
 	gpg --batch --yes --armor --detach-sig $(RELEASE_SRC).tgz
