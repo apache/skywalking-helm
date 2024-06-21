@@ -75,11 +75,12 @@ cd skywalking-helm
 helm install "${SKYWALKING_RELEASE_NAME}" \
   ${REPO}/skywalking \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=10.0.0 \
+  --set oap.image.tag=10.0.1 \
   --set oap.storageType=banyandb \
-  --set ui.image.tag=10.0.0 \
+  --set ui.image.tag=10.0.1 \
   --set elasticsearch.enabled=false \
   --set banyandb.enabled=true
+  --set skywalking.banyandb.image.tag=0.6.1
 ```
 
 ## Install development version of SWCK Adapter using master branch
