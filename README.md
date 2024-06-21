@@ -80,7 +80,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   --set ui.image.tag=10.0.1 \
   --set elasticsearch.enabled=false \
   --set banyandb.enabled=true
-  --set skywalking.banyandb.image.tag=0.6.1
+  --set banyandb.image.tag=0.6.1
 ```
 
 ## Install development version of SWCK Adapter using master branch
