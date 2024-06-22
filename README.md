@@ -62,7 +62,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   --set banyandb.image.tag=0.6.1
 ```
 
-The parameter `--set banyandb.image.tag=0.6.1` can be used to specify the version of banyandb.
+The parameter `banyandb.image.tag` can be used to specify the version of banyandb.
 
 ## Install released version using Apache Jfrog Helm repository (<= 4.3.0)
 
