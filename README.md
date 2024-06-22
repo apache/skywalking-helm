@@ -17,11 +17,11 @@ There are required values that you must set explicitly when deploying SkyWalking
 
 | name | description | example |
 | ---- | ----------- | ------- |
-| `oap.image.tag` | the OAP docker image tag | `10.0.0` |
+| `oap.image.tag` | the OAP docker image tag | `10.0.1` |
 | `oap.storageType` | the storage type of the OAP | `elasticsearch`, `postgresql`, `banyandb`, etc. |
-| `ui.image.tag` | the UI docker image tag | `10.0.0` |
+| `ui.image.tag` | the UI docker image tag | `10.0.1` |
 
-You can set these required values via command line (e.g. `--set oap.image.tag=10.0.0 --set oap.storageType=elasticsearch`),
+You can set these required values via command line (e.g. `--set oap.image.tag=10.0.1 --set oap.storageType=elasticsearch`),
 or edit them in a separate file(e.g. [`values.yaml`](chart/skywalking/values.yaml), [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml))
 and use `-f <filename>` or `--values=<filename>` to set them.
 
@@ -30,7 +30,7 @@ and use `-f <filename>` or `--values=<filename>` to set them.
 Let's set some variables for convenient use later.
 
 ```shell
-export SKYWALKING_RELEASE_VERSION=4.3.0  # change the release version according to your need
+export SKYWALKING_RELEASE_VERSION=4.6.0  # change the release version according to your need
 export SKYWALKING_RELEASE_NAME=skywalking  # change the release name according to your scenario
 export SKYWALKING_RELEASE_NAMESPACE=default  # change the namespace to where you want to install SkyWalking
 ```
@@ -42,10 +42,27 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   oci://registry-1.docker.io/apache/skywalking-helm \
   --version "${SKYWALKING_RELEASE_VERSION}" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=10.0.0 \
+  --set oap.image.tag=10.0.1 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=10.0.0
+  --set ui.image.tag=10.0.1
 ```
+
+To use BanyanDB as storage solution, you can try
+
+```shell
+helm install "${SKYWALKING_RELEASE_NAME}" \
+  oci://registry-1.docker.io/apache/skywalking-helm \
+  --version "${SKYWALKING_RELEASE_VERSION}" \
+  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  --set oap.image.tag=10.0.1 \
+  --set oap.storageType=banyandb \
+  --set ui.image.tag=10.0.1 \
+  --set elasticsearch.enabled=false \
+  --set banyandb.enabled=true \
+  --set banyandb.image.tag=0.6.1
+```
+
+BanyanDB can be configured through various parameters. A comprehensive list of these parameters can be found in the configuration section of the SkyWalking BanyanDB Helm chart repository [https://github.com/apache/skywalking-banyandb-helm?tab=readme-ov-file#configuration]. These parameters allow you to customize aspects such as replication, resource allocation, persistence, and more to suit your specific deployment needs. Remember to prepend 'banyandb.' to all parameter names when applying the settings. For example, `banyandb.image.tag` can be used to specify the version of BanyanDB.
 
 ## Install released version using Apache Jfrog Helm repository (<= 4.3.0)
 
@@ -64,22 +81,6 @@ git clone https://github.com/apache/skywalking-helm
 cd skywalking-helm
 helm repo add elastic https://helm.elastic.co
 helm dep up ${REPO}/skywalking
-```
-
-To use banyandb as storage solution, you can try
-
-```shell
-export REPO=chart
-git clone https://github.com/apache/skywalking-helm
-cd skywalking-helm
-helm install "${SKYWALKING_RELEASE_NAME}" \
-  ${REPO}/skywalking \
-  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=10.0.0 \
-  --set oap.storageType=banyandb \
-  --set ui.image.tag=10.0.0 \
-  --set elasticsearch.enabled=false \
-  --set banyandb.enabled=true
 ```
 
 ## Install development version of SWCK Adapter using master branch
@@ -127,13 +128,13 @@ specify those configurations, they may take no effect.
 
 here are some examples.
 
-- Deploy SkyWalking 10.0.0
+- Deploy SkyWalking 10.0.1
 
 ```shell script
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=10.0.0 \
+  --set oap.image.tag=10.0.1 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=10.0.0
+  --set ui.image.tag=10.0.1
 ```
 
 Because ElasticSearch recommends to use the corresponding Helm Chart version of the ElasticSearch version,
@@ -152,6 +153,7 @@ elasticsearch:
     user: "xxx"         # [optional]
     password: "xxx"     # [optional]
 ```
+
 The same goes for PostgreSQL and BanyanDB.
 
 ## Install development version using ghcr.io Helm repository
@@ -165,9 +167,9 @@ helm -n istio-system install skywalking \
   oci://ghcr.io/apache/skywalking-helm/skywalking-helm \
   --version "0.0.0-b670c41d94a82ddefcf466d54bab5c492d88d772" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=10.0.0 \
+  --set oap.image.tag=10.0.1 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=10.0.0
+  --set ui.image.tag=10.0.1
 ```
 
 ## Install development version using source codes
@@ -180,7 +182,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RE
 
 ## Install a specific version of SkyWalking with an existing database
 
-If you want to use a specific version of elasticsearch as storage solution, for instance, modify the connection information to the existing elasticsearch cluster in file [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml).
+If you want to use a specific version of ElasticSearch as storage solution, for instance, modify the connection information to the existing ElasticSearch cluster in file [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml).
 
 ```shell script
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
