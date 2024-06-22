@@ -47,7 +47,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   --set ui.image.tag=10.0.1
 ```
 
-To use banyandb as storage solution, you can try
+To use BanyanDB as storage solution, you can try
 
 ```shell
 helm install "${SKYWALKING_RELEASE_NAME}" \
@@ -62,7 +62,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   --set banyandb.image.tag=0.6.1
 ```
 
-The parameter `banyandb.image.tag` can be used to specify the version of banyandb.
+BanyanDB can be configured through various parameters. A comprehensive list of these parameters can be found in the configuration section of the SkyWalking BanyanDB Helm chart repository [https://github.com/apache/skywalking-banyandb-helm?tab=readme-ov-file#configuration]. These parameters allow you to customize aspects such as replication, resource allocation, persistence, and more to suit your specific deployment needs. Remember to prepend 'banyandb.' to all parameter names when applying the settings. For example, `banyandb.image.tag` can be used to specify the version of BanyanDB.
 
 ## Install released version using Apache Jfrog Helm repository (<= 4.3.0)
 
@@ -182,7 +182,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RE
 
 ## Install a specific version of SkyWalking with an existing database
 
-If you want to use a specific version of elasticsearch as storage solution, for instance, modify the connection information to the existing elasticsearch cluster in file [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml).
+If you want to use a specific version of ElasticSearch as storage solution, for instance, modify the connection information to the existing ElasticSearch cluster in file [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml).
 
 ```shell script
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
