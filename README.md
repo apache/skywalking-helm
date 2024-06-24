@@ -62,7 +62,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   --set banyandb.image.tag=0.6.1
 ```
 
-BanyanDB can be configured through various parameters. A comprehensive list of these parameters can be found in the configuration section of the SkyWalking BanyanDB Helm chart repository [https://github.com/apache/skywalking-banyandb-helm?tab=readme-ov-file#configuration]. These parameters allow you to customize aspects such as replication, resource allocation, persistence, and more to suit your specific deployment needs. Remember to prepend 'banyandb.' to all parameter names when applying the settings. For example, `banyandb.image.tag` can be used to specify the version of BanyanDB.
+BanyanDB can be configured through various parameters. A comprehensive list of these parameters can be found in the configuration section of [BanyanDB Helm](https://github.com/apache/skywalking-banyandb-helm?tab=readme-ov-file#configuration) repository. These parameters allow you to customize aspects such as replication, resource allocation, persistence, and more to suit your specific deployment needs. Remember to prepend 'banyandb.' to all parameter names when applying the settings. For example, `banyandb.image.tag` can be used to specify the version of BanyanDB.
 
 ## Install released version using Apache Jfrog Helm repository (<= 4.3.0)
 
