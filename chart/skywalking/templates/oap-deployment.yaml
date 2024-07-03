@@ -185,10 +185,25 @@ spec:
           {{- end }}
           {{- end }}
           {{- end }}
+          {{- range .Values.oap.secretMounts }}
+          - name: {{ .name }}
+            mountPath: {{ .path }}
+            {{- if .subPath }}
+            subPath: {{ .subPath }}
+            {{- end }}
+          {{- end }}
 
       volumes:
         {{- if .Values.oap.config }}
         - name: skywalking-oap-override
           configMap:
             name: {{ template "skywalking.fullname" . }}-oap-cm-override
+        {{- end }}
+        {{- range .Values.oap.secretMounts }}
+        - name: {{ .name }}
+          secret:
+            secretName: {{ .secretName }}
+            {{- if .defaultMode }}
+            defaultMode: {{ .defaultMode }}
+          {{- end }}
         {{- end }}

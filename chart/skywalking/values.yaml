@@ -126,6 +126,12 @@ oap:
     #       silence-period: 5
     #       Response time of service {name} is more than 1000ms in 3 minutes of last 10 minutes.
 
+  # A list of secrets and their paths to mount inside the pod
+  secretMounts: []
+#    - name: elastic-certificates
+#      secretName: elastic-certificates
+#      path: /usr/share/elasticsearch/config/certs
+
 ui:
   name: ui
   replicas: 1
