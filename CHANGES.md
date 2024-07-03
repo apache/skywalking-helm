@@ -10,6 +10,7 @@ Release Notes.
 - Bump up BanyanDB Helm version to 0.2.0.
 - Bump up OAP and UI to 10.0.0.
 - Make release process work with Linux.
+- Support setting `secretMounts` in OAP.
 
 4.5.0
 ------------------
