@@ -444,6 +444,7 @@ postgresql:
     # The hostname of your own postgresql service, this only takes effect when postgresql.enabled is false.
     host: postgresql-service.your-awesome-company.com
   auth:
+    postgresPassword: "123456"
     username: postgres
     password: "123456"
     database: skywalking
