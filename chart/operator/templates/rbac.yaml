@@ -60,7 +60,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: skywalking-swck-manager-role
+  name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-manager-role"))) | printf "%s-manager-role" }}
 rules:
 - apiGroups:
   - certificates.k8s.io
@@ -459,7 +459,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-leader-election-role"))) | printf "%s-leader-election-role" }} binding
+  name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-leader-election-role"))) | printf "%s-leader-election-role" }}binding
   namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -473,7 +473,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-manager-role"))) | printf "%s-manager-role" }} binding
+  name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-manager-role"))) | printf "%s-manager-role" }}binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -491,6 +491,19 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-proxy-role"))) | printf "%s-proxy-role" }} 
+subjects:
+- kind: ServiceAccount
+  name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-controller-manager"))) | printf "%s-controller-manager" }} 
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-metrics-reader"))) | printf "%s-metrics-reader" }}-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-metrics-reader"))) | printf "%s-metrics-reader" }} 
 subjects:
 - kind: ServiceAccount
   name: {{ include "operator.fullname" . | trunc (int (sub 63 (len "-controller-manager"))) | printf "%s-controller-manager" }} 
