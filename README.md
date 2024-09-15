@@ -59,10 +59,12 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   --set ui.image.tag=10.0.1 \
   --set elasticsearch.enabled=false \
   --set banyandb.enabled=true \
-  --set banyandb.image.tag=0.6.1
+  --set banyandb.image.tag=0.7.0
 ```
 
 BanyanDB can be configured through various parameters. A comprehensive list of these parameters can be found in the configuration section of [BanyanDB Helm](https://github.com/apache/skywalking-banyandb-helm?tab=readme-ov-file#configuration) repository. These parameters allow you to customize aspects such as replication, resource allocation, persistence, and more to suit your specific deployment needs. Remember to prepend 'banyandb.' to all parameter names when applying the settings. For example, `banyandb.image.tag` can be used to specify the version of BanyanDB.
+
+The _BanyanDB(>=0.7.0)_ is not compatible with the _BanyanDB Helm Chart(<0.3.0)_ which is referred by the _SkyWalking Helm Chart(<4.7.0)_. If you want to use _BanyanDB(>=0.7.0)_ as storage solution, you have to use the _BanyanDB Helm Chart(>=0.3.0)_ or _SkyWalking Helm Chart(>=4.7.0)_.
 
 ## Install released version using Apache Jfrog Helm repository (<= 4.3.0)
 

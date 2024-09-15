@@ -33,7 +33,7 @@ oap:
   name: oap
   image:
     repository: skywalking.docker.scarf.sh/apache/skywalking-oap-server
-    tag: null  # Must be set explicitly
+    tag: null # Must be set explicitly
     pullPolicy: IfNotPresent
   storageType: null
   ports:
@@ -54,58 +54,58 @@ oap:
   nodeSelector: {}
   tolerations: []
   resources: {}
-    # limits:
-    #   cpu: 8
-    #   memory: 8Gi
-    # requests:
-    #   cpu: 8
-    #   memory: 4Gi
+  # limits:
+  #   cpu: 8
+  #   memory: 8Gi
+  # requests:
+  #   cpu: 8
+  #   memory: 4Gi
   livenessProbe: {}
-    # tcpSocket:
-    #   port: 12800
-    # initialDelaySeconds: 5
-    # periodSeconds: 20
+  # tcpSocket:
+  #   port: 12800
+  # initialDelaySeconds: 5
+  # periodSeconds: 20
   startupProbe: {}
   # Time to boot the application is set to:
   # 9 (failureThreshold) * 10 (periodSeconds) = 90 seconds in this case.
-    # tcpSocket:
-    #   port: 12800
-    # failureThreshold: 9
-    # periodSeconds: 10
+  # tcpSocket:
+  #   port: 12800
+  # failureThreshold: 9
+  # periodSeconds: 10
   readinessProbe: {}
-    # tcpSocket:
-    #   port: 12800
-    # initialDelaySeconds: 5
-    # periodSeconds: 20
+  # tcpSocket:
+  #   port: 12800
+  # initialDelaySeconds: 5
+  # periodSeconds: 20
   # podAnnotations:
   #   example: oap-foo
   securityContext: {}
-    # runAsUser: 1000
-    # runAsGroup: 1000
-    # fsGroup: 1000
+  # runAsUser: 1000
+  # runAsGroup: 1000
+  # fsGroup: 1000
   env:
-    # more env, please refer to https://hub.docker.com/r/apache/skywalking-oap-server
-    # or https://github.com/apache/skywalking-docker/blob/master/6/6.4/oap/README.md#sw_telemetry
+  # more env, please refer to https://hub.docker.com/r/apache/skywalking-oap-server
+  # or https://github.com/apache/skywalking-docker/blob/master/6/6.4/oap/README.md#sw_telemetry
 
   # Allows you to add any config files in /skywalking/config
   # such as log4j2.xml, oal/core.oal, etc.
   config: {}
-    # metadata-service-mapping.yaml: |
-    #   serviceName: e2e::${LABELS."service.istio.io/canonical-name"}
-    #   serviceInstanceName: ${NAME}
-    # oal:
-    #   core.oal: |
-    #     service_resp_time = from(Service.latency).longAvg();
-    #     service_sla = from(Service.*).percent(status == true);
-    #     service_cpm = from(Service.*).cpm();
-    # log4j2.xml: |
-    #   <Configuration status="DEBUG">
-    #     <!-- ... -->
-    #   </Configuration>
-    # ui-initialized-templates:
-    #   general:
-    #     general-service.json: |
-    #       [{"id":"General-Service" ... }]
+  # metadata-service-mapping.yaml: |
+  #   serviceName: e2e::${LABELS."service.istio.io/canonical-name"}
+  #   serviceInstanceName: ${NAME}
+  # oal:
+  #   core.oal: |
+  #     service_resp_time = from(Service.latency).longAvg();
+  #     service_sla = from(Service.*).percent(status == true);
+  #     service_cpm = from(Service.*).cpm();
+  # log4j2.xml: |
+  #   <Configuration status="DEBUG">
+  #     <!-- ... -->
+  #   </Configuration>
+  # ui-initialized-templates:
+  #   general:
+  #     general-service.json: |
+  #       [{"id":"General-Service" ... }]
   # When 'dynamicConfig.enabled' set to true, enable oap dynamic configuration through k8s configmap，
   # Note: The default configmap data is empty, please refer to the detailed documentation (https://github.com/apache/skywalking/blob/master/docs/en/setup/backend/dynamic-config.md)
   # Sync period in seconds. Defaults to 60 seconds.
@@ -137,7 +137,7 @@ ui:
   replicas: 1
   image:
     repository: skywalking.docker.scarf.sh/apache/skywalking-ui
-    tag: null  # Must be set explicitly
+    tag: null # Must be set explicitly
     pullPolicy: IfNotPresent
   # podAnnotations:
   #   example: oap-foo
@@ -147,8 +147,8 @@ ui:
   ingress:
     enabled: false
     annotations: {}
-      # kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
     path: /
     hosts: []
     # - skywalking.local
@@ -181,9 +181,9 @@ ui:
     ## Limit load balancer source ips to list of CIDRs (where available)
     # loadBalancerSourceRanges: []
   securityContext: {}
-    # runAsUser: 1000
-    # runAsGroup: 1000
-    # fsGroup: 1000
+  # runAsUser: 1000
+  # runAsGroup: 1000
+  # fsGroup: 1000
   env:
 
 oapInit:
@@ -195,12 +195,12 @@ oapInit:
 
 elasticsearch:
   enabled: true
-  config:               # For users of an existing elasticsearch cluster,takes effect when `elasticsearch.enabled` is false
+  config: # For users of an existing elasticsearch cluster,takes effect when `elasticsearch.enabled` is false
     port:
       http: 9200
     host: elasticsearch # es service on kubernetes or host
-    user: "xxx"         # [optional]
-    password: "xxx"     # [optional]
+    user: "xxx" # [optional]
+    password: "xxx" # [optional]
   clusterName: "elasticsearch"
   nodeGroup: "master"
 
@@ -261,25 +261,25 @@ elasticsearch:
       memory: "2Gi"
 
   initResources: {}
-    # limits:
-    #   cpu: "25m"
-    #   # memory: "128Mi"
-    # requests:
-    #   cpu: "25m"
+  # limits:
+  #   cpu: "25m"
+  #   # memory: "128Mi"
+  # requests:
+  #   cpu: "25m"
   #   memory: "128Mi"
 
   sidecarResources: {}
-    # limits:
-    #   cpu: "25m"
-    #   # memory: "128Mi"
-    # requests:
-    #   cpu: "25m"
+  # limits:
+  #   cpu: "25m"
+  #   # memory: "128Mi"
+  # requests:
+  #   cpu: "25m"
   #   memory: "128Mi"
 
   networkHost: "0.0.0.0"
 
   volumeClaimTemplate:
-    accessModes: [ "ReadWriteOnce" ]
+    accessModes: ["ReadWriteOnce"]
     resources:
       requests:
         storage: 30Gi
@@ -311,17 +311,17 @@ elasticsearch:
     annotations: {}
 
   extraVolumes: ""
-    # - name: extras
+  # - name: extras
   #   emptyDir: {}
 
   extraVolumeMounts: ""
-    # - name: extras
-    #   mountPath: /usr/share/extras
+  # - name: extras
+  #   mountPath: /usr/share/extras
   #   readOnly: true
 
   extraInitContainers: ""
-    # - name: do-something
-    #   image: busybox
+  # - name: do-something
+  #   image: busybox
   #   command: ['do', 'something']
 
   # This is the PriorityClass settings as defined in
@@ -409,7 +409,7 @@ elasticsearch:
   ingress:
     enabled: false
     annotations: {}
-      # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
     path: /
     hosts:
@@ -426,11 +426,11 @@ elasticsearch:
   masterTerminationFix: false
 
   lifecycle: {}
-    # preStop:
-    #   exec:
-    #     command: ["/bin/sh", "-c", "echo Hello from the postStart handler > /usr/share/message"]
-    # postStart:
-    #   exec:
+  # preStop:
+  #   exec:
+  #     command: ["/bin/sh", "-c", "echo Hello from the postStart handler > /usr/share/message"]
+  # postStart:
+  #   exec:
   #     command: ["/bin/sh", "-c", "echo Hello from the postStart handler > /usr/share/message"]
 
   sysctlInitContainer:
@@ -460,9 +460,8 @@ postgresql:
 banyandb:
   enabled: false
   config:
-    httpHost: banyandb-http
-    httpPort: 17913
-    targets: "banyandb-grpc:17912"
+    grpcAddress: "banyandb-grpc:17912"
+    httpAddress: "banyandb-http:17913"
   standalone:
     enabled: true
   cluster:
@@ -495,24 +494,24 @@ satellite:
   nodeSelector: {}
   tolerations: []
   resources: {}
-    # limits:
-    #   cpu: 4
-    #   memory: 8Gi
-    # requests:
-    #   cpu: 4
-    #   memory: 4Gi
+  # limits:
+  #   cpu: 4
+  #   memory: 8Gi
+  # requests:
+  #   cpu: 4
+  #   memory: 4Gi
   podAnnotations:
-    # example: oap-foo
+  # example: oap-foo
   env:
-    # more env, please refer to https://skywalking.apache.org/docs/skywalking-satellite/latest/en/setup/readme/#satellite_configyaml
+  # more env, please refer to https://skywalking.apache.org/docs/skywalking-satellite/latest/en/setup/readme/#satellite_configyaml
   # Allows you to add any config files in /skywalking/config.
   config: {}
-    # satellite_config.yaml: |
-    #   key: val
+  # satellite_config.yaml: |
+  #   key: val
   securityContext: {}
-    # runAsUser: 1000
-    # runAsGroup: 1000
-    # fsGroup: 1000
+  # runAsUser: 1000
+  # runAsGroup: 1000
+  # fsGroup: 1000
 
 nameOverride: ""
 fullnameOverride: ""

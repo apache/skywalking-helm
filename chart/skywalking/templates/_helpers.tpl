@@ -116,14 +116,14 @@ Create the name of the service account to use for the satellite cluster
         sleep 3
       done
 {{- else if eq .Values.oap.storageType "banyandb" -}}
-{{- $banyandbHost := "banyandb-http" -}}
-{{- if not .Values.banyandb.enabled -}}
-{{- $banyandbHost = .Values.banyandb.config.httpHost -}}
+{{- $address := .Values.banyandb.config.httpAddress -}}
+{{- if .Values.banyandb.enabled -}}
+{{- $address = printf "%s-http:%s" (include "skywalking.banyandb.fullname" .) (include "skywalking.banyandb.httpPort" .) -}}
 {{- end }}
 - name: wait-for-banyandb
   image: curlimages/curl
   imagePullPolicy: IfNotPresent
-  command: ['sh', '-c', 'for i in $(seq 1 60); do curl {{ $banyandbHost }}:{{ .Values.banyandb.config.httpPort }}/api/healthz && exit 0 || sleep 5; done; exit 1']
+  command: ['sh', '-c', 'for i in $(seq 1 60); do curl -k {{ $address }}/api/healthz && exit 0 || sleep 5; done; exit 1']
 {{- end }}
 {{- end -}}
 
@@ -160,7 +160,59 @@ Create the name of the service account to use for the satellite cluster
 - name: SW_DATA_SOURCE_PASSWORD
   value: "{{ .Values.postgresql.auth.password }}"
 {{- else if eq .Values.oap.storageType "banyandb" }}
-- name: SW_STORAGE_BANYANDB_TARGETS
-  value: "{{ .Values.banyandb.config.targets }}"
+{{- $targets := .Values.banyandb.config.grpcAddress -}}
+{{- if .Values.banyandb.enabled -}}
+{{- $targets = printf "%s-grpc:%s" (include "skywalking.banyandb.fullname" .) (include "skywalking.banyandb.grpcPort" .) -}}
 {{- end }}
+- name: SW_STORAGE_BANYANDB_TARGETS
+  value: "{{ $targets }}"
+{{- end }}
+{{- end -}}
+
+{{/*
+Expand the name of the banyandb chart.
+*/}}
+{{- define "skywalking.banyandb.name" -}}
+{{- default "skywalking-banyandb-helm" .Values.banyandb.nameOverride | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+
+{{/*
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "skywalking.banyandb.fullname" -}}
+{{- if .Values.banyandb.fullnameOverride -}}
+{{- .Values.banyandb.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := (include "skywalking.banyandb.name" .) -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Define the banyandb http port
+*/}}
+{{- define "skywalking.banyandb.httpPort" -}}
+{{- if .Values.banyandb.standalone.enabled -}}
+{{- .Values.banyandb.standalone.httpSvc.port -}}
+{{- else if .Values.banyandb.cluster.enabled -}}
+{{- .Values.banyandb.cluster.liaison.httpSvc.port -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Define the banyandb grpc port
+*/}}
+{{- define "skywalking.banyandb.grpcPort" -}}
+{{- if .Values.banyandb.standalone.enabled -}}
+{{- .Values.banyandb.standalone.grpcSvc.port -}}
+{{- else if .Values.banyandb.cluster.enabled -}}
+{{- .Values.banyandb.cluster.liaison.grpcSvc.port -}}
+{{- end -}}
 {{- end -}}

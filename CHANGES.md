@@ -2,6 +2,11 @@ Changes by Version
 ==================
 Release Notes.
 
+4.7.0
+------------------
+
+- Bump up Banyandb Helm version to 0.3.0.
+
 4.6.0
 ------------------
 
