@@ -20,11 +20,11 @@ apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
   # the control plane node config
   - role: control-plane
-    image: kindest/node:v1.28.15@sha256:a7c05c7ae043a0b8c818f5a06188bc2c4098f6cb59ca7d1856df00375d839251
+    image: kindest/node:v1.21.14
   # the three workers
   - role: worker
-    image: kindest/node:v1.28.15@sha256:a7c05c7ae043a0b8c818f5a06188bc2c4098f6cb59ca7d1856df00375d839251
+    image: kindest/node:v1.21.14
   - role: worker
-    image: kindest/node:v1.28.15@sha256:a7c05c7ae043a0b8c818f5a06188bc2c4098f6cb59ca7d1856df00375d839251
+    image: kindest/node:v1.21.14
   - role: worker
-    image: kindest/node:v1.28.15@sha256:a7c05c7ae043a0b8c818f5a06188bc2c4098f6cb59ca7d1856df00375d839251
+    image: kindest/node:v1.21.14
