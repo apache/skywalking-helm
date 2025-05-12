@@ -57,7 +57,7 @@ jobs:
       OAP_REPO: ghcr.io/apache/skywalking/oap
       UI_TAG: 3739add599a4e213071d68b1f2e9fbae31b7a6bf
       UI_REPO: ghcr.io/apache/skywalking/ui
-      SATELLITE_TAG: c18784af827d1ee19003b5dddd97bd03cca02136
+      SATELLITE_TAG: vc18784af827d1ee19003b5dddd97bd03cca02136
       SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
       BANYANDB_TAG: 190a7b9bc26a7bcec8c3fbb0aa62b36450664c82
       BANYANDB_REPO: ghcr.io/apache/skywalking-banyandb
