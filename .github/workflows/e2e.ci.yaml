@@ -59,6 +59,8 @@ jobs:
       UI_REPO: ghcr.io/apache/skywalking/ui
       SATELLITE_TAG: v35bfaff6352b4dc351a706772796a1f79b651c14
       SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
+      BANYANDB_TAG: 0e734c462571dcf55dbb7761211c07d8b156521e
+      BANYANDB_REPO: ghcr.io/apache/skywalking-banyandb
     steps:
       - uses: actions/checkout@v2
       - name: Login to ghcr

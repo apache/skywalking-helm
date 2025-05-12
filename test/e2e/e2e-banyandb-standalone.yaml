@@ -55,6 +55,8 @@ setup:
                        --set oap.image.tag=$OAP_TAG \
                        --set oap.storageType=banyandb \
                        --set elasticsearch.enabled=false \
+                       --set banyandb.image.repository=$BANYANDB_REPO \
+                       --set banyandb.image.tag=$BANYANDB_TAG \
                        --set banyandb.enabled=true \
                        --set banyandb.standalone.enabled=true \
                        --set banyandb.cluster.enabled=false \
