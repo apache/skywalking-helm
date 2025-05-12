@@ -459,9 +459,6 @@ postgresql:
 
 banyandb:
   enabled: false
-  config:
-    grpcAddress: "banyandb-grpc:17912"
-    httpAddress: "banyandb-http:17913"
   standalone:
     enabled: true
   cluster:
