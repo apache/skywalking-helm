@@ -91,10 +91,18 @@ spec:
             mountPath: /skywalking/config/{{ $path }}
             subPath: {{ $path }}
           {{- else }}
-          {{- range $subpath, $oalContent := $config }}
+          {{- range $subpath, $subconfig := $config }}
+          {{- if typeIs "string" $subconfig }}
           - name: skywalking-oap-override
             mountPath: /skywalking/config/{{ $path }}/{{ $subpath }}
             subPath: {{ print $path "-" $subpath }}
+          {{- else }}
+          {{- range $subsubpath, $subsubconfig := $subconfig }}
+          - name: skywalking-oap-override
+            mountPath: /skywalking/config/{{ $path }}/{{ $subpath }}/{{ $subsubpath }}
+            subPath: {{ print $path "-" $subpath "-" $subsubpath }}
+          {{- end }}
+          {{- end }}
           {{- end }}
           {{- end }}
           {{- end }}
