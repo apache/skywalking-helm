@@ -216,3 +216,56 @@ Define the banyandb grpc port
 {{- .Values.banyandb.cluster.liaison.grpcSvc.port -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Define volumeMounts for OAP containers
+*/}}
+{{- define "skywalking.oap.volumeMounts" -}}
+{{- range $path, $config := .Values.oap.config }}
+{{- if typeIs "string" $config }}
+- name: skywalking-oap-override
+  mountPath: /skywalking/config/{{ $path }}
+  subPath: {{ $path }}
+{{- else }}
+{{- range $subpath, $subconfig := $config }}
+{{- if typeIs "string" $subconfig }}
+- name: skywalking-oap-override
+  mountPath: /skywalking/config/{{ $path }}/{{ $subpath }}
+  subPath: {{ print $path "-" $subpath }}
+{{- else }}
+{{- range $subsubpath, $subsubconfig := $subconfig }}
+- name: skywalking-oap-override
+  mountPath: /skywalking/config/{{ $path }}/{{ $subpath }}/{{ $subsubpath }}
+  subPath: {{ print $path "-" $subpath "-" $subsubpath }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- range .Values.oap.secretMounts }}
+- name: {{ .name }}
+  mountPath: {{ .path }}
+  {{- if .subPath }}
+  subPath: {{ .subPath }}
+  {{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+Define volumes for OAP containers
+*/}}
+{{- define "skywalking.oap.volumes" -}}
+{{- if .Values.oap.config }}
+- name: skywalking-oap-override
+  configMap:
+    name: {{ template "skywalking.fullname" . }}-oap-cm-override
+{{- end }}
+{{- range .Values.oap.secretMounts }}
+- name: {{ .name }}
+  secret:
+    secretName: {{ .secretName }}
+    {{- if .defaultMode }}
+    defaultMode: {{ .defaultMode }}
+    {{- end }}
+{{- end }}
+{{- end -}}
