@@ -2,6 +2,11 @@ Changes by Version
 ==================
 Release Notes.
 
+4.8.0
+------------------
+
+- Bump up BanyanDB Helm version to 0.5.0.
+
 4.7.0
 ------------------
 

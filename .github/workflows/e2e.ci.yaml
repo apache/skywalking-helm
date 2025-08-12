@@ -26,7 +26,7 @@ on:
 
 env:
   SKIP_TEST: true
-  ISTIO_VERSION: 1.7.1
+  ISTIO_VERSION: 1.24.0
 
 jobs:
   als:
@@ -53,13 +53,13 @@ jobs:
             config: test/e2e/swck/oap-ui-agent-satellite.yaml
     name: ${{ matrix.test.name }}
     env:
-      OAP_TAG: ddbed6d091c4c20dbb43294fbd03778bdbb8471a
+      OAP_TAG: bf04afdb2a841c60d5e27f5a9fc62d0879a5600c
       OAP_REPO: ghcr.io/apache/skywalking/oap
-      UI_TAG: ddbed6d091c4c20dbb43294fbd03778bdbb8471a
+      UI_TAG: bf04afdb2a841c60d5e27f5a9fc62d0879a5600c
       UI_REPO: ghcr.io/apache/skywalking/ui
       SATELLITE_TAG: v35bfaff6352b4dc351a706772796a1f79b651c14
       SATELLITE_REPO: ghcr.io/apache/skywalking-satellite/skywalking-satellite
-      BANYANDB_TAG: 0e734c462571dcf55dbb7761211c07d8b156521e
+      BANYANDB_TAG: 7e5b2d0404e8ad6d5835eee6fe589a2544d0decb
       BANYANDB_REPO: ghcr.io/apache/skywalking-banyandb
     steps:
       - uses: actions/checkout@v2
@@ -72,9 +72,9 @@ jobs:
       - name: Setup go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.20'
+          go-version: '1.24'
       - name: ${{ matrix.test.name }}
-        uses: apache/skywalking-infra-e2e@cf589b4a0b9f8e6f436f78e9cfd94a1ee5494180
+        uses: apache/skywalking-infra-e2e@7e4b5b68716fdb7b79b21fa8908f9db497e1b115
         with:
           e2e-file: $GITHUB_WORKSPACE/${{ matrix.test.config }}
       - if: ${{ failure() }}
