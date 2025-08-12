@@ -17,7 +17,7 @@
 
 setup:
   env: kind
-  file: kind.yaml
+  file: kind28.yaml
   init-system-environment: env
   kind:
     expose-ports:
