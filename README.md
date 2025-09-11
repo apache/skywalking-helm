@@ -245,3 +245,5 @@ kubectl -n "${SKYWALKING_RELEASE_NAMESPACE}" apply -f oap-init.job.trimmed.yaml
 
 # LICENSE
 Apache 2.0
+
+export OAP_TAG=79860ca5c76a77bbd93e76ce4861b24707dd5ee3 && export OAP_REPO=ghcr.io/apache/skywalking/oap && export UI_TAG=79860ca5c76a77bbd93e76ce4861b24707dd5ee3 && export UI_REPO=ghcr.io/apache/skywalking/ui && export SATELLITE_TAG=v35bfaff6352b4dc351a706772796a1f79b651c14 && export SATELLITE_REPO=ghcr.io/apache/skywalking-satellite/skywalking-satellite && export BANYANDB_TAG=46083529398b73504e9ca929ef367cd1776aef82 && export BANYANDB_REPO=ghcr.io/apache/skywalking-banyandb && export ISTIO_VERSION=1.24.0 && e2e run -c test/e2e/e2e-banyandb-standalone.yaml

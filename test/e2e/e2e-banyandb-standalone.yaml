@@ -61,6 +61,7 @@ setup:
                        --set banyandb.standalone.enabled=true \
                        --set banyandb.cluster.enabled=false \
                        --set banyandb.etcd.enabled=false \
+                       --set banyandb.auth.enabled=true \
                        --set satellite.enabled=true \
                        --set satellite.image.repository=$SATELLITE_REPO \
                        --set satellite.image.tag=$SATELLITE_TAG \

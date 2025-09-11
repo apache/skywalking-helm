@@ -20,26 +20,26 @@ version: 4.7.0
 description: Helm Chart for Apache SkyWalking
 icon: https://raw.githubusercontent.com/apache/skywalking-kubernetes/master/logo/sw-logo-for-chart.jpg
 sources:
-  - https://github.com/apache/skywalking-helm
+- https://github.com/apache/skywalking-helm
 maintainers:
-  - name: hanahmily
-    email: hanahmily@gmail.com
-  - name: innerpeacez
-    email: innerpeace.zhai@gmail.com
-  - name: kezhenxu94
-    email: kezhenxu94@163.com
+- name: hanahmily
+  email: hanahmily@gmail.com
+- name: innerpeacez
+  email: innerpeace.zhai@gmail.com
+- name: kezhenxu94
+  email: kezhenxu94@163.com
 
 dependencies:
-  - name: elasticsearch
-    version: ~7.17.1
-    repository: https://helm.elastic.co/
-    condition: elasticsearch.enabled
-  - name: postgresql
-    version: 12.1.2
-    repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
-    condition: postgresql.enabled
-  - name: skywalking-banyandb-helm
-    alias: banyandb
-    version: 0.5.0-rc3
-    repository: oci://registry-1.docker.io/apache
-    condition: banyandb.enabled
+- name: elasticsearch
+  version: ~7.17.1
+  repository: https://helm.elastic.co/
+  condition: elasticsearch.enabled
+- name: postgresql
+  version: 12.1.2
+  repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
+  condition: postgresql.enabled
+- name: skywalking-banyandb-helm
+  alias: banyandb
+  version: 0.0.0-70694ad
+  repository: oci://ghcr.io/apache/skywalking-banyandb-helm
+  condition: banyandb.enabled

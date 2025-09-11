@@ -166,6 +166,14 @@ Create the name of the service account to use for the satellite cluster
 {{- end }}
 - name: SW_STORAGE_BANYANDB_TARGETS
   value: "{{ $targets }}"
+{{- if .Values.banyandb.auth.enabled }}
+{{- if .Values.banyandb.auth.users }}
+- name: SW_STORAGE_BANYANDB_USER
+  value: "{{ (index .Values.banyandb.auth.users 0).username }}"
+- name: SW_STORAGE_BANYANDB_PASSWORD
+  value: "{{ (index .Values.banyandb.auth.users 0).password }}"
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end -}}
 
