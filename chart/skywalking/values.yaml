@@ -83,8 +83,8 @@ oap:
   # runAsUser: 1000
   # runAsGroup: 1000
   # fsGroup: 1000
-  env:
-  # more env, please refer to https://hub.docker.com/r/apache/skywalking-oap-server
+  env: # more env, please refer to https://hub.docker.com/r/apache/skywalking-oap-server
+
   # or https://github.com/apache/skywalking-docker/blob/master/6/6.4/oap/README.md#sw_telemetry
 
   # Allows you to add any config files in /skywalking/config
@@ -126,7 +126,7 @@ oap:
     #       silence-period: 5
     #       Response time of service {name} is more than 1000ms in 3 minutes of last 10 minutes.
 
-  # A list of secrets and their paths to mount inside the pod
+    # A list of secrets and their paths to mount inside the pod
   secretMounts: []
 #    - name: elastic-certificates
 #      secretName: elastic-certificates
@@ -186,6 +186,7 @@ ui:
   # fsGroup: 1000
   env:
 
+
 oapInit:
   nodeAffinity: {}
   nodeSelector: {}
@@ -195,7 +196,8 @@ oapInit:
 
 elasticsearch:
   enabled: true
-  config: # For users of an existing elasticsearch cluster,takes effect when `elasticsearch.enabled` is false
+  config:
+    # For users of an existing elasticsearch cluster,takes effect when `elasticsearch.enabled` is false
     port:
       http: 9200
     host: elasticsearch # es service on kubernetes or host
@@ -279,7 +281,7 @@ elasticsearch:
   networkHost: "0.0.0.0"
 
   volumeClaimTemplate:
-    accessModes: ["ReadWriteOnce"]
+    accessModes: [ "ReadWriteOnce" ]
     resources:
       requests:
         storage: 30Gi
@@ -302,9 +304,9 @@ elasticsearch:
       supplementalGroups:
         rule: RunAsAny
       volumes:
-        - secret
-        - configMap
-        - persistentVolumeClaim
+      - secret
+      - configMap
+      - persistentVolumeClaim
 
   persistence:
     enabled: false
@@ -375,7 +377,7 @@ elasticsearch:
   securityContext:
     capabilities:
       drop:
-        - ALL
+      - ALL
     # readOnlyRootFilesystem: true
     runAsNonRoot: true
     runAsUser: 1000
@@ -413,7 +415,7 @@ elasticsearch:
     # kubernetes.io/tls-acme: "true"
     path: /
     hosts:
-      - chart-example.local
+    - chart-example.local
     tls: []
     #  - secretName: chart-example-tls
     #    hosts:
@@ -462,6 +464,11 @@ banyandb:
   config:
     grpcAddress: "banyandb-grpc:17912"
     httpAddress: "banyandb-http:17913"
+  auth:
+    enabled: false
+    users:
+    - username: "admin"
+      password: "banyandb"
   standalone:
     enabled: true
   cluster:
@@ -500,10 +507,10 @@ satellite:
   # requests:
   #   cpu: 4
   #   memory: 4Gi
-  podAnnotations:
-  # example: oap-foo
-  env:
-  # more env, please refer to https://skywalking.apache.org/docs/skywalking-satellite/latest/en/setup/readme/#satellite_configyaml
+  podAnnotations: # example: oap-foo
+
+  env: # more env, please refer to https://skywalking.apache.org/docs/skywalking-satellite/latest/en/setup/readme/#satellite_configyaml
+
   # Allows you to add any config files in /skywalking/config.
   config: {}
   # satellite_config.yaml: |
