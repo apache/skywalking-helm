@@ -17,11 +17,11 @@ There are required values that you must set explicitly when deploying SkyWalking
 
 | name | description | example |
 | ---- | ----------- | ------- |
-| `oap.image.tag` | the OAP docker image tag | `10.1.0` |
+| `oap.image.tag` | the OAP docker image tag | `10.3.0` |
 | `oap.storageType` | the storage type of the OAP | `elasticsearch`, `postgresql`, `banyandb`, etc. |
-| `ui.image.tag` | the UI docker image tag | `10.1.0` |
+| `ui.image.tag` | the UI docker image tag | `10.3.0` |
 
-You can set these required values via command line (e.g. `--set oap.image.tag=10.1.0 --set oap.storageType=elasticsearch`),
+You can set these required values via command line (e.g. `--set oap.image.tag=10.3.0 --set oap.storageType=elasticsearch`),
 or edit them in a separate file(e.g. [`values.yaml`](chart/skywalking/values.yaml), [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml))
 and use `-f <filename>` or `--values=<filename>` to set them.
 
@@ -42,9 +42,9 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   oci://registry-1.docker.io/apache/skywalking-helm \
   --version "${SKYWALKING_RELEASE_VERSION}" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=10.1.0 \
+  --set oap.image.tag=10.3.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=10.1.0
+  --set ui.image.tag=10.3.0
 ```
 
 To use BanyanDB as storage solution, you can try
@@ -54,17 +54,17 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   oci://registry-1.docker.io/apache/skywalking-helm \
   --version "${SKYWALKING_RELEASE_VERSION}" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=10.1.0 \
+  --set oap.image.tag=10.3.0 \
   --set oap.storageType=banyandb \
-  --set ui.image.tag=10.1.0 \
+  --set ui.image.tag=10.3.0 \
   --set elasticsearch.enabled=false \
   --set banyandb.enabled=true \
-  --set banyandb.image.tag=0.7.0
+  --set banyandb.image.tag=0.9.0
 ```
 
 BanyanDB can be configured through various parameters. A comprehensive list of these parameters can be found in the configuration section of [BanyanDB Helm](https://github.com/apache/skywalking-banyandb-helm?tab=readme-ov-file#configuration) repository. These parameters allow you to customize aspects such as replication, resource allocation, persistence, and more to suit your specific deployment needs. Remember to prepend 'banyandb.' to all parameter names when applying the settings. For example, `banyandb.image.tag` can be used to specify the version of BanyanDB.
 
-The _BanyanDB(>=0.7.0)_ is not compatible with the _BanyanDB Helm Chart(<0.3.0)_ which was referred by the _SkyWalking Helm Chart(<4.7.0)_. Meanwhile, _BanyanDB(>=0.7.0)_ requires OAP 10.1.0+. If you want to use _BanyanDB(>=0.7.0)_ as storage solution, you have to use the _BanyanDB Helm Chart(>=0.3.0)_ or _SkyWalking Helm Chart(>=4.7.0)_.
+The _BanyanDB(>=0.7.0)_ is not compatible with the _BanyanDB Helm Chart(<0.3.0)_ which was referred by the _SkyWalking Helm Chart(<4.7.0)_. Meanwhile, _BanyanDB(>=0.7.0)_ requires OAP 10.3.0+. If you want to use _BanyanDB(>=0.7.0)_ as storage solution, you have to use the _BanyanDB Helm Chart(>=0.3.0)_ or _SkyWalking Helm Chart(>=4.7.0)_.
 
 ## Install released version using Apache Jfrog Helm repository (<= 4.3.0)
 
@@ -130,13 +130,13 @@ specify those configurations, they may take no effect.
 
 here are some examples.
 
-- Deploy SkyWalking 10.1.0
+- Deploy SkyWalking 10.3.0
 
 ```shell script
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=10.1.0 \
+  --set oap.image.tag=10.3.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=10.1.0
+  --set ui.image.tag=10.3.0
 ```
 
 Because ElasticSearch recommends to use the corresponding Helm Chart version of the ElasticSearch version,
@@ -169,9 +169,9 @@ helm -n istio-system install skywalking \
   oci://ghcr.io/apache/skywalking-helm/skywalking-helm \
   --version "0.0.0-b670c41d94a82ddefcf466d54bab5c492d88d772" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=10.1.0 \
+  --set oap.image.tag=10.3.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=10.1.0
+  --set ui.image.tag=10.3.0
 ```
 
 ## Install development version using source codes
