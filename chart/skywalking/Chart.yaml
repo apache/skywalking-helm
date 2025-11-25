@@ -40,6 +40,6 @@ dependencies:
   condition: postgresql.enabled
 - name: skywalking-banyandb-helm
   alias: banyandb
-  version: 0.5.0
+  version: 0.5.2
   repository: oci://registry-1.docker.io/apache
   condition: banyandb.enabled
