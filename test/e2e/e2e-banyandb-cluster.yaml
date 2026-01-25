@@ -62,6 +62,8 @@ setup:
                        --set banyandb.cluster.enabled=true \
                        --set banyandb.etcd.enabled=true \
                        --set banyandb.etcd.auth.enabled=false \
+                       --set banyandb.cluster.fodc.agent.resources.requests.memory=256Mi \
+                       --set banyandb.cluster.fodc.agent.resources.limits.memory=256Mi \
                        --set satellite.enabled=true \
                        --set satellite.image.repository=$SATELLITE_REPO \
                        --set satellite.image.tag=$SATELLITE_TAG \

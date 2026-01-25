@@ -477,6 +477,13 @@ banyandb:
       replicas: 1
     data:
       replicas: 1
+    fodc:
+      agent:
+        resources:
+          requests:
+            memory: 256Mi
+          limits:
+            memory: 256Mi
   etcd:
     enabled: false
     replicaCount: 1
