@@ -481,9 +481,11 @@ banyandb:
       agent:
         resources:
           requests:
-            memory: 256Mi
+            - key: memory
+              value: 256Mi
           limits:
-            memory: 256Mi
+            - key: memory
+              value: 256Mi
   etcd:
     enabled: false
     replicaCount: 1
