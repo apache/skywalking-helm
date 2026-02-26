@@ -51,10 +51,26 @@ setup:
         - namespace: skywalking-swck-system
           resource: deployment/skywalking-swck-operator
           for: condition=Available
+    - name: Setup BanyanDB
+      command: |
+        export BANYANDB_VERSION=$(yq e '.dependencies[] | select(.name == "skywalking-banyandb-helm") | .version' chart/skywalking/Chart.yaml)
+        helm install banyandb oci://registry-1.docker.io/apache/skywalking-banyandb-helm \
+                       --version ${BANYANDB_VERSION} \
+                       --set fullnameOverride=banyandb \
+                       --set image.repository=$BANYANDB_REPO \
+                       --set image.tag=$BANYANDB_TAG \
+                       --set standalone.enabled=true \
+                       --set cluster.enabled=false \
+                       --set etcd.enabled=false
+      wait:
+        - namespace: default
+          resource: pod
+          for: condition=Ready
     - name: setup oapserver and ui
       command: |
         kubectl create namespace skywalking-system
-        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.9.0/test/e2e/skywalking-components-with-satellite.yaml | kubectl apply -f -
+        sed "s#OAP_IMAGE_PLACEHOLDER#${OAP_REPO}:${OAP_TAG}#g;s#UI_IMAGE_PLACEHOLDER#${UI_REPO}:${UI_TAG}#g;s#SATELLITE_IMAGE_PLACEHOLDER#${SATELLITE_REPO}:${SATELLITE_TAG}#g;s#PLACEHOLDER#latest#g" \
+          test/e2e/swck/skywalking-components-satellite.yaml | kubectl apply -f -
       wait:
         - namespace: skywalking-system
           resource: OAPServer/skywalking-system
