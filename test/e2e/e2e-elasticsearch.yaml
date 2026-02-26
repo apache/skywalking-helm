@@ -45,7 +45,7 @@ setup:
         helm dep up chart/skywalking
         helm -n istio-system install eck-operator chart/skywalking/charts/eck-operator-3.3.1.tgz \
                        --create-namespace
-        kubectl -n istio-system rollout status --watch --timeout=120s statefulset/eck-operator
+        kubectl -n istio-system rollout status --watch --timeout=120s statefulset/elastic-operator
     - name: Install SkyWalking
       command: |
         helm -n istio-system install skywalking chart/skywalking \
