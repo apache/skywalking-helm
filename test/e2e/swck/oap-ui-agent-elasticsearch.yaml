@@ -16,7 +16,7 @@
 setup:
   env: kind
   file: ../kind.yaml
-  init-system-environment: ../env.swck
+  init-system-environment: ../env
   kind:
     expose-ports:
       - namespace: skywalking-system
