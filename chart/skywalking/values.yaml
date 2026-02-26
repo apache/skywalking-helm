@@ -194,251 +194,156 @@ oapInit:
   extraPodLabels: {}
   # sidecar.istio.io/inject: false
 
+# ECK Operator settings
+# Set eckOperator.enabled to false if the ECK operator is already installed in your cluster
+eckOperator:
+  enabled: true
+
+# Elasticsearch managed by ECK (eck-elasticsearch chart)
+# ref: https://github.com/elastic/cloud-on-k8s
 elasticsearch:
   enabled: true
+  version: 8.18.8
+  fullnameOverride: ""
+
+  # For users of an existing elasticsearch cluster, takes effect when `elasticsearch.enabled` is false
   config:
-    # For users of an existing elasticsearch cluster,takes effect when `elasticsearch.enabled` is false
+    host: elasticsearch # es service on kubernetes or host
     port:
       http: 9200
-    host: elasticsearch # es service on kubernetes or host
-    user: "xxx" # [optional]
-    password: "xxx" # [optional]
-  clusterName: "elasticsearch"
-  nodeGroup: "master"
+    user: "" # [optional]
+    password: "" # [optional]
 
-  # The service that non master groups will try to connect to when joining the cluster
-  # This should be set to clusterName + "-" + nodeGroup for your master group
-  masterService: ""
-
-  # Elasticsearch roles that will be applied to this nodeGroup
-  # These will be set as environment variables. E.g. node.master=true
-  roles:
-    master: "true"
-    ingest: "true"
-    data: "true"
-
-  replicas: 3
-  minimumMasterNodes: 2
-
-  esMajorVersion: ""
-
-  # Allows you to add any config files in /usr/share/elasticsearch/config/
-  # such as elasticsearch.yml and log4j2.properties
-  esConfig: {}
-  #  elasticsearch.yml: |
-  #    key:
-  #      nestedkey: value
-  #  log4j2.properties: |
-  #    key = value
-
-  # Extra environment variables to append to this nodeGroup
-  # This will be appended to the current 'env:' key. You can use any of the kubernetes env
-  # syntax here
-  extraEnvs: []
-  #  - name: MY_ENVIRONMENT_VAR
-  #    value: the_value_goes_here
-
-  # A list of secrets and their paths to mount inside the pod
-  # This is useful for mounting certificates for security and for mounting
-  # the X-Pack license
-  secretMounts: []
-  #  - name: elastic-certificates
-  #    secretName: elastic-certificates
-  #    path: /usr/share/elasticsearch/config/certs
-
-  podAnnotations: {}
-  # iam.amazonaws.com/role: es-cluster
-
-  # additionals labels
+  # Labels that will be applied to the Elasticsearch resource
   labels: {}
 
-  esJavaOpts: "-Xmx1g -Xms1g"
+  # Annotations that will be applied to the Elasticsearch resource
+  annotations: {}
 
-  resources:
-    requests:
-      cpu: "100m"
-      memory: "2Gi"
-    limits:
-      cpu: "1000m"
-      memory: "2Gi"
+  # Settings to control how Elasticsearch will be accessed
+  # ref: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-accessing-elastic-services.html
+  http:
+    # Disable TLS on HTTP layer so OAP can connect without certificate trust configuration.
+    # To re-enable TLS, remove the tls section or set disabled to false,
+    # and configure OAP to trust the self-signed certificate.
+    tls:
+      selfSignedCertificate:
+        disabled: true
+    # service:
+    #   spec:
+    #     type: LoadBalancer
 
-  initResources: {}
-  # limits:
-  #   cpu: "25m"
-  #   # memory: "128Mi"
-  # requests:
-  #   cpu: "25m"
-  #   memory: "128Mi"
+  # Control Elasticsearch Secure Settings
+  # ref: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-es-secure-settings.html
+  secureSettings: []
+  #  - secretName: one-secure-settings-secret
 
-  sidecarResources: {}
-  # limits:
-  #   cpu: "25m"
-  #   # memory: "128Mi"
-  # requests:
-  #   cpu: "25m"
-  #   memory: "128Mi"
+  # Settings for limiting the number of simultaneous changes to an Elasticsearch resource
+  # ref: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-update-strategy.html
+  updateStrategy: {}
+  #  changeBudget:
+  #    maxSurge: 3
+  #    maxUnavailable: 1
 
-  networkHost: "0.0.0.0"
+  # VolumeClaimDeletePolicy sets the policy for handling deletion of PersistentVolumeClaims for all NodeSets.
+  # Possible values are DeleteOnScaledownOnly and DeleteOnScaledownAndClusterDeletion.
+  volumeClaimDeletePolicy: ""
 
-  volumeClaimTemplate:
-    accessModes: [ "ReadWriteOnce" ]
-    resources:
-      requests:
-        storage: 30Gi
+  # Node configuration settings
+  # ref: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-node-configuration.html
+  nodeSets:
+  - name: default
+    count: 3
+    config:
+      # For production workloads, it is strongly recommended to increase the kernel setting
+      # vm.max_map_count to 262144 via an initContainer and leave node.store.allow_mmap unset.
+      # ref: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
+      node.store.allow_mmap: false
+    # Persistent storage for Elasticsearch data
+    # volumeClaimTemplates:
+    # - metadata:
+    #     name: elasticsearch-data
+    #   spec:
+    #     accessModes:
+    #     - ReadWriteOnce
+    #     resources:
+    #       requests:
+    #         storage: 30Gi
+    #     # storageClassName: standard
+    podTemplate:
+      metadata: {}
+        # annotations:
+        #   iam.amazonaws.com/role: es-cluster
+        # labels:
+        #   my-label: my-value
+      spec:
+        # Pod scheduling constraints
+        # ref: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-advanced-node-scheduling.html
 
-  rbac:
-    create: false
-    serviceAccountName: ""
+        # affinity:
+        #   nodeAffinity:
+        #     requiredDuringSchedulingIgnoredDuringExecution:
+        #       nodeSelectorTerms:
+        #       - matchExpressions:
+        #         - key: topology.kubernetes.io/zone
+        #           operator: In
+        #           values:
+        #           - us-east-1a
 
-  podSecurityPolicy:
-    create: false
-    name: ""
-    spec:
-      privileged: true
-      fsGroup:
-        rule: RunAsAny
-      runAsUser:
-        rule: RunAsAny
-      seLinux:
-        rule: RunAsAny
-      supplementalGroups:
-        rule: RunAsAny
-      volumes:
-      - secret
-      - configMap
-      - persistentVolumeClaim
+        # nodeSelector: {}
 
-  persistence:
-    enabled: false
-    annotations: {}
+        # tolerations: []
 
-  extraVolumes: ""
-  # - name: extras
-  #   emptyDir: {}
+        # imagePullSecrets: []
 
-  extraVolumeMounts: ""
-  # - name: extras
-  #   mountPath: /usr/share/extras
-  #   readOnly: true
+        # priorityClassName: ""
 
-  extraInitContainers: ""
-  # - name: do-something
-  #   image: busybox
-  #   command: ['do', 'something']
+        # terminationGracePeriodSeconds: 120
 
-  # This is the PriorityClass settings as defined in
-  # https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass
-  priorityClassName: ""
+        # Init containers (e.g. to set vm.max_map_count or install plugins)
+        # initContainers:
+        # - command:
+        #   - sh
+        #   - "-c"
+        #   - sysctl -w vm.max_map_count=262144
+        #   name: sysctl
+        #   securityContext:
+        #     privileged: true
+        #     runAsUser: 0
 
-  # By default this will make sure two pods don't end up on the same node
-  # Changing this to a region would allow you to spread pods across regions
-  antiAffinityTopologyKey: "kubernetes.io/hostname"
+        containers:
+        - name: elasticsearch
+          resources:
+            requests:
+              cpu: 100m
+              memory: 2Gi
+            limits:
+              memory: 2Gi
+          # Environment variables (replaces the old extraEnvs and esJavaOpts)
+          # env:
+          # - name: ES_JAVA_OPTS
+          #   value: "-Xms1g -Xmx1g"
 
-  # Hard means that by default pods will only be scheduled if there are enough nodes for them
-  # and that they will never end up on the same node. Setting this to soft will do this "best effort"
-  antiAffinity: "hard"
+          # Container-level security context (typically set by ECK automatically)
+          # securityContext:
+          #   capabilities:
+          #     drop:
+          #     - ALL
+          #   runAsNonRoot: true
+          #   runAsUser: 1000
 
-  # This is the node affinity settings as defined in
-  # https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity-beta-feature
-  nodeAffinity: {}
-
-  # The default is to deploy all pods serially. By setting this to parallel all pods are started at
-  # the same time when bootstrapping the cluster
-  podManagementPolicy: "Parallel"
-
-  protocol: http
-  httpPort: 9200
-  transportPort: 9300
-
-  service:
-    labels: {}
-    labelsHeadless: {}
-    type: ClusterIP
-    nodePort: ""
-    annotations: {}
-    httpPortName: http
-    transportPortName: transport
-
-  updateStrategy: RollingUpdate
-
-  # This is the max unavailable setting for the pod disruption budget
-  # The default value of 1 will make sure that kubernetes won't allow more than 1
-  # of your pods to be unavailable during maintenance
-  maxUnavailable: 1
-
-  podSecurityContext:
-    fsGroup: 1000
-    runAsUser: 1000
-
-  # The following value is deprecated,
-  # please use the above podSecurityContext.fsGroup instead
-  fsGroup: ""
-
-  securityContext:
-    capabilities:
-      drop:
-      - ALL
-    # readOnlyRootFilesystem: true
-    runAsNonRoot: true
-    runAsUser: 1000
-
-  # How long to wait for elasticsearch to stop gracefully
-  terminationGracePeriod: 120
-
-  sysctlVmMaxMapCount: 262144
-
-  readinessProbe:
-    failureThreshold: 3
-    initialDelaySeconds: 10
-    periodSeconds: 10
-    successThreshold: 3
-    timeoutSeconds: 5
-
-  # https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-health.html#request-params wait_for_status
-  clusterHealthCheckParams: "wait_for_status=green&timeout=1s"
-
-  ## Use an alternate scheduler.
-  ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
-  ##
-  schedulerName: ""
-
-  imagePullSecrets: []
-  nodeSelector: {}
-  tolerations: []
-
-  # Enabling this will publically expose your Elasticsearch instance.
-  # Only enable this if you have security enabled on your cluster
+  # Ingress configuration for exposing Elasticsearch externally
   ingress:
     enabled: false
     annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
-    path: /
     hosts:
-    - chart-example.local
-    tls: []
-    #  - secretName: chart-example-tls
-    #    hosts:
-    #      - chart-example.local
-
-  nameOverride: ""
-  fullnameOverride: ""
-
-  # https://github.com/elastic/helm-charts/issues/63
-  masterTerminationFix: false
-
-  lifecycle: {}
-  # preStop:
-  #   exec:
-  #     command: ["/bin/sh", "-c", "echo Hello from the postStart handler > /usr/share/message"]
-  # postStart:
-  #   exec:
-  #     command: ["/bin/sh", "-c", "echo Hello from the postStart handler > /usr/share/message"]
-
-  sysctlInitContainer:
-    enabled: true
-
-  keystore: []
+    - host: chart-example.local
+      path: /
+    tls:
+      enabled: false
+      # secretName: chart-example-tls
 
 postgresql:
   enabled: false # Whether to start a demo postgresql deployment, don't use this for production.

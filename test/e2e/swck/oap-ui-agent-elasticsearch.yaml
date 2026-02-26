@@ -56,7 +56,7 @@ setup:
           for: condition=Available
     - name: setup elasticsearch
       command: |
-        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.9.0/test/e2e/deploy-elasticsearch.yaml | kubectl apply -f -
+        kubectl apply -f test/e2e/swck/deploy-elasticsearch.yaml
         kubectl rollout status --watch --timeout=120s statefulset/es
     - name: setup storage(use the external type)
       command: |

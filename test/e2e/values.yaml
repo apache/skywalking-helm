@@ -19,8 +19,21 @@ oap:
       serviceName: e2e::${LABELS."service.istio.io/canonical-name"}
       serviceInstanceName: ${NAME}
 elasticsearch:
-  esConfig:
-    elasticsearch.yml: |
+  nodeSets:
+  - name: default
+    count: 1
+    config:
+      node.store.allow_mmap: false
       cluster.routing.allocation.disk.watermark.low: 90%
       cluster.routing.allocation.disk.watermark.high: 99%
       cluster.routing.allocation.disk.watermark.flood_stage: 99%
+    podTemplate:
+      spec:
+        containers:
+        - name: elasticsearch
+          resources:
+            limits:
+              memory: 2Gi
+            requests:
+              cpu: 100m
+              memory: 2Gi

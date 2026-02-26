@@ -89,13 +89,25 @@ Create the name of the service account to use for the satellite cluster
 {{ default (include "skywalking.satellite.fullname" .) .Values.serviceAccounts.satellite }}
 {{- end -}}
 
+{{/*
+Expand the fullname of the ECK-managed Elasticsearch resource.
+The ECK operator creates a service named {fullname}-es-http.
+*/}}
+{{- define "skywalking.elasticsearch.fullname" -}}
+{{- if .Values.elasticsearch.fullnameOverride -}}
+{{- .Values.elasticsearch.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-elasticsearch" .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "skywalking.containers.wait-for-storage" -}}
 {{- if eq .Values.oap.storageType "elasticsearch" }}
 - name: wait-for-elasticsearch
   image: {{ .Values.initContainer.image }}:{{ .Values.initContainer.tag }}
   imagePullPolicy: IfNotPresent
     {{- if .Values.elasticsearch.enabled }}
-  command: ['sh', '-c', 'for i in $(seq 1 60); do nc -z -w3 {{ .Values.elasticsearch.clusterName }}-{{ .Values.elasticsearch.nodeGroup }} {{ .Values.elasticsearch.httpPort }} && exit 0 || sleep 5; done; exit 1']
+  command: ['sh', '-c', 'for i in $(seq 1 60); do nc -z -w3 {{ include "skywalking.elasticsearch.fullname" . }}-es-http 9200 && exit 0 || sleep 5; done; exit 1']
     {{- else }}
   command: ['sh', '-c', 'for i in $(seq 1 60); do nc -z -w3 {{ .Values.elasticsearch.config.host }} {{ .Values.elasticsearch.config.port.http }} && exit 0 || sleep 5; done; exit 1']
     {{- end }}
@@ -134,11 +146,19 @@ Create the name of the service account to use for the satellite cluster
 {{- if eq .Values.oap.storageType "elasticsearch" }}
 - name: SW_STORAGE_ES_CLUSTER_NODES
   {{- if .Values.elasticsearch.enabled }}
-  value: "{{ .Values.elasticsearch.clusterName }}-{{ .Values.elasticsearch.nodeGroup }}:{{ .Values.elasticsearch.httpPort }}"
+  value: "{{ include "skywalking.elasticsearch.fullname" . }}-es-http:9200"
   {{- else }}
   value: "{{ .Values.elasticsearch.config.host }}:{{ .Values.elasticsearch.config.port.http }}"
   {{- end }}
-  {{- if not .Values.elasticsearch.enabled }}
+  {{- if .Values.elasticsearch.enabled }}
+- name: SW_ES_USER
+  value: "elastic"
+- name: SW_ES_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "skywalking.elasticsearch.fullname" . }}-es-elastic-user
+      key: elastic
+  {{- else }}
     {{- if .Values.elasticsearch.config.user }}
 - name: SW_ES_USER
   value: "{{ .Values.elasticsearch.config.user }}"

@@ -13,27 +13,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Default values for skywalking.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-oap:
-  image:
-    tag: 10.0.0
-  storageType: elasticsearch
-
-ui:
-  image:
-    tag: 10.0.0
-
-eckOperator:
-  enabled: false
-
-elasticsearch:
-  enabled: false
-  config:               # For users of an existing elasticsearch cluster, takes effect when `elasticsearch.enabled` is false
-    host: elasticsearch-es-http
-    port:
-      http: 9200
-    user: "xxx"         # [optional]
-    password: "xxx"     # [optional]
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: es
+spec:
+  serviceName: es
+  replicas: 1
+  selector:
+    matchLabels:
+      app: es
+  template:
+    metadata:
+      labels:
+        app: es
+    spec:
+      containers:
+      - name: es
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.18.8
+        env:
+        - name: discovery.type
+          value: single-node
+        - name: xpack.security.enabled
+          value: "false"
+        ports:
+        - containerPort: 9200
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: es-out
+spec:
+  type: ClusterIP
+  selector:
+    app: es
+  ports:
+  - port: 9200
+    targetPort: 9200
+    protocol: TCP
