@@ -102,7 +102,7 @@ cleanup:
 trigger:
   action: http
   interval: 5s
-  times: 5
+  times: 0
   url: http://${service_demo_host}:${service_demo_8085}/hello
   method: GET
 
