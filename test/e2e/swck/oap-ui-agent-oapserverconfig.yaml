@@ -94,6 +94,7 @@ setup:
         oap_podname=$(kubectl get pod -lapp=oap -n skywalking-system -o jsonpath='{.items[*].metadata.name}')
         curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.9.0/test/e2e/oapserverconfig-demo.yaml | \
           sed 's/version: 9.5.0/version: latest/' | \
+          sed '/- name: example/a\            layer: GENERAL' | \
           sed '/env:/a\    - name: SW_STORAGE\n      value: banyandb\n    - name: SW_STORAGE_BANYANDB_TARGETS\n      value: banyandb-grpc.default:17912' | \
           kubectl apply -f -
         while kubectl get pod $oap_podname -n skywalking-system > /dev/null 2>&1; \
