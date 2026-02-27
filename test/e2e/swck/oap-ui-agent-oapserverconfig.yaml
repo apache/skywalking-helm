@@ -89,15 +89,13 @@ setup:
         - namespace: skywalking-system
           resource: deployment/demo
           for: condition=Available
-    - name: setup oapserverconfig(static configuration)
+    - name: setup oapserverconfig(static configuration) and wait for pod restart
       command: |
-        export oap_podname=$(kubectl get pod -lapp=oap -n skywalking-system -o jsonpath='{.items[*].metadata.name}')
+        oap_podname=$(kubectl get pod -lapp=oap -n skywalking-system -o jsonpath='{.items[*].metadata.name}')
         curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.9.0/test/e2e/oapserverconfig-demo.yaml | \
           sed '/env:/a\    - name: SW_STORAGE\n      value: banyandb\n    - name: SW_STORAGE_BANYANDB_TARGETS\n      value: banyandb-grpc.default:17912' | \
           kubectl apply -f -
-    - name: wait the old pod teminated
-      command: |
-        while kubectl get pod $oap_podname -n skywalking-system > /dev/null; \
+        while kubectl get pod $oap_podname -n skywalking-system > /dev/null 2>&1; \
         do \
           sleep 0.1; \
         done
