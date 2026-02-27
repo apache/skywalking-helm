@@ -21,4 +21,4 @@ SATELLITE_TAG=v35bfaff6352b4dc351a706772796a1f79b651c14
 SATELLITE_REPO=ghcr.io/apache/skywalking-satellite/skywalking-satellite
 BANYANDB_TAG=4b9ac7545a7084514bdaea7f0b8b5b7b13b745a5
 BANYANDB_REPO=ghcr.io/apache/skywalking-banyandb
-SW_CTL_COMMIT=9d2d0edccda2afe5cf24f1e632142f40e80e8fa4
+SW_CTL_COMMIT=9a1beab08413ce415a00a8547a238a14691c5655
