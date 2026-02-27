@@ -57,6 +57,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   --set oap.image.tag=10.3.0 \
   --set oap.storageType=banyandb \
   --set ui.image.tag=10.3.0 \
+  --set eckOperator.enabled=false \
   --set elasticsearch.enabled=false \
   --set banyandb.enabled=true \
   --set banyandb.image.tag=0.9.0
@@ -138,19 +139,22 @@ helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RE
   --set ui.image.tag=10.3.0
 ```
 
-Because ElasticSearch recommends to use the corresponding Helm Chart version of the ElasticSearch version,
-if you want to use a specific version of ElasticSearch, you have to change the ElasticSearch Helm Chart version in
-`dependencies` section in `Chart.yaml` file, which requires you to install from the source codes.
-Or you should deploy the desired ElasticSearch version first by yourself, and then deploy SkyWalking to use the
-existing ElasticSearch by setting the following section:
+Elasticsearch is now deployed via [ECK (Elastic Cloud on Kubernetes)](https://github.com/elastic/cloud-on-k8s).
+By default, the chart deploys the ECK operator and an Elasticsearch 8.18.8 cluster.
+If you already have the ECK operator installed, set `eckOperator.enabled=false`.
+
+To use an existing external Elasticsearch instead, disable the embedded deployment:
 
 ```yaml
+eckOperator:
+  enabled: false
+
 elasticsearch:
-  enabled: true
-  config:               # For users of an existing elasticsearch cluster,takes effect when `elasticsearch.enabled` is false
+  enabled: false
+  config:
+    host: elasticsearch-es-http
     port:
       http: 9200
-    host: elasticsearch # es service on kubernetes or host
     user: "xxx"         # [optional]
     password: "xxx"     # [optional]
 ```
@@ -183,7 +187,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RE
 
 ## Install a specific version of SkyWalking with an existing database
 
-If you want to use a specific version of ElasticSearch as storage solution, for instance, modify the connection information to the existing ElasticSearch cluster in file [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml).
+If you want to use an existing Elasticsearch cluster as storage solution, modify the connection information in file [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml).
 
 ```shell script
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \

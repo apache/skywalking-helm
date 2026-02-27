@@ -26,9 +26,12 @@ ui:
   image:
     tag: 10.0.0
 
+eckOperator:
+  enabled: false
+
 elasticsearch:
   enabled: false
-  config:               # For users of an existing elasticsearch cluster,takes effect when `elasticsearch.enabled` is false
+  config:               # For users of an existing elasticsearch cluster, takes effect when `elasticsearch.enabled` is false
     host: elasticsearch-es-http
     port:
       http: 9200

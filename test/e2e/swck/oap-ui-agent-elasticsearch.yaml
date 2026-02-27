@@ -16,18 +16,15 @@
 setup:
   env: kind
   file: ../kind.yaml
-  init-system-environment: ../env.swck
+  init-system-environment: ../env
   kind:
     expose-ports:
       - namespace: skywalking-system
         resource: service/demo
         port: 8085
-      - namespace: default
-        resource: service/default-oap
+      - namespace: skywalking-system
+        resource: service/skywalking-system-oap
         port: 12800
-      - namespace: default
-        resource: service/es-out
-        port: 9200
   steps:
     - name: Install yq
       command: bash test/e2e/setup-e2e-shell/install.sh yq
@@ -56,18 +53,16 @@ setup:
           for: condition=Available
     - name: setup elasticsearch
       command: |
-        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.9.0/test/e2e/deploy-elasticsearch.yaml | kubectl apply -f -
+        kubectl apply -f test/e2e/swck/deploy-elasticsearch.yaml
         kubectl rollout status --watch --timeout=120s statefulset/es
-    - name: setup storage(use the external type)
-      command: |
-        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.9.0/test/e2e/external-storage.yaml | kubectl apply -f -
     - name: setup oapserver and ui
       command: |
         kubectl create namespace skywalking-system
-        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.9.0/test/e2e/skywalking-components-with-storage.yaml | kubectl apply -f -
+        sed "s#OAP_IMAGE_PLACEHOLDER#${OAP_REPO}:${OAP_TAG}#g;s#UI_IMAGE_PLACEHOLDER#${UI_REPO}:${UI_TAG}#g;s#PLACEHOLDER#latest#g" \
+          test/e2e/swck/skywalking-components-elasticsearch.yaml | kubectl apply -f -
       wait:
-        - namespace: default
-          resource: OAPServer/default
+        - namespace: skywalking-system
+          resource: OAPServer/skywalking-system
           for: condition=Available
         - namespace: skywalking-system
           resource: UI/skywalking-system
@@ -75,7 +70,7 @@ setup:
     - name: Setup java agent demo
       command: |
         kubectl label namespace skywalking-system swck-injection=enabled
-        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.9.0/test/e2e/demo.yaml | sed 's/oap-service/default-oap.default/' | kubectl apply -f -
+        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.9.0/test/e2e/demo.yaml | sed 's/oap-service/skywalking-system-oap.skywalking-system/' | kubectl apply -f -
       wait:
         - namespace: skywalking-system
           resource: deployment/demo
@@ -89,7 +84,7 @@ cleanup:
 trigger:
   action: http
   interval: 10s
-  times: 5
+  times: 0
   url: http://${service_demo_host}:${service_demo_8085}/hello
   method: GET
 
@@ -101,11 +96,11 @@ verify:
     # the interval between two attempts, e.g. 10s, 1m.
     interval: 10s
   cases:
-    - query: swctl --display yaml --base-url=http://${service_default_oap_host}:${service_default_oap_12800}/graphql service ls
+    - query: swctl --display yaml --base-url=http://${service_skywalking_system_oap_host}:${service_skywalking_system_oap_12800}/graphql service ls
       expected: ../expected/swck-demo-service.yaml
-    - query: swctl --display yaml --base-url=http://${service_default_oap_host}:${service_default_oap_12800}/graphql metrics linear --name service_cpm --service-name Your_ApplicationName | yq e 'to_entries' -
+    - query: swctl --display yaml --base-url=http://${service_skywalking_system_oap_host}:${service_skywalking_system_oap_12800}/graphql metrics linear --name service_cpm --service-name Your_ApplicationName | yq e 'to_entries' -
       expected: ../expected/metrics.yaml
-    - query: swctl --display yaml --base-url=http://${service_default_oap_host}:${service_default_oap_12800}/graphql endpoint list --keyword=hello --service-name Your_ApplicationName
+    - query: swctl --display yaml --base-url=http://${service_skywalking_system_oap_host}:${service_skywalking_system_oap_12800}/graphql endpoint list --keyword=hello --service-name Your_ApplicationName
       expected: ../expected/endpoint.yaml
-    - query: swctl --display yaml --base-url=http://${service_default_oap_host}:${service_default_oap_12800}/graphql metrics linear --name endpoint_cpm --endpoint-name GET:/hello --service-name Your_ApplicationName | yq e 'to_entries' -
+    - query: swctl --display yaml --base-url=http://${service_skywalking_system_oap_host}:${service_skywalking_system_oap_12800}/graphql metrics linear --name endpoint_cpm --endpoint-name GET:/hello --service-name Your_ApplicationName | yq e 'to_entries' -
       expected: ../expected/metrics.yaml

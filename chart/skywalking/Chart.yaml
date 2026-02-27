@@ -30,8 +30,13 @@ maintainers:
   email: kezhenxu94@163.com
 
 dependencies:
-- name: elasticsearch
-  version: ~7.17.1
+- name: eck-operator
+  version: 3.3.1
+  repository: https://helm.elastic.co/
+  condition: eckOperator.enabled
+- name: eck-elasticsearch
+  alias: elasticsearch
+  version: 0.18.1
   repository: https://helm.elastic.co/
   condition: elasticsearch.enabled
 - name: postgresql
