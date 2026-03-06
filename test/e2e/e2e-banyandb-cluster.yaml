@@ -60,8 +60,6 @@ setup:
                        --set banyandb.enabled=true \
                        --set banyandb.standalone.enabled=false \
                        --set banyandb.cluster.enabled=true \
-                       --set banyandb.etcd.enabled=true \
-                       --set banyandb.etcd.auth.enabled=false \
                        --set banyandb.cluster.fodc.agent.resources.requests[0].key=memory \
                        --set banyandb.cluster.fodc.agent.resources.requests[0].value=256Mi \
                        --set banyandb.cluster.fodc.agent.resources.limits[0].key=memory \
