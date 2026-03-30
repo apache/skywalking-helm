@@ -57,7 +57,6 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   --set oap.image.tag=10.3.0 \
   --set oap.storageType=banyandb \
   --set ui.image.tag=10.3.0 \
-  --set eckOperator.enabled=false \
   --set elasticsearch.enabled=false \
   --set banyandb.enabled=true \
   --set banyandb.image.tag=0.9.0
@@ -141,14 +140,11 @@ helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RE
 
 Elasticsearch is now deployed via [ECK (Elastic Cloud on Kubernetes)](https://github.com/elastic/cloud-on-k8s).
 By default, the chart deploys the ECK operator and an Elasticsearch 8.18.8 cluster.
-If you already have the ECK operator installed, set `eckOperator.enabled=false`.
+The ECK operator is automatically installed when `elasticsearch.enabled=true` and skipped otherwise.
 
 To use an existing external Elasticsearch instead, disable the embedded deployment:
 
 ```yaml
-eckOperator:
-  enabled: false
-
 elasticsearch:
   enabled: false
   config:

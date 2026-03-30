@@ -32,7 +32,7 @@ test/e2e/              # E2E test configs (skywalking-infra-e2e format)
 ## Chart Dependencies
 
 Defined in `chart/skywalking/Chart.yaml`:
-- **eck-operator** (3.3.1) — ECK operator, condition: `eckOperator.enabled`
+- **eck-operator** (3.3.1) — ECK operator, condition: `elasticsearch.enabled`
 - **eck-elasticsearch** (0.18.1, alias: `elasticsearch`) — ECK-managed ES, condition: `elasticsearch.enabled`
 - **postgresql** (12.1.2) — Bitnami PostgreSQL, condition: `postgresql.enabled`
 - **skywalking-banyandb-helm** (alias: `banyandb`) — BanyanDB, condition: `banyandb.enabled`
@@ -74,8 +74,7 @@ helm template test chart/skywalking \
   --set oap.image.tag=10.3.0 \
   --set oap.storageType=elasticsearch \
   --set ui.image.tag=10.3.0 \
-  --set elasticsearch.enabled=false \
-  --set eckOperator.enabled=false
+  --set elasticsearch.enabled=false
 
 # Package chart
 make package
