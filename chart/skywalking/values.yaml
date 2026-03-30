@@ -194,12 +194,8 @@ oapInit:
   extraPodLabels: {}
   # sidecar.istio.io/inject: false
 
-# ECK Operator settings
-# Set eckOperator.enabled to false if the ECK operator is already installed in your cluster
-eckOperator:
-  enabled: true
-
 # Elasticsearch managed by ECK (eck-elasticsearch chart)
+# When enabled, the ECK operator is also installed as a dependency.
 # ref: https://github.com/elastic/cloud-on-k8s
 elasticsearch:
   enabled: true

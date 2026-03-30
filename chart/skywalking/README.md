@@ -118,14 +118,14 @@ The following table lists the configurable parameters of the Skywalking chart an
 ### Elasticsearch (ECK)
 
 Elasticsearch is deployed via [ECK (Elastic Cloud on Kubernetes)](https://github.com/elastic/cloud-on-k8s).
-The chart includes the ECK operator and an `eck-elasticsearch` subchart. Set `eckOperator.enabled=false` if the ECK operator is already installed in your cluster.
+The chart includes the ECK operator and an `eck-elasticsearch` subchart, both controlled by `elasticsearch.enabled`.
+Because Elasticsearch CRDs must exist before the ES custom resource can be created, the ECK operator CRDs need to be installed separately before deploying the chart. See the main [README](../../README.md) for installation steps.
 
 #### Top-level parameters
 
 | Parameter | Description | Default |
 |---|---|---|
-| `eckOperator.enabled` | Deploy the ECK operator | `true` |
-| `elasticsearch.enabled` | Deploy an ECK-managed Elasticsearch cluster | `true` |
+| `elasticsearch.enabled` | Deploy the ECK operator and an ECK-managed Elasticsearch cluster | `true` |
 | `elasticsearch.version` | Elasticsearch version to deploy | `8.18.8` |
 | `elasticsearch.fullnameOverride` | Override the Elasticsearch resource name. The ECK service will be `{name}-es-http` | `""` |
 | `elasticsearch.labels` | Labels applied to the Elasticsearch resource | `{}` |

@@ -43,14 +43,14 @@ setup:
     - name: Install ECK operator
       command: |
         helm dep up chart/skywalking
-        helm -n istio-system install eck-operator chart/skywalking/charts/eck-operator-3.3.1.tgz \
+        tar xzf chart/skywalking/charts/eck-operator-3.3.1.tgz -C /tmp eck-operator/charts/eck-operator-crds
+        helm -n istio-system install eck-crds /tmp/eck-operator/charts/eck-operator-crds \
                        --create-namespace
-        kubectl -n istio-system rollout status --watch --timeout=120s statefulset/elastic-operator
     - name: Install SkyWalking
       command: |
         helm -n istio-system install skywalking chart/skywalking \
                        --set fullnameOverride=skywalking \
-                       --set eckOperator.enabled=false \
+                       --set eck-operator.installCRDs=false \
                        --set oap.env.SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS=k8s-mesh \
                        --set oap.env.SW_ENVOY_METRIC_ALS_TCP_ANALYSIS=k8s-mesh \
                        --set oap.env.K8S_SERVICE_NAME_RULE='e2e::${service.metadata.name}' \

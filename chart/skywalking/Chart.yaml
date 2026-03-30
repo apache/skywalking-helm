@@ -33,7 +33,7 @@ dependencies:
 - name: eck-operator
   version: 3.3.1
   repository: https://helm.elastic.co/
-  condition: eckOperator.enabled
+  condition: elasticsearch.enabled
 - name: eck-elasticsearch
   alias: elasticsearch
   version: 0.18.1
