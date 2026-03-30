@@ -135,14 +135,23 @@ here are some examples.
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=10.3.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=10.3.0
+  --set ui.image.tag=10.3.0 \
+  --set eck-operator.installCRDs=false
 ```
 
-Elasticsearch is now deployed via [ECK (Elastic Cloud on Kubernetes)](https://github.com/elastic/cloud-on-k8s).
-By default, the chart deploys the ECK operator and an Elasticsearch 8.18.8 cluster.
-The ECK operator is automatically installed when `elasticsearch.enabled=true` and skipped otherwise.
+Elasticsearch is deployed via [ECK (Elastic Cloud on Kubernetes)](https://github.com/elastic/cloud-on-k8s).
+When `elasticsearch.enabled=true` (the default), the chart deploys both the ECK operator and an Elasticsearch 8.18.8 cluster.
+Because Elasticsearch CRDs must exist before the chart can be installed, you need to install them first:
 
-To use an existing external Elasticsearch instead, disable the embedded deployment:
+```shell
+helm dep up chart/skywalking
+tar xzf chart/skywalking/charts/eck-operator-3.3.1.tgz -C /tmp eck-operator/charts/eck-operator-crds
+helm install eck-crds /tmp/eck-operator/charts/eck-operator-crds -n "${SKYWALKING_RELEASE_NAMESPACE}" --create-namespace
+```
+
+Then install the chart with `--set eck-operator.installCRDs=false` to avoid duplicating the CRDs.
+
+To use an existing external Elasticsearch instead, disable the embedded deployment (no CRD pre-install needed):
 
 ```yaml
 elasticsearch:

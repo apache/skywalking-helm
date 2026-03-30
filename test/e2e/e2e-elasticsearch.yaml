@@ -40,7 +40,7 @@ setup:
         kubectl label namespace default istio-injection=enabled
     - name: Install helm
       command: bash test/e2e/setup-e2e-shell/install.sh helm
-    - name: Install ECK CRDs
+    - name: Install ECK operator
       command: |
         helm dep up chart/skywalking
         tar xzf chart/skywalking/charts/eck-operator-3.3.1.tgz -C /tmp eck-operator/charts/eck-operator-crds

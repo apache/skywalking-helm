@@ -118,8 +118,8 @@ The following table lists the configurable parameters of the Skywalking chart an
 ### Elasticsearch (ECK)
 
 Elasticsearch is deployed via [ECK (Elastic Cloud on Kubernetes)](https://github.com/elastic/cloud-on-k8s).
-The chart includes the ECK operator and an `eck-elasticsearch` subchart. The ECK operator is automatically installed when `elasticsearch.enabled=true` and skipped otherwise.
-If the ECK operator is already installed in your cluster, you can skip its duplicate deployment by setting `eck-operator.replicaCount=0` and `eck-operator.installCRDs=false`.
+The chart includes the ECK operator and an `eck-elasticsearch` subchart, both controlled by `elasticsearch.enabled`.
+Because Elasticsearch CRDs must exist before the ES custom resource can be created, the ECK operator CRDs need to be installed separately before deploying the chart. See the main [README](../../README.md) for installation steps.
 
 #### Top-level parameters
 
