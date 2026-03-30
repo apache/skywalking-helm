@@ -103,6 +103,11 @@ When modifying chart configuration, update all of:
 4. `chart/skywalking/values-my-es.yaml` — external ES example (if ES-related)
 5. `test/e2e/values.yaml` — test overrides (if defaults change)
 
+## GitHub Actions Allow List
+
+Apache enforces an allow list for third-party GitHub Actions. All third-party actions must be pinned to an approved SHA from:
+https://github.com/apache/infrastructure-actions/blob/main/approved_patterns.yml
+
 ## Git Workflow
 
 - **Do not push directly to master.** Always create a feature branch and open a PR.
