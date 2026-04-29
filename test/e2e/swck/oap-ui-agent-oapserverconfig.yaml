@@ -63,8 +63,7 @@ setup:
                        --set image.repository=$BANYANDB_REPO \
                        --set image.tag=$BANYANDB_TAG \
                        --set standalone.enabled=true \
-                       --set cluster.enabled=false \
-                       --set etcd.enabled=false
+                       --set cluster.enabled=false
       wait:
         - namespace: default
           resource: pod
