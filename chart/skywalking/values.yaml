@@ -387,9 +387,6 @@ banyandb:
           limits:
             - key: memory
               value: 256Mi
-  etcd:
-    enabled: false
-    replicaCount: 1
 
 satellite:
   name: satellite
