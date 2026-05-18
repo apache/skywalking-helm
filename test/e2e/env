@@ -17,8 +17,9 @@ OAP_TAG=a0cec0ca237792497d2da0b65757d11f58c3f342
 OAP_REPO=ghcr.io/apache/skywalking/oap
 # Horizon UI dev images are published to GHCR by the apache/skywalking-horizon-ui
 # repo (tags: full commit SHA, vX.Y.Z, main). Release images live on Docker Hub
-# at apache/skywalking-ui:horizon-x.y.z. For CI we pull from GHCR by SHA / main.
-UI_TAG=main
+# at apache/skywalking-ui:horizon-x.y.z. CI pins to a SHA so re-runs are
+# reproducible — bump this when a new horizon-ui feature/fix needs CI coverage.
+UI_TAG=cfed07a1b69fd130559a0cc238ec5f2d6a913832
 UI_REPO=ghcr.io/apache/skywalking-horizon-ui
 SATELLITE_TAG=v35bfaff6352b4dc351a706772796a1f79b651c14
 SATELLITE_REPO=ghcr.io/apache/skywalking-satellite/skywalking-satellite

@@ -44,12 +44,16 @@ which replaces the legacy `skywalking-booster-ui`. Compared to booster-ui:
 
 ### Out-of-the-box install
 
+The chart's own `values.yaml` ships the default users; a plain install Just Works:
+
 ```shell
 helm install "${SKYWALKING_RELEASE_NAME}" \
   oci://registry-1.docker.io/apache/skywalking-helm \
   --version "${SKYWALKING_RELEASE_VERSION}" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  -f chart/skywalking/values-horizon-ui.yaml
+  --set oap.image.tag=10.4.0 \
+  --set oap.storageType=elasticsearch \
+  --set ui.image.tag=horizon-1.0.0
 ```
 
 Then port-forward and log in as `admin/admin`:
@@ -60,7 +64,18 @@ kubectl port-forward -n "${SKYWALKING_RELEASE_NAMESPACE}" \
 open http://127.0.0.1:8080
 ```
 
-[`chart/skywalking/values-horizon-ui.yaml`](chart/skywalking/values-horizon-ui.yaml) is a self-contained example that mirrors the public [`horizon.example.yaml`](https://github.com/apache/skywalking-horizon-ui/blob/main/horizon.example.yaml) shipped at `/app/horizon.example.yaml` inside the image.
+If you want to customize Horizon's auth / RBAC / session, copy [`chart/skywalking/values-horizon-ui.yaml`](chart/skywalking/values-horizon-ui.yaml) — a UI-only overlay mirroring the public [`horizon.example.yaml`](https://github.com/apache/skywalking-horizon-ui/blob/main/horizon.example.yaml) shipped at `/app/horizon.example.yaml` inside the image — and apply it alongside the OAP `--set` flags:
+
+```shell
+helm install "${SKYWALKING_RELEASE_NAME}" \
+  oci://registry-1.docker.io/apache/skywalking-helm \
+  --version "${SKYWALKING_RELEASE_VERSION}" \
+  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  --set oap.image.tag=10.4.0 \
+  --set oap.storageType=elasticsearch \
+  --set ui.image.tag=horizon-1.0.0 \
+  -f chart/skywalking/values-horizon-ui.yaml
+```
 
 ### Production: hash via Kubernetes Secret
 

@@ -13,12 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Minimal `helm install -f values-horizon-ui.yaml` example that boots the
-# chart with Horizon UI using its default users — admin/admin and
-# skywalking/skywalking. These match what the chart already ships in
-# `values.yaml`; this file exists so an operator can `helm install -f` a
-# single, self-contained example without learning every required value
-# first.
+# UI-only example values overlay. Apply alongside the OAP-required values
+# (`oap.image.tag`, `oap.storageType`, `ui.image.tag`):
+#
+#   helm install <release> chart/skywalking \
+#     --set oap.image.tag=10.4.0 \
+#     --set oap.storageType=elasticsearch \
+#     --set ui.image.tag=horizon-1.0.0 \
+#     -f chart/skywalking/values-horizon-ui.yaml
+#
+# This file exists so an operator who wants to customize Horizon UI's auth /
+# RBAC / session has a self-contained template to copy from — it intentionally
+# does NOT pin OAP version or storage backend, since those are orthogonal to
+# the UI configuration.
 #
 # The Horizon `config` block mirrors the public horizon.example.yaml that
 # ships at /app/horizon.example.yaml inside the image — same shape, same
@@ -32,14 +39,7 @@
 # running `pnpm --filter bff cli:hash`, or wire production secrets through
 # a Kubernetes Secret + `ui.envFromSecret` + `${VAR}` interpolation.
 
-oap:
-  image:
-    tag: 10.4.0
-  storageType: elasticsearch
-
 ui:
-  image:
-    tag: horizon-1.0.0
   config:
     server:
       host: 0.0.0.0
