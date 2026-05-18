@@ -18,17 +18,13 @@
 # Declare variables to be passed into your templates.
 
 oap:
-  image:
-    tag: 10.4.0
   storageType: elasticsearch
+  # Set oap.image.tag at install time, e.g. --set oap.image.tag=<release>
 
-ui:
-  image:
-    tag: horizon-1.0.0
-  # Horizon UI's BFF refuses to start with no users. This file is the
-  # external-Elasticsearch example; for the UI auth/RBAC config, layer
-  # `-f chart/skywalking/values-horizon-ui.yaml` on top of this file,
-  # or define your own `ui.config.auth.local.users[]` here.
+# Set ui.image.tag at install time, e.g. --set ui.image.tag=horizon-<release>
+# Horizon UI's BFF refuses to start with no users. For UI auth/RBAC, layer
+# `-f chart/skywalking/values-horizon-ui.yaml` on top of this file, or
+# define your own `ui.config.auth.local.users[]` here.
 
 elasticsearch:
   enabled: false
