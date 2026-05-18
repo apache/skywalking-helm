@@ -22,9 +22,9 @@ oap:
   # Set oap.image.tag at install time, e.g. --set oap.image.tag=<release>
 
 # Set ui.image.tag at install time, e.g. --set ui.image.tag=horizon-<release>
-# Horizon UI's BFF refuses to start with no users. For UI auth/RBAC, layer
-# `-f chart/skywalking/values-horizon-ui.yaml` on top of this file, or
-# define your own `ui.config.auth.local.users[]` here.
+# Horizon UI's BFF refuses to start with no users. Define
+# `ui.config.auth.local.users[]` here (see the README "Web UI" section)
+# or layer your own UI values file on top.
 
 elasticsearch:
   enabled: false

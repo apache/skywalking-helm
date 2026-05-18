@@ -238,12 +238,9 @@ ui:
   #
   # `auth.local.users` is intentionally empty by default — Horizon's BFF
   # refuses to start without it, which is the upstream's "no default
-  # admin/admin" stance. For a working demo / first-run install, apply
-  # `chart/skywalking/values-horizon-ui.yaml` (it ships admin/admin and
-  # skywalking/skywalking with real argon2id hashes). For production,
-  # generate your own hash via `pnpm --filter bff cli:hash` in
-  # apache/skywalking-horizon-ui and feed it through a Secret +
-  # `${VAR}` interpolation (see README "Web UI" section).
+  # admin/admin" stance. See the README "Web UI" section for two paths:
+  # a copy-pastable demo snippet (publicly-known admin/admin hash) or the
+  # production Secret + `${VAR}` interpolation pattern.
   config:
     server:
       host: 0.0.0.0
