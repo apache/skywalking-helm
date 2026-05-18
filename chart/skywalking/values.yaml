@@ -220,8 +220,11 @@ ui:
     initialDelaySeconds: 30
     periodSeconds: 20
   readinessProbe:
+    # /api/auth/health is the only unauthenticated BFF health endpoint —
+    # /api/oap/info is gated behind a logged-in session and returns 401
+    # to an unauthenticated kubelet probe.
     httpGet:
-      path: /api/oap/info
+      path: /api/auth/health
       port: 8081
     initialDelaySeconds: 10
     periodSeconds: 10
