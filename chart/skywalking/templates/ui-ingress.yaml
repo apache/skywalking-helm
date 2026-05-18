@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- if .Values.ui.ingress.enabled }}
+{{- if and .Values.ui.enabled .Values.ui.ingress.enabled }}
 {{- $serviceName := include "skywalking.ui.fullname" . }}
 {{- $servicePort := .Values.ui.service.externalPort }}
 {{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1/Ingress" }}

@@ -41,6 +41,11 @@ oap:
     # zabbix: 10051
     grpc: 11800
     rest: 12800
+    # admin REST exposed by OAP 10.5+. Horizon UI's BFF talks to this for
+    # runtime-rule, DSL debugging, inspect, status, and config dump. Set to
+    # null (or remove) if the deployed OAP version predates 10.5 — Horizon
+    # admin features will be unavailable in that case.
+    admin: 17128
     # zipkinreceiver: 9411
     # zipkinquery: 9412
   replicas: 2
@@ -133,11 +138,22 @@ oap:
 #      path: /usr/share/elasticsearch/config/certs
 
 ui:
+  # Set to false to skip the UI deployment entirely — no Deployment, Service,
+  # Ingress, ConfigMap, or PVC will be created. Useful when an external UI
+  # talks to OAP directly, or when only the OAP backend is wanted.
+  enabled: true
   name: ui
+  # Horizon UI's BFF holds the active session table in memory; a multi-replica
+  # deployment without sticky routing breaks logins on every other request.
+  # Keep replicas: 1 unless your ingress provides sticky sessions.
   replicas: 1
   image:
+    # Horizon UI release images ship to Docker Hub `apache/skywalking-ui`
+    # tagged `horizon-<x.y.z>` (e.g. `horizon-1.0.0`). Dev / pre-release
+    # images live at `ghcr.io/apache/skywalking-horizon-ui` and are tagged
+    # by SHA / `vX.Y.Z` / `main`.
     repository: skywalking.docker.scarf.sh/apache/skywalking-ui
-    tag: null # Must be set explicitly
+    tag: null # Must be set explicitly, e.g. horizon-1.0.0
     pullPolicy: IfNotPresent
   # podAnnotations:
   #   example: oap-foo
@@ -160,7 +176,8 @@ ui:
     type: ClusterIP
     # clusterIP: None
     externalPort: 80
-    internalPort: 8080
+    # Horizon UI's BFF binds 8081 by default.
+    internalPort: 8081
     ## nodePort is the port on each node on which this service is exposed when type=NodePort
     ## Default: auto-allocated port if not specified. 30080 is just an example
     ##
@@ -180,11 +197,102 @@ ui:
     annotations: {}
     ## Limit load balancer source ips to list of CIDRs (where available)
     # loadBalancerSourceRanges: []
-  securityContext: {}
-  # runAsUser: 1000
-  # runAsGroup: 1000
-  # fsGroup: 1000
-  env:
+  # The image runs as a non-root alpine system user `horizon`. PVCs mounted
+  # at /data and (optionally) /app/bundled_templates must be group-writable
+  # by that user; fsGroup defaults to 101 (alpine's typical `nobody` GID).
+  securityContext:
+    fsGroup: 101
+  # Persistent state directory used by the BFF for audit log, setup state,
+  # alarm state, and wire debug log. Without persistence these files land in
+  # the container's writable layer and are lost on pod restart.
+  persistence:
+    enabled: false
+    # existingClaim: ""
+    # storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+    annotations: {}
+  resources: {}
+  livenessProbe:
+    tcpSocket:
+      port: 8081
+    initialDelaySeconds: 30
+    periodSeconds: 20
+  readinessProbe:
+    httpGet:
+      path: /api/oap/info
+      port: 8081
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 6
+  # `config` is rendered verbatim into the `horizon.yaml` ConfigMap mounted
+  # at /app/horizon.yaml. Schema and field reference:
+  # https://github.com/apache/skywalking-horizon-ui/blob/main/docs/setup/horizon-yaml.md
+  # See also /app/horizon.example.yaml inside the image for the upstream
+  # commented example.
+  #
+  # Chart-managed defaults wire `oap.queryUrl` / `oap.adminUrl` to the
+  # in-cluster OAP service. Anything you set here merges over the defaults
+  # via Helm's mergeOverwrite semantics.
+  #
+  # ⚠ Default credentials below — admin/admin and skywalking/skywalking —
+  # make first-run / demo deployments work out of the box, but they are
+  # publicly known. ROTATE THEM BEFORE EXPOSING THE UI BEYOND A TRUSTED
+  # NETWORK. Generate a replacement hash by checking out
+  # apache/skywalking-horizon-ui and running `pnpm --filter bff cli:hash`,
+  # or wire production credentials through a Secret via
+  # `ui.envFromSecret` + `${VAR}` interpolation (see values-my-es.yaml).
+  config:
+    server:
+      host: 0.0.0.0
+      port: 8081
+    oap:
+      # queryUrl / adminUrl default to the in-cluster OAP service when unset.
+      # Override here if you point the UI at an external OAP cluster.
+      # queryUrl: http://skywalking-oap:12800
+      # adminUrl: http://skywalking-oap:17128
+      timeoutMs: 15000
+      # auth:
+      #   username: skywalking
+      #   password: "${HORIZON_OAP_PW}"
+    auth:
+      backend: local
+      local:
+        # Default users — change before production. The argon2id hashes
+        # below decode to the indicated plaintext password.
+        users:
+          - username: admin            # password: admin → full admin
+            passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$eemqy1r72oSXR58y8VpRqw$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM"
+            roles: [admin]
+          - username: skywalking       # password: skywalking → read data + platform health
+            passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q"
+            roles: [viewer, maintainer]
+    rbac:
+      enabled: true
+    session:
+      ttlMinutes: 60
+      cookieName: horizon_sid
+      # Flip to true when serving over HTTPS (browser refuses Secure
+      # cookies over plain HTTP).
+      cookieSecure: false
+  # Optional: pass extra env vars into the BFF container. Use this to
+  # provide values referenced by `${VAR}` interpolation in `config`
+  # (e.g. admin password hash, OAP basic-auth password) without baking
+  # them into the ConfigMap.
+  # extraEnv:
+  #   - name: HORIZON_ADMIN_HASH
+  #     valueFrom:
+  #       secretKeyRef:
+  #         name: horizon-admin
+  #         key: passwordHash
+  extraEnv: []
+  # Optional: reference a pre-created Secret whose keys are exposed as env
+  # vars in the BFF container (shortcut for the common ConfigMap+Secret
+  # pattern). The Secret must define keys referenced in `config` via
+  # ${VAR} interpolation.
+  # envFromSecret: horizon-secrets
+  envFromSecret: ""
 
 
 oapInit:

@@ -27,6 +27,11 @@ Your release is named {{ .Release.Name }}.
 
 Learn more, please visit https://skywalking.apache.org/
 
+{{- if not .Values.ui.enabled }}
+The web UI is disabled in this release (ui.enabled=false). No UI Deployment,
+Service, ConfigMap, Ingress, or PVC was created. OAP is still reachable on
+its GraphQL port (default 12800) for any external UI you point at it.
+{{- else }}
 Get the UI URL by running these commands:
 {{- if .Values.ui.ingress.enabled }}
 {{- range .Values.ui.ingress.hosts }}
@@ -44,5 +49,33 @@ Get the UI URL by running these commands:
 {{- else if contains "ClusterIP" .Values.ui.service.type }}
   echo "Visit http://127.0.0.1:8080 to use your application"
   kubectl port-forward svc/{{ include "skywalking.ui.fullname" . }} 8080:{{ .Values.ui.service.externalPort }} --namespace {{ .Release.Namespace }}
+{{- end }}
+
+NOTE on Horizon UI auth:
+
+The web UI is Apache SkyWalking Horizon UI. It ships with two default users
+so the chart boots out of the box:
+
+  admin       / admin        — full admin
+  skywalking  / skywalking   — viewer + maintainer (read data + platform health)
+
+⚠ These passwords are PUBLICLY KNOWN. Rotate them before exposing the UI
+beyond a trusted network. Generate a replacement argon2id hash by checking
+out apache/skywalking-horizon-ui and running `pnpm --filter bff cli:hash`,
+then override `ui.config.auth.local.users`. For production, store the hash
+in a Kubernetes Secret and reference it via ${VAR} interpolation:
+
+  ui:
+    envFromSecret: horizon-admin-secret   # Secret contains HORIZON_ADMIN_HASH
+    config:
+      auth:
+        local:
+          users:
+            - username: admin
+              passwordHash: "${HORIZON_ADMIN_HASH}"
+              roles: [admin]
+
+Full config reference:
+  https://github.com/apache/skywalking-horizon-ui/blob/main/docs/setup/horizon-yaml.md
 {{- end }}
 

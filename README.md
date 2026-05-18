@@ -19,11 +19,83 @@ There are required values that you must set explicitly when deploying SkyWalking
 | ---- | ----------- | ------- |
 | `oap.image.tag` | the OAP docker image tag | `10.4.0` |
 | `oap.storageType` | the storage type of the OAP | `elasticsearch`, `postgresql`, `banyandb`, etc. |
-| `ui.image.tag` | the UI docker image tag | `10.4.0` |
+| `ui.image.tag` | the Horizon UI docker image tag | `horizon-1.0.0` |
 
 You can set these required values via command line (e.g. `--set oap.image.tag=10.4.0 --set oap.storageType=elasticsearch`),
 or edit them in a separate file(e.g. [`values.yaml`](chart/skywalking/values.yaml), [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml))
 and use `-f <filename>` or `--values=<filename>` to set them.
+
+## Web UI (Horizon UI)
+
+The web UI shipped by this chart is [Apache SkyWalking Horizon UI](https://github.com/apache/skywalking-horizon-ui),
+which replaces the legacy `skywalking-booster-ui`. Compared to booster-ui:
+
+- The container bundles a Node-based BFF in front of the SPA. It connects to OAP on **two** ports: the GraphQL query port (`12800`, `oap.ports.rest`) and the admin REST port (`17128`, `oap.ports.admin`, available on OAP 10.5+).
+- The container exposes **port 8081** (was 8080) and **does not pass-through `/graphql`** to OAP. Callers that previously talked to the UI's GraphQL endpoint (e.g. `swctl --base-url=http://<ui>/graphql`) must now talk to the OAP service directly (`http://<oap>:12800/graphql`).
+- The BFF requires **authentication**. The chart ships two default users so it boots out of the box:
+
+  | Username | Password | Roles | What they can do |
+  | --- | --- | --- | --- |
+  | `admin` | `admin` | `admin` | everything |
+  | `skywalking` | `skywalking` | `viewer`, `maintainer` | read all observability data, plus OAP cluster + module health |
+
+  ⚠ **These defaults are publicly known. Rotate them before exposing the UI beyond a trusted network.** Generate a replacement `argon2id` hash with `pnpm --filter bff cli:hash` in a checkout of [skywalking-horizon-ui](https://github.com/apache/skywalking-horizon-ui), then override `ui.config.auth.local.users` in your own values file (or wire the hash through a Kubernetes Secret as shown below).
+- Release images are published to Docker Hub as `apache/skywalking-ui:horizon-x.y.z`. Pre-release / dev images live at `ghcr.io/apache/skywalking-horizon-ui` (tags: SHA, `vX.Y.Z`, `main`).
+
+### Out-of-the-box install
+
+```shell
+helm install "${SKYWALKING_RELEASE_NAME}" \
+  oci://registry-1.docker.io/apache/skywalking-helm \
+  --version "${SKYWALKING_RELEASE_VERSION}" \
+  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  -f chart/skywalking/values-horizon-ui.yaml
+```
+
+Then port-forward and log in as `admin/admin`:
+
+```shell
+kubectl port-forward -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  svc/${SKYWALKING_RELEASE_NAME}-skywalking-helm-ui 8080:80
+open http://127.0.0.1:8080
+```
+
+[`chart/skywalking/values-horizon-ui.yaml`](chart/skywalking/values-horizon-ui.yaml) is a self-contained example that mirrors the public [`horizon.example.yaml`](https://github.com/apache/skywalking-horizon-ui/blob/main/horizon.example.yaml) shipped at `/app/horizon.example.yaml` inside the image.
+
+### Production: hash via Kubernetes Secret
+
+For anything beyond a demo, swap the publicly-known hash for one you generated yourself and feed it through a Secret + `${VAR}` interpolation:
+
+```shell
+HASH=$(cd skywalking-horizon-ui && pnpm --filter bff cli:hash 'your-strong-password' | tail -1)
+
+kubectl create secret generic horizon-admin \
+  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  --from-literal=HORIZON_ADMIN_HASH="$HASH"
+
+cat > my-values.yaml <<'EOF'
+ui:
+  envFromSecret: horizon-admin
+  config:
+    auth:
+      local:
+        users:
+          - username: admin
+            passwordHash: "${HORIZON_ADMIN_HASH}"
+            roles: [admin]
+EOF
+
+helm install "${SKYWALKING_RELEASE_NAME}" \
+  oci://registry-1.docker.io/apache/skywalking-helm \
+  --version "${SKYWALKING_RELEASE_VERSION}" \
+  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  --set oap.image.tag=10.4.0 \
+  --set oap.storageType=elasticsearch \
+  --set ui.image.tag=horizon-1.0.0 \
+  -f my-values.yaml
+```
+
+Full `horizon.yaml` reference: https://github.com/apache/skywalking-horizon-ui/blob/main/docs/setup/horizon-yaml.md
 
 # Install
 
@@ -44,7 +116,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=10.4.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=10.4.0
+  --set ui.image.tag=horizon-1.0.0
 ```
 
 To use BanyanDB as storage solution, you can try
@@ -56,7 +128,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=10.4.0 \
   --set oap.storageType=banyandb \
-  --set ui.image.tag=10.4.0 \
+  --set ui.image.tag=horizon-1.0.0 \
   --set elasticsearch.enabled=false \
   --set banyandb.enabled=true \
   --set banyandb.image.tag=0.10.1
@@ -135,7 +207,7 @@ here are some examples.
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=10.4.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=10.4.0 \
+  --set ui.image.tag=horizon-1.0.0 \
   --set eck-operator.installCRDs=false
 ```
 
@@ -179,7 +251,7 @@ helm -n istio-system install skywalking \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=10.4.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=10.4.0
+  --set ui.image.tag=horizon-1.0.0
 ```
 
 ## Install development version using source codes
