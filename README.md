@@ -32,39 +32,19 @@ which replaces the legacy `skywalking-booster-ui`. Compared to booster-ui:
 
 - The container bundles a Node-based BFF in front of the SPA. It connects to OAP on **two** ports: the GraphQL query port (`12800`, `oap.ports.rest`) and the admin REST port (`17128`, `oap.ports.admin`, available on OAP 10.5+).
 - The container exposes **port 8081** (was 8080) and **does not pass-through `/graphql`** to OAP. Callers that previously talked to the UI's GraphQL endpoint (e.g. `swctl --base-url=http://<ui>/graphql`) must now talk to the OAP service directly (`http://<oap>:12800/graphql`).
-- The BFF requires **authentication**. The chart ships two default users so it boots out of the box:
+- The BFF requires **authentication**. There is no built-in `admin/admin` fallback — `ui.config.auth.local.users` ships **empty**, and the BFF refuses to start until you provide at least one user. You have two paths:
+  - **Demo / first-run**: apply the example overlay [`chart/skywalking/values-horizon-ui.yaml`](chart/skywalking/values-horizon-ui.yaml), which ships:
 
-  | Username | Password | Roles | What they can do |
-  | --- | --- | --- | --- |
-  | `admin` | `admin` | `admin` | everything |
-  | `skywalking` | `skywalking` | `viewer`, `maintainer` | read all observability data, plus OAP cluster + module health |
+    | Username | Password | Roles | What they can do |
+    | --- | --- | --- | --- |
+    | `admin` | `admin` | `admin` | everything |
+    | `skywalking` | `skywalking` | `viewer`, `maintainer` | read all observability data, plus OAP cluster + module health |
 
-  ⚠ **These defaults are publicly known. Rotate them before exposing the UI beyond a trusted network.** Generate a replacement `argon2id` hash with `pnpm --filter bff cli:hash` in a checkout of [skywalking-horizon-ui](https://github.com/apache/skywalking-horizon-ui), then override `ui.config.auth.local.users` in your own values file (or wire the hash through a Kubernetes Secret as shown below).
+    ⚠ **Those passwords are publicly known in this repo. Use only on trusted networks; rotate before exposing externally.**
+  - **Production**: generate your own `argon2id` hash with `pnpm --filter bff cli:hash` in a checkout of [skywalking-horizon-ui](https://github.com/apache/skywalking-horizon-ui), store it in a Kubernetes Secret, and inject via `ui.envFromSecret` + `${VAR}` interpolation (example below).
 - Release images are published to Docker Hub as `apache/skywalking-ui:horizon-x.y.z`. Pre-release / dev images live at `ghcr.io/apache/skywalking-horizon-ui` (tags: SHA, `vX.Y.Z`, `main`).
 
-### Out-of-the-box install
-
-The chart's own `values.yaml` ships the default users; a plain install Just Works:
-
-```shell
-helm install "${SKYWALKING_RELEASE_NAME}" \
-  oci://registry-1.docker.io/apache/skywalking-helm \
-  --version "${SKYWALKING_RELEASE_VERSION}" \
-  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=10.4.0 \
-  --set oap.storageType=elasticsearch \
-  --set ui.image.tag=horizon-1.0.0
-```
-
-Then port-forward and log in as `admin/admin`:
-
-```shell
-kubectl port-forward -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  svc/${SKYWALKING_RELEASE_NAME}-skywalking-helm-ui 8080:80
-open http://127.0.0.1:8080
-```
-
-If you want to customize Horizon's auth / RBAC / session, copy [`chart/skywalking/values-horizon-ui.yaml`](chart/skywalking/values-horizon-ui.yaml) — a UI-only overlay mirroring the public [`horizon.example.yaml`](https://github.com/apache/skywalking-horizon-ui/blob/main/horizon.example.yaml) shipped at `/app/horizon.example.yaml` inside the image — and apply it alongside the OAP `--set` flags:
+### Demo install (uses the shipped example)
 
 ```shell
 helm install "${SKYWALKING_RELEASE_NAME}" \
@@ -76,6 +56,16 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   --set ui.image.tag=horizon-1.0.0 \
   -f chart/skywalking/values-horizon-ui.yaml
 ```
+
+Then port-forward and log in as `admin/admin`:
+
+```shell
+kubectl port-forward -n "${SKYWALKING_RELEASE_NAMESPACE}" \
+  svc/${SKYWALKING_RELEASE_NAME}-skywalking-helm-ui 8080:80
+open http://127.0.0.1:8080
+```
+
+`values-horizon-ui.yaml` is a UI-only overlay mirroring the public [`horizon.example.yaml`](https://github.com/apache/skywalking-horizon-ui/blob/main/horizon.example.yaml) shipped at `/app/horizon.example.yaml` inside the image — copy it as the starting point for your own auth / RBAC / session customizations.
 
 ### Production: hash via Kubernetes Secret
 

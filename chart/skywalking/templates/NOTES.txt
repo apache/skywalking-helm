@@ -53,27 +53,33 @@ Get the UI URL by running these commands:
 
 NOTE on Horizon UI auth:
 
-The web UI is Apache SkyWalking Horizon UI. It ships with two default users
-so the chart boots out of the box:
+The web UI is Apache SkyWalking Horizon UI. Its BFF refuses to start when
+no users are configured — there is no built-in "admin/admin" fallback.
 
-  admin       / admin        — full admin
-  skywalking  / skywalking   — viewer + maintainer (read data + platform health)
+If your `ui.config.auth.local.users` list is empty, the UI pod will
+CrashLoopBackOff. Two ways to provide users:
 
-⚠ These passwords are PUBLICLY KNOWN. Rotate them before exposing the UI
-beyond a trusted network. Generate a replacement argon2id hash by checking
-out apache/skywalking-horizon-ui and running `pnpm --filter bff cli:hash`,
-then override `ui.config.auth.local.users`. For production, store the hash
-in a Kubernetes Secret and reference it via ${VAR} interpolation:
+1. Demo / first-run — apply the example overlay we ship, which configures
+   admin/admin and skywalking/skywalking with real argon2id hashes:
 
-  ui:
-    envFromSecret: horizon-admin-secret   # Secret contains HORIZON_ADMIN_HASH
-    config:
-      auth:
-        local:
-          users:
-            - username: admin
-              passwordHash: "${HORIZON_ADMIN_HASH}"
-              roles: [admin]
+     helm install … -f chart/skywalking/values-horizon-ui.yaml
+
+   ⚠ Those passwords are PUBLICLY KNOWN in this repo. Use only on trusted
+   networks; rotate before exposing externally.
+
+2. Production — generate your own argon2id hash via
+   `pnpm --filter bff cli:hash` in apache/skywalking-horizon-ui, store it
+   in a Kubernetes Secret, and reference it via ${VAR} interpolation:
+
+     ui:
+       envFromSecret: horizon-admin-secret   # Secret has HORIZON_ADMIN_HASH
+       config:
+         auth:
+           local:
+             users:
+               - username: admin
+                 passwordHash: "${HORIZON_ADMIN_HASH}"
+                 roles: [admin]
 
 Full config reference:
   https://github.com/apache/skywalking-horizon-ui/blob/main/docs/setup/horizon-yaml.md

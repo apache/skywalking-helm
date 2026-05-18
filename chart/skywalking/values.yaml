@@ -236,13 +236,14 @@ ui:
   # in-cluster OAP service. Anything you set here merges over the defaults
   # via Helm's mergeOverwrite semantics.
   #
-  # ⚠ Default credentials below — admin/admin and skywalking/skywalking —
-  # make first-run / demo deployments work out of the box, but they are
-  # publicly known. ROTATE THEM BEFORE EXPOSING THE UI BEYOND A TRUSTED
-  # NETWORK. Generate a replacement hash by checking out
-  # apache/skywalking-horizon-ui and running `pnpm --filter bff cli:hash`,
-  # or wire production credentials through a Secret via
-  # `ui.envFromSecret` + `${VAR}` interpolation (see values-my-es.yaml).
+  # `auth.local.users` is intentionally empty by default — Horizon's BFF
+  # refuses to start without it, which is the upstream's "no default
+  # admin/admin" stance. For a working demo / first-run install, apply
+  # `chart/skywalking/values-horizon-ui.yaml` (it ships admin/admin and
+  # skywalking/skywalking with real argon2id hashes). For production,
+  # generate your own hash via `pnpm --filter bff cli:hash` in
+  # apache/skywalking-horizon-ui and feed it through a Secret +
+  # `${VAR}` interpolation (see README "Web UI" section).
   config:
     server:
       host: 0.0.0.0
@@ -259,15 +260,10 @@ ui:
     auth:
       backend: local
       local:
-        # Default users — change before production. The argon2id hashes
-        # below decode to the indicated plaintext password.
-        users:
-          - username: admin            # password: admin → full admin
-            passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$eemqy1r72oSXR58y8VpRqw$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM"
-            roles: [admin]
-          - username: skywalking       # password: skywalking → read data + platform health
-            passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q"
-            roles: [viewer, maintainer]
+        users: []
+        # - username: admin
+        #   passwordHash: "${HORIZON_ADMIN_HASH}"
+        #   roles: [admin]
     rbac:
       enabled: true
     session:
