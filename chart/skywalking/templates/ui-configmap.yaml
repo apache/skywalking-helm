@@ -1,0 +1,46 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{{- if .Values.ui.enabled }}
+{{- /*
+horizon.yaml is built by deep-merging:
+  1. chart-managed defaults that point at the in-cluster OAP service
+  2. whatever the operator put in `ui.config`
+The merge order means user values win on every field except oap.queryUrl /
+oap.adminUrl, where we always default to the in-cluster service if the
+operator left them unset.
+*/ -}}
+{{- $defaults := dict
+  "oap" (dict
+    "queryUrl" (printf "http://%s:%v" (include "skywalking.oap.fullname" .) .Values.oap.ports.rest)
+    "adminUrl" (printf "http://%s:%v" (include "skywalking.oap.fullname" .) (default 17128 .Values.oap.ports.admin))
+  )
+}}
+{{- $userConfig := default (dict) .Values.ui.config }}
+{{- $merged := mergeOverwrite (deepCopy $defaults) (deepCopy $userConfig) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "skywalking.ui.fullname" . }}
+  labels:
+    app: {{ template "skywalking.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    component: "{{ .Values.ui.name }}"
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+data:
+  horizon.yaml: |
+{{ toYaml $merged | indent 4 }}
+{{- end }}

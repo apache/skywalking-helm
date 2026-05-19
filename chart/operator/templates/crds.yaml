@@ -3424,7 +3424,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "operator.fullname" . }}-serving-cert
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.19.0
   name: uis.operator.skywalking.apache.org
 spec:
   conversion:
@@ -3501,7 +3501,26 @@ spec:
             description: UISpec defines the desired state of UI
             properties:
               OAPServerAddress:
-                description: Backend OAP server address
+                description: |-
+                  Backend OAP server address.
+                  For kind=booster, exported as the SW_OAP_ADDRESS env var.
+                  For kind=horizon, used as oap.queryUrl in the generated horizon.yaml.
+                type: string
+              OAPServerAdminAddress:
+                description: |-
+                  OAPServerAdminAddress is the OAP admin host (port 17128 by default; runtime-rule,
+                  dsl-debug, inspect, status). Only used when kind=horizon. If unset, defaults to
+                  http://<name>-oap.<namespace>:17128.
+                type: string
+              OAPServerZipkinAddress:
+                description: |-
+                  OAPServerZipkinAddress is the OAP Zipkin REST host. Only used when kind=horizon.
+                  If unset, defaults to <OAPServerAddress>/zipkin.
+                type: string
+              config:
+                description: |-
+                  Config is a raw horizon.yaml that, when set, fully replaces the operator-generated
+                  config mounted into the Horizon UI container. Only used when kind=horizon.
                 type: string
               image:
                 description: Image is the UI Docker image to deploy.
@@ -3510,6 +3529,16 @@ spec:
                 description: Count is the number of UI pods
                 format: int32
                 type: integer
+              kind:
+                default: horizon
+                description: |-
+                  Kind selects which SkyWalking web UI to deploy.
+                  "horizon" deploys the next-generation Horizon UI (default).
+                  "booster" deploys the legacy Booster UI image.
+                enum:
+                - horizon
+                - booster
+                type: string
               service:
                 description: Service relevant settings
                 properties:

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+{{- if .Values.ui.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,6 +26,11 @@ metadata:
     release: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.ui.replicas }}
+  # Horizon UI's BFF holds the session table in memory. Recreate (not
+  # RollingUpdate) avoids the brief window of two pods serving traffic with
+  # disjoint session state.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: {{ template "skywalking.name" . }}
@@ -36,9 +42,12 @@ spec:
         app: {{ template "skywalking.name" . }}
         component: "{{ .Values.ui.name }}"
         release: {{ .Release.Name }}
-        {{- if .Values.ui.podAnnotations }}
       annotations:
-{{ toYaml .Values.ui.podAnnotations | indent 8 }}
+        # Roll the pod when horizon.yaml changes — ConfigMap subPath mounts
+        # don't auto-update at runtime.
+        checksum/config: {{ include (print $.Template.BasePath "/ui-configmap.yaml") . | sha256sum }}
+        {{- with .Values.ui.podAnnotations }}
+{{ toYaml . | indent 8 }}
         {{- end }}
     spec:
       {{- with .Values.ui.securityContext }}
@@ -74,14 +83,44 @@ spec:
         resources:
 {{ toYaml .Values.ui.resources | indent 10 }}
 {{- end }}
-        env:
-        - name: SW_OAP_ADDRESS
-          value: "http://{{ template "skywalking.oap.fullname" . }}:{{ .Values.oap.ports.rest }}"
-{{- if .Values.oap.ports.zipkinquery }}
-        - name: SW_ZIPKIN_ADDRESS
-          value: "http://{{ template "skywalking.oap.fullname" . }}:{{ .Values.oap.ports.zipkinquery }}"
+{{- if .Values.ui.livenessProbe }}
+        livenessProbe:
+{{ toYaml .Values.ui.livenessProbe | indent 10 }}
 {{- end }}
-        {{- range $key, $value :=  .Values.ui.env }}
-        - name: {{ $key }}
-          value: {{ $value | quote }}
-        {{- end }}
+{{- if .Values.ui.readinessProbe }}
+        readinessProbe:
+{{ toYaml .Values.ui.readinessProbe | indent 10 }}
+{{- end }}
+{{- if or .Values.ui.envFromSecret .Values.ui.extraEnv }}
+        env:
+{{- range .Values.ui.extraEnv }}
+        - {{ toYaml . | nindent 10 | trim }}
+{{- end }}
+{{- end }}
+{{- if .Values.ui.envFromSecret }}
+        envFrom:
+        - secretRef:
+            name: {{ .Values.ui.envFromSecret }}
+{{- end }}
+        volumeMounts:
+        - name: horizon-config
+          mountPath: /app/horizon.yaml
+          subPath: horizon.yaml
+          readOnly: true
+        - name: horizon-data
+          mountPath: /data
+      volumes:
+      - name: horizon-config
+        configMap:
+          name: {{ template "skywalking.ui.fullname" . }}
+          items:
+          - key: horizon.yaml
+            path: horizon.yaml
+      - name: horizon-data
+{{- if .Values.ui.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ default (printf "%s-data" (include "skywalking.ui.fullname" .)) .Values.ui.persistence.existingClaim }}
+{{- else }}
+        emptyDir: {}
+{{- end }}
+{{- end }}

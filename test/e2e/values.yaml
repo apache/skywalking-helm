@@ -18,6 +18,24 @@ oap:
     metadata-service-mapping.yaml: |
       serviceName: e2e::${LABELS."service.istio.io/canonical-name"}
       serviceInstanceName: ${NAME}
+
+# E2E runs with the chart's shipped defaults — admin/admin and
+# skywalking/skywalking — so a developer port-forwarding into a kind cluster
+# can log in interactively while reproducing a CI failure. These are the
+# same hashes that ship in chart/skywalking/values.yaml; we re-state them
+# here so the test overlay is explicit about what the credentials are.
+ui:
+  config:
+    auth:
+      backend: local
+      local:
+        users:
+          - username: admin            # password: admin
+            passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$eemqy1r72oSXR58y8VpRqw$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM"
+            roles: [admin]
+          - username: skywalking       # password: skywalking
+            passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q"
+            roles: [viewer, maintainer]
 elasticsearch:
   nodeSets:
   - name: default

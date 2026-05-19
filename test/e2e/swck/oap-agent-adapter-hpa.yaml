@@ -58,7 +58,9 @@ setup:
         helm dep up chart/operator
         helm install operator chart/operator --namespace=skywalking-swck-system \
                        --create-namespace \
-                       --set fullnameOverride=skywalking-swck
+                       --set fullnameOverride=skywalking-swck \
+                       --set image.repository=$SWCK_OPERATOR_REPO \
+                       --set image.tag=$SWCK_OPERATOR_TAG
       wait:
         - namespace: skywalking-swck-system
           resource: deployment/skywalking-swck-operator
