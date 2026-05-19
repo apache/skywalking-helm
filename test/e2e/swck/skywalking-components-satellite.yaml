@@ -49,19 +49,9 @@ spec:
   service:
     template:
       type: ClusterIP
----
-apiVersion: operator.skywalking.apache.org/v1alpha1
-kind: UI
-metadata:
-  name: skywalking-system
-  namespace: skywalking-system
-spec:
-  version: PLACEHOLDER
-  instances: 1
-  image: UI_IMAGE_PLACEHOLDER
-  OAPServerAddress: http://skywalking-system-oap.skywalking-system:12800
-  service:
-    template:
-      type: ClusterIP
-    ingress:
-      host: demo.ui.skywalking
+# The SWCK operator's `UI` CRD only knows how to deploy booster-ui
+# (port 8080, env-driven config). Horizon UI needs a horizon.yaml
+# config file + port 8081 + auth users, none of which the CRD wires.
+# Until apache/skywalking-swck teaches the UI CRD about Horizon, we
+# skip deploying it from SWCK tests — verify queries hit OAP directly
+# at port 12800, so the UI isn't on the test path anyway.

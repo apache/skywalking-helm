@@ -73,11 +73,7 @@ setup:
       wait:
         - namespace: skywalking-system
           resource: OAPServer/skywalking-system
-          for: condition=Available
-        - namespace: skywalking-system
-          resource: UI/skywalking-system
-          for: condition=Available
-        - namespace: skywalking-system
+          for: condition=Available        - namespace: skywalking-system
           resource: Satellite/skywalking-system
           for: condition=Available
     - name: Setup java agent demo
