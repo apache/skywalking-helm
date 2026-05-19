@@ -21,6 +21,12 @@ OAP_REPO=ghcr.io/apache/skywalking/oap
 # reproducible — bump this when a new horizon-ui feature/fix needs CI coverage.
 UI_TAG=80565f563b6ea47c274141029d8ef6bd33b7eeac
 UI_REPO=ghcr.io/apache/skywalking-horizon-ui
+# SWCK operator dev image — published by apache/skywalking-swck's
+# publish-docker.yml on every master push. Bump SWCK_OPERATOR_TAG when
+# the SWCK PR with Horizon UI support gets merged & released; the chart's
+# own default (apache/skywalking-swck:v0.9.0) stays unchanged for users.
+SWCK_OPERATOR_REPO=ghcr.io/apache/skywalking-swck/operator
+SWCK_OPERATOR_TAG=d299bc05ee230f5f366584054db5b099ca60166f
 SATELLITE_TAG=v35bfaff6352b4dc351a706772796a1f79b651c14
 SATELLITE_REPO=ghcr.io/apache/skywalking-satellite/skywalking-satellite
 BANYANDB_TAG=5dedaa1aa5106dd87ad9d6c5f08c63deefee5579
