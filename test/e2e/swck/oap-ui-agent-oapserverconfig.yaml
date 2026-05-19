@@ -77,6 +77,9 @@ setup:
         - namespace: skywalking-system
           resource: OAPServer/skywalking-system
           for: condition=Available
+        - namespace: skywalking-system
+          resource: UI/skywalking-system
+          for: condition=Available
     - name: setup java agent demo(test for dynamic configuration)
       command: |
         kubectl label namespace skywalking-system swck-injection=enabled
