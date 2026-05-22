@@ -20,15 +20,18 @@ horizon.yaml is built by deep-merging:
   2. whatever the operator put in `ui.config`
 The merge order means user values win on every field except oap.queryUrl /
 oap.adminUrl, where we always default to the in-cluster service if the
-operator left them unset.
+operator left them unset. zipkinUrl is only injected when the Zipkin query
+port is enabled — Horizon's BFF rejects an empty/non-URL value at startup.
 */ -}}
-{{- $defaults := dict
-  "oap" (dict
-    "queryUrl" (printf "http://%s:%v" (include "skywalking.oap.fullname" .) .Values.oap.ports.rest)
-    "adminUrl" (printf "http://%s:%v" (include "skywalking.oap.fullname" .) (default 17128 .Values.oap.ports.admin))
-    "zipkinUrl" (printf "http://%s:%v/zipkin" (include "skywalking.oap.fullname" .) (index .Values.oap.ports "zipkin-query"))
-  )
+{{- $oapDefaults := dict
+  "queryUrl" (printf "http://%s:%v" (include "skywalking.oap.fullname" .) .Values.oap.ports.rest)
+  "adminUrl" (printf "http://%s:%v" (include "skywalking.oap.fullname" .) (default 17128 .Values.oap.ports.admin))
 }}
+{{- $zipkinQueryPort := index .Values.oap.ports "zipkin-query" }}
+{{- if $zipkinQueryPort }}
+{{- $_ := set $oapDefaults "zipkinUrl" (printf "http://%s:%v/zipkin" (include "skywalking.oap.fullname" .) $zipkinQueryPort) }}
+{{- end }}
+{{- $defaults := dict "oap" $oapDefaults }}
 {{- $userConfig := default (dict) .Values.ui.config }}
 {{- $merged := mergeOverwrite (deepCopy $defaults) (deepCopy $userConfig) }}
 apiVersion: v1
