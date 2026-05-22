@@ -26,7 +26,7 @@ operator left them unset.
   "oap" (dict
     "queryUrl" (printf "http://%s:%v" (include "skywalking.oap.fullname" .) .Values.oap.ports.rest)
     "adminUrl" (printf "http://%s:%v" (include "skywalking.oap.fullname" .) (default 17128 .Values.oap.ports.admin))
-    "zipkinUrl" (printf "http://%s:%v/zipkin" (include "skywalking.oap.fullname" .) .Values.oap.ports.zipkin_query)
+    "zipkinUrl" (printf "http://%s:%v/zipkin" (include "skywalking.oap.fullname" .) (index .Values.oap.ports "zipkin-query"))
   )
 }}
 {{- $userConfig := default (dict) .Values.ui.config }}
