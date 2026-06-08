@@ -13,13 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-OAP_TAG=a0cec0ca237792497d2da0b65757d11f58c3f342
+OAP_TAG=2aa0e8502a928c7066a01f864ee32122f12dfcae
 OAP_REPO=ghcr.io/apache/skywalking/oap
 # Horizon UI dev images are published to GHCR by the apache/skywalking-horizon-ui
 # repo (tags: full commit SHA, vX.Y.Z, main). Release images live on Docker Hub
 # at apache/skywalking-ui:horizon-x.y.z. CI pins to a SHA so re-runs are
 # reproducible — bump this when a new horizon-ui feature/fix needs CI coverage.
-UI_TAG=80565f563b6ea47c274141029d8ef6bd33b7eeac
+UI_TAG=58a4c1fb61478936f317136400d6dbd0cdda5ee1
 UI_REPO=ghcr.io/apache/skywalking-horizon-ui
 # SWCK operator release image — apache/skywalking-swck:0.10.0 includes
 # Horizon UI support (PR #199). Match the chart default in
@@ -28,6 +28,6 @@ SWCK_OPERATOR_REPO=docker.io/apache/skywalking-swck
 SWCK_OPERATOR_TAG=0.10.0
 SATELLITE_TAG=v35bfaff6352b4dc351a706772796a1f79b651c14
 SATELLITE_REPO=ghcr.io/apache/skywalking-satellite/skywalking-satellite
-BANYANDB_TAG=5dedaa1aa5106dd87ad9d6c5f08c63deefee5579
+BANYANDB_TAG=65d951f1c464bd85770c51b4d69a0a28ed861a1e
 BANYANDB_REPO=ghcr.io/apache/skywalking-banyandb
 SW_CTL_COMMIT=9a1beab08413ce415a00a8547a238a14691c5655
