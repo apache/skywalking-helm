@@ -74,6 +74,10 @@ rules:
   - ""
   resources:
   - configmaps
+  - persistentvolumeclaims
+  - secrets
+  - serviceaccounts
+  - services
   verbs:
   - create
   - delete
@@ -92,20 +96,6 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - persistentvolumeclaims
-  - serviceaccounts
-  - services
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
   - pods
   verbs:
   - create
@@ -115,47 +105,9 @@ rules:
   - update
   - watch
 - apiGroups:
-  - ""
-  resources:
-  - secrets
-  - serviceaccounts
-  - services
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - serviceaccounts
-  - services
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
   - apps
   resources:
   - deployments
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - apps
-  resources:
   - statefulsets
   verbs:
   - create
@@ -205,204 +157,15 @@ rules:
   - operator.skywalking.apache.org
   resources:
   - banyandbs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
-  - banyandbs/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
-  - banyandbs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
+  - eventexporters
   - fetchers
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
-  - fetchers/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
   - javaagents
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
-  - javaagents/status
-  verbs:
-  - delete
-  - get
-  - patch
-  - update
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
   - oapserverconfigs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
-  - oapserverconfigs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
   - oapserverdynamicconfigs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
-  - oapserverdynamicconfigs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
   - oapservers
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
-  - oapservers/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
   - satellites
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
-  - satellites/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
-  - satellites/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
   - storages
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
-  - storages/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
   - swagents
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
-  - swagents/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
-  - swagents/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - operator.skywalking.apache.org
-  resources:
   - uis
   verbs:
   - create
@@ -415,8 +178,35 @@ rules:
 - apiGroups:
   - operator.skywalking.apache.org
   resources:
+  - banyandbs/finalizers
+  - eventexporters/finalizers
+  - satellites/finalizers
+  - swagents/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - operator.skywalking.apache.org
+  resources:
+  - banyandbs/status
+  - eventexporters/status
+  - fetchers/status
+  - oapserverconfigs/status
+  - oapserverdynamicconfigs/status
+  - oapservers/status
+  - satellites/status
+  - storages/status
+  - swagents/status
   - uis/status
   verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - operator.skywalking.apache.org
+  resources:
+  - javaagents/status
+  verbs:
+  - delete
   - get
   - patch
   - update
