@@ -46,8 +46,12 @@ oap:
     # null (or remove) if the deployed OAP version predates 10.5 — Horizon
     # admin features will be unavailable in that case.
     admin: 17128
-    # zipkinreceiver: 9411
-    # zipkinquery: 9412
+    # zipkin-receiver: 9411
+    # zipkin-query: 9412
+    # promql: 9090
+    # logql: 3100
+    # traceql: 3200
+    # metrics: 1234
   replicas: 2
   service:
     type: ClusterIP
