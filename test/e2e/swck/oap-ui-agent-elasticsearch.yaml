@@ -72,7 +72,7 @@ setup:
     - name: Setup java agent demo
       command: |
         kubectl label namespace skywalking-system swck-injection=enabled
-        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.9.0/test/e2e/demo.yaml | sed 's/oap-service/skywalking-system-oap.skywalking-system/' | kubectl apply -f -
+        curl https://raw.githubusercontent.com/apache/skywalking-swck/v0.10.0/test/e2e/demo.yaml | sed 's/oap-service/skywalking-system-oap.skywalking-system/' | kubectl apply -f -
       wait:
         - namespace: skywalking-system
           resource: deployment/demo
