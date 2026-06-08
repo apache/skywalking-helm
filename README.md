@@ -19,7 +19,7 @@ There are required values that you must set explicitly when deploying SkyWalking
 | ---- | ----------- | ------- |
 | `oap.image.tag` | the OAP docker image tag | `10.4.0` |
 | `oap.storageType` | the storage type of the OAP | `elasticsearch`, `postgresql`, `banyandb`, etc. |
-| `ui.image.tag` | the Horizon UI docker image tag | `horizon-1.0.0` |
+| `ui.image.tag` | the Horizon UI docker image tag | `horizon-0.6.0` |
 
 You can set these required values via command line (e.g. `--set oap.image.tag=10.4.0 --set oap.storageType=elasticsearch`),
 or edit them in a separate file(e.g. [`values.yaml`](chart/skywalking/values.yaml), [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml))
@@ -135,7 +135,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=10.4.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=horizon-1.0.0
+  --set ui.image.tag=horizon-0.6.0
 ```
 
 To use BanyanDB as storage solution, you can try
@@ -147,7 +147,7 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=10.4.0 \
   --set oap.storageType=banyandb \
-  --set ui.image.tag=horizon-1.0.0 \
+  --set ui.image.tag=horizon-0.6.0 \
   --set elasticsearch.enabled=false \
   --set banyandb.enabled=true \
   --set banyandb.image.tag=0.10.1
@@ -226,7 +226,7 @@ here are some examples.
 helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=10.4.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=horizon-1.0.0 \
+  --set ui.image.tag=horizon-0.6.0 \
   --set eck-operator.installCRDs=false
 ```
 
@@ -270,7 +270,7 @@ helm -n istio-system install skywalking \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=10.4.0 \
   --set oap.storageType=elasticsearch \
-  --set ui.image.tag=horizon-1.0.0
+  --set ui.image.tag=horizon-0.6.0
 ```
 
 ## Install development version using source codes

@@ -153,11 +153,11 @@ ui:
   replicas: 1
   image:
     # Horizon UI release images ship to Docker Hub `apache/skywalking-ui`
-    # tagged `horizon-<x.y.z>` (e.g. `horizon-1.0.0`). Dev / pre-release
+    # tagged `horizon-<x.y.z>` (e.g. `horizon-0.6.0`). Dev / pre-release
     # images live at `ghcr.io/apache/skywalking-horizon-ui` and are tagged
     # by SHA / `vX.Y.Z` / `main`.
     repository: skywalking.docker.scarf.sh/apache/skywalking-ui
-    tag: null # Must be set explicitly, e.g. horizon-1.0.0
+    tag: null # Must be set explicitly, e.g. horizon-0.6.0
     pullPolicy: IfNotPresent
   # podAnnotations:
   #   example: oap-foo
