@@ -105,7 +105,10 @@ spec:
 {{ else }}
           tcpSocket:
             port: 12800
-          failureThreshold: 9
+          # In no-init mode OAP blocks (port 12800 stays closed) until the init Job has created
+          # the storage schema. Give it a generous budget (30 * 10s = 300s) so the pod waits for
+          # the init Job instead of being restarted during a cold start.
+          failureThreshold: 30
           periodSeconds: 10
 {{- end }}
         readinessProbe:

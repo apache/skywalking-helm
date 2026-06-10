@@ -316,22 +316,25 @@ You can set those environment variables by `--set oap.env.<ENV_NAME>=<ENV_VALUE>
 
 > The environment variables take priority over the overrode configuration files.
 
-## Rerun OAP init job
+## OAP init job
 
-Kubernetes Job cannot be rerun by default, if you want to rerun the OAP init
-job, you need to delete the Job and recreate it.
+The OAP storage schema (Elasticsearch indices / SQL tables / BanyanDB groups) is created by a
+one-shot `*-oap-init-*` Job that runs OAP in `-Dmode=init`. The main OAP Deployment runs in
+`-Dmode=no-init` and blocks (its `12800` port stays closed, so it is not Ready) until that schema
+exists. The init Job is a **normal release resource** that runs in the main install/upgrade phase,
+so `helm upgrade --install --wait` works: the Job creates the schema while OAP waits for it. To get
+Helm to surface init-Job failures directly (instead of only seeing OAP fail to become Ready), add
+`--wait-for-jobs` alongside `--wait`.
+
+The Job name carries a hash of the chart values, so any `helm upgrade` that changes a value
+re-creates the Job and re-runs init automatically (Helm prunes the previous one).
+
+To **force a rerun** without changing any value — delete the Job and re-run `helm upgrade`; Helm
+recreates the (now missing) Job and init runs again:
 
 ```shell
-# Make sure to export the Job manifest to a file before deleting it.
-kubectl get job -n "${SKYWALKING_RELEASE_NAMESPACE}" -l release=$SKYWALKING_RELEASE_NAME -o yaml > oap-init.job.yaml
-# Trim the Job manifest to keep only the Job part, you can either download yq from https://github.com/mikefarah/yq or
-# manually remove the fields that are not needed.
-yq 'del(.items[0].metadata.creationTimestamp,.items[0].metadata.resourceVersion,.items[0].metadata.uid,.items[0].status,.items[0].spec.template.metadata.labels."batch.kubernetes.io/controller-uid",.items[0].spec.template.metadata.labels."controller-uid",.items[0].spec.selector.matchLabels."batch.kubernetes.io/controller-uid")' oap-init.job.yaml > oap-init.job.trimmed.yaml
-# Check the file oap-init.job.trimmed.yaml to make sure it has correct content
-# Delete the Job
 kubectl delete job -n "${SKYWALKING_RELEASE_NAMESPACE}" -l release=$SKYWALKING_RELEASE_NAME
-# Create the Job
-kubectl -n "${SKYWALKING_RELEASE_NAMESPACE}" apply -f oap-init.job.trimmed.yaml
+helm upgrade "$SKYWALKING_RELEASE_NAME" <chart> -n "${SKYWALKING_RELEASE_NAMESPACE}" --reuse-values
 ```
 
 # Contact Us

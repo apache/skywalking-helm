@@ -18,17 +18,28 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ template "skywalking.oap.fullname" . }}-init"
+  # NOTE: This Job is intentionally a normal release resource, NOT a Helm hook.
+  # Running it as a post-install/post-upgrade hook deadlocks `helm upgrade --install --wait`:
+  # Helm waits for every release resource to become Ready before it runs post-* hooks, but the
+  # OAP Deployment runs in `-Dmode=no-init` and never becomes Ready until this Job has created
+  # the storage schema -- so the hook (and therefore the schema) would never run. As a main-phase
+  # resource the Job runs alongside the OAP Deployment, which blocks in no-init mode until the
+  # schema appears, so `--wait` resolves instead of deadlocking.
+  #
+  # The name carries a hash of the chart values: a Job's `spec.template` is immutable, so a stable
+  # name would make `helm upgrade` fail with "field is immutable" whenever the pod template changes.
+  # Hashing yields a fresh Job whenever a relevant value changes; Helm prunes the previous one.
+  name: "{{ printf "%s-init-%s" (include "skywalking.oap.fullname" . | trunc 40 | trimSuffix "-") (.Values | toYaml | sha256sum | trunc 8) }}"
   labels:
     app: {{ template "skywalking.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     component: "{{ template "skywalking.fullname" . }}-job"
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade,post-rollback
-    "helm.sh/hook-weight": "1"
 spec:
+  {{- if .Values.oapInit.ttlSecondsAfterFinished }}
+  ttlSecondsAfterFinished: {{ .Values.oapInit.ttlSecondsAfterFinished }}
+  {{- end }}
   template:
     metadata:
       name: "{{ .Release.Name }}-oap-init"

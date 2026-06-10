@@ -75,11 +75,13 @@ oap:
   # initialDelaySeconds: 5
   # periodSeconds: 20
   startupProbe: {}
-  # Time to boot the application is set to:
-  # 9 (failureThreshold) * 10 (periodSeconds) = 90 seconds in this case.
+  # Boot budget defaults to 30 (failureThreshold) * 10 (periodSeconds) = 300 seconds.
+  # In no-init mode OAP keeps port 12800 closed until the OAP init Job has created the storage
+  # schema, so the budget must be large enough to cover storage startup + schema creation;
+  # otherwise the pod is restarted while it is legitimately waiting for the init Job.
   # tcpSocket:
   #   port: 12800
-  # failureThreshold: 9
+  # failureThreshold: 30
   # periodSeconds: 10
   readinessProbe: {}
   # tcpSocket:
@@ -301,6 +303,12 @@ oapInit:
   tolerations: []
   extraPodLabels: {}
   # sidecar.istio.io/inject: false
+  # Auto-delete the completed init Job (and its Pod) this many seconds after it finishes, via the
+  # Kubernetes TTL-after-finished controller. Leave empty to keep the completed Job around.
+  # NOTE: leave this empty when using GitOps tools (e.g. Argo CD, Flux) -- they would recreate the
+  # Job after the TTL controller deletes it, re-running init on every reconcile. The Job name is
+  # value-hashed, so upgrades already work without TTL; this is only for tidying finished Jobs.
+  ttlSecondsAfterFinished: ""
 
 # Elasticsearch managed by ECK (eck-elasticsearch chart)
 # When enabled, the ECK operator is also installed as a dependency.
