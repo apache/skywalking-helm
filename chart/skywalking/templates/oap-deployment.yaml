@@ -168,6 +168,9 @@ spec:
 
         volumeMounts:
         {{- include "skywalking.oap.volumeMounts" . | nindent 8 }}
+      {{- with .Values.oap.sidecars }}
+      {{- tpl (toYaml .) $ | nindent 6 }}
+      {{- end }}
 
       volumes:
       {{- include "skywalking.oap.volumes" . | nindent 6 }}

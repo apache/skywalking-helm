@@ -94,6 +94,15 @@ oap:
   # runAsUser: 1000
   # runAsGroup: 1000
   # fsGroup: 1000
+  # Extra sidecar containers to run in the OAP pod. Each entry is a full
+  # container spec appended to the pod's `containers` list (e.g. a query proxy,
+  # log shipper). Rendered through `tpl`, so values may contain template
+  # expressions (evaluated against the release context). Empty by default.
+  sidecars: []
+  # - name: query-proxy
+  #   image: my/query-proxy:1.0.0
+  #   ports:
+  #     - { name: http, containerPort: 8080 }
   env: # more env, please refer to https://hub.docker.com/r/apache/skywalking-oap-server
 
   # or https://github.com/apache/skywalking-docker/blob/master/6/6.4/oap/README.md#sw_telemetry
