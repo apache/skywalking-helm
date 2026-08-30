@@ -16,7 +16,7 @@
 # Covers the third configuration mechanism for both components: a file rendered
 # into a ConfigMap and mounted over the image's own.
 #
-# The other five cells all take the default path -- Horizon configured purely by
+# The other three cells all take the default path -- Horizon configured purely by
 # environment variable, with no ConfigMap created at all -- so without this the
 # opt-in mount would ship untested. It is also the riskier path: mounting over
 # Horizon's /app/horizon.yaml REPLACES it, and the chart has to merge its

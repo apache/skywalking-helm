@@ -51,7 +51,9 @@ confirm() {
   ${DRY_RUN} && { log "dry run: would $1"; return 1; }
   log "About to $1"
   log "Proceed? [y/N]"
-  read -r reply
+  # `read` exits 1 at EOF. Without this the run reports "declined" when in truth there was no
+  # terminal to ask -- e.g. the script was piped, or run from CI.
+  read -r reply || die "nothing on stdin -- run this script from a terminal"
   [[ "${reply}" == "y" || "${reply}" == "Y" ]] && return 0
   die "declined -- aborting before anything further"
 }
@@ -64,9 +66,20 @@ preflight() {
   TAG="v${VERSION}"
   log "publishing ${VERSION}"
 
+  local missing=""
   for tool in svn gh git; do
-    command -v "${tool}" >/dev/null || die "${tool} is not installed"
+    command -v "${tool}" >/dev/null || missing="${missing} ${tool}"
   done
+  [[ -z "${missing}" ]] || die "not installed:${missing}"
+
+  # gh is used in github_release(), which runs AFTER the svn promotion -- and that
+  # promotion cannot be undone. An unauthenticated gh has to fail here or not at all.
+  gh auth status >/dev/null 2>&1 \
+    || die "gh is not authenticated -- run 'gh auth login'. The GitHub release is created after the
+       svn promotion, which cannot be undone, so this has to be working before anything starts."
+
+  svn ls "${SVN_RELEASE_URL}" >/dev/null 2>&1 \
+    || die "cannot read ${SVN_RELEASE_URL} -- check your network and your ASF svn credentials"
 
   svn ls "${SVN_DEV_URL}/helm/${VERSION}" >/dev/null 2>&1 \
     || die "${SVN_DEV_URL}/helm/${VERSION} does not exist -- was release.sh run?"
@@ -103,7 +116,7 @@ remove_previous() {
   echo
   log "Remove ALL of the above? [y/N]"
   ${DRY_RUN} && { log "dry run: not removing"; return; }
-  read -r reply
+  read -r reply || die "nothing on stdin -- run this script from a terminal"
   if [[ "${reply}" == "y" || "${reply}" == "Y" ]]; then
     local targets=()
     while IFS= read -r entry; do

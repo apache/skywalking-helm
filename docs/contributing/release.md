@@ -169,12 +169,25 @@ irreversible step comes last, and a failure leaves nothing on the remote to clea
 Preflight refuses to start when:
 
 - the host is not Linux;
-- any of `helm`, `gpg`, `shasum`, `svn`, `git`, `make` is missing;
+- any of `helm`, `gpg`, `shasum`, `svn`, `git`, `make`, `tar`, `awk` is missing. All of them are
+  reported in one message — finding them one at a time costs one failed run per package;
+- `helm` is older than 3.8. The chart ships only as an OCI artifact, and `helm push` to an `oci://`
+  registry arrived in 3.8. Helm 4 is accepted: `Chart.yaml` is `apiVersion: v2`, which both majors
+  read;
+- `gpg` holds no secret key. `make release` signs with `gpg --batch`, so without one the run would
+  fail *after* building and packaging everything;
+- `dist/dev/skywalking` cannot be read — a network problem, or svn credentials that are not set up;
 - the working tree is dirty — `release-src` archives the working *tree*, not `HEAD`;
 - a `*.tgz`, `*.tgz.asc` or `*.tgz.sha512` is lying in the repository root. Those are gitignored, so
   `git status` cannot see them, and a leftover from a previous release would be embedded in this
   release's source tarball;
-- `v$VERSION` already exists.
+- `v$VERSION` already exists, or `dist/dev/skywalking/helm/$VERSION` already does. The second catches
+  a re-run after a partial upload, which would otherwise only surface at `svn commit` — after the
+  build, the signing and the tag push.
+
+The point of the capability checks is *when* they fail. A missing signing key or unusable svn
+credentials are both perfectly capable of stopping a release half-way through, with a tag already on
+the remote; preflight is the only place where stopping is free.
 
 `verify_artifacts` checks, for each of the two artifacts, that the file and its `.asc` and `.sha512`
 are present, that `gpg --batch --verify` passes and that `shasum -a 512 -c` passes. It then runs
@@ -344,12 +357,16 @@ as a no *without* aborting, so it walks the whole plan and does none of it.
 
 | Stage | Prompt | Declining |
 | --- | --- | --- |
-| `preflight` | — | fails if `svn` / `gh` / `git` are missing, or if `dist/dev/skywalking/helm/$VERSION` does not exist |
+| `preflight` | — | fails if `svn` / `gh` / `git` are missing, if `gh` is not authenticated, if `dist/release/skywalking` cannot be read, or if `dist/dev/skywalking/helm/$VERSION` does not exist |
 | `promote_artifacts` | `svn mv` from `dist/dev` to `dist/release` | aborts |
 | `remove_previous` | remove everything under `release/helm/` other than `$VERSION` | **skips and continues** — the one exception |
 | `github_release` | `gh release create` — this is what publishes the chart | aborts |
 | `announce_mail` | — | prints the mail, sends nothing |
 | `remaining` | — | prints what is left by hand |
+
+`gh auth status` is checked in preflight rather than left to `github_release`, because
+`github_release` runs *after* `promote_artifacts` — and an `svn mv` into `dist/release` cannot be
+taken back. An unauthenticated `gh` has to stop the run before that, or not at all.
 
 `remove_previous` is the exception because skipping it is survivable: `dist/release` is meant to
 hold only the current version, but a stale sibling breaks nothing. Declining prints

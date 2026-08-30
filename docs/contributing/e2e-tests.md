@@ -16,7 +16,7 @@ the traffic to generate, and the assertions to make. The phases are:
 | Phase | What it does here |
 | --- | --- |
 | `setup` | Creates the kind cluster from `file: kind28.yaml`, loads `init-system-environment: env` into the shell environment, then runs the `steps:` in order — install tooling, install Istio, `helm install` the chart, deploy bookinfo, start traffic. Each step may declare `wait:` conditions; the whole phase has `timeout: 25m`. |
-| `trigger` | Unused. All five cells generate load with a `wrk` Deployment (`test/e2e/traffic-gen.yaml`) applied as a setup step, so no cell has a `trigger:` block. |
+| `trigger` | Unused. The three traffic cells generate load with a `wrk` Deployment (`test/e2e/traffic-gen.yaml`) applied as a setup step, so no cell has a `trigger:` block. |
 | `verify` | Runs each `query:` and matches its output against a template in `test/e2e/expected/`, retrying on `retry: {count: 30, interval: 10s}`. |
 | `cleanup` | No cell declares `cleanup:`, so infra-e2e's own default applies — `always` when `CI=true` (GitHub Actions always tears down), `success` otherwise. A locally *failed* run therefore leaves the cluster up for debugging. |
 
@@ -38,9 +38,9 @@ interpolates into a base URL. The OAP's own ports are not exposed at all.
 and `{{ notEmpty .version }}`, so a case asserts "these services are present" or "this field has a
 value", not an exact payload.
 
-## The five cells
+## The four cells
 
-All five run the same fixture — kind `kindest/node:v1.28.15` (one control plane, three workers),
+Three of them run the same fixture — kind `kindest/node:v1.28.15` (one control plane, three workers),
 namespace `istio-system`, `fullnameOverride=skywalking`, `oap.replicas=1`, Satellite enabled, Horizon
 UI at `$UI_REPO:$UI_TAG` — and differ in which OAP and which storage they install, plus the flags
 each of those pairings needs.
@@ -51,29 +51,40 @@ each of those pairings needs.
 | `test/e2e/e2e-oap11-banyandb-standalone.yaml` | 11.0.0 | BanyanDB 0.11 (`$BANYANDB_REPO:$BANYANDB_TAG`) | `oap.storageType=banyandb`, `elasticsearch.enabled=false`, `banyandb.enabled=true`, `banyandb.standalone.enabled=true`, `banyandb.cluster.enabled=false`, `banyandb.auth.enabled=true`. |
 | `test/e2e/e2e-oap11-banyandb-cluster.yaml` | 11.0.0 | BanyanDB 0.11, cluster mode | As above but `banyandb.standalone.enabled=false`, `banyandb.cluster.enabled=true`. |
 
-The three OAP 11 cells also switch Zipkin on — `oap.ports.zipkin-query=9412` plus
-`SW_RECEIVER_ZIPKIN=default` and `SW_QUERY_ZIPKIN=default` — because the chart only emits
-`oap.zipkinUrl` into Horizon's config when that port is set, and one verify case asserts Horizon can
-reach it.
+All three also switch Zipkin on — `oap.ports.zipkin-query=9412` plus `SW_RECEIVER_ZIPKIN=default`
+and `SW_QUERY_ZIPKIN=default` — because the chart only emits `oap.zipkinUrl` into Horizon's config
+when that port is set, and one verify case asserts Horizon can reach it. Each runs seven cases.
 
-### How the OAP 10.4 cells differ
+### The fourth cell: `e2e-config-override.yaml`
 
-The admin host, and the `/ui-management` template store mounted on it, arrived in OAP 11. On 10.4
-the chart must not render an admin port (`oap.ports.admin=null`) and Horizon must run its template
-store from the bundle in its own image (`ui.config.templates.mode=readonly`).
+The other three take the default configuration path — Horizon set up purely by environment variable,
+with no ConfigMap created at all. This cell covers the opt-in third mechanism for **both**
+components: a file rendered into a ConfigMap and mounted over the image's own.
 
-The important part is what happens to the assertions: they are **inverted, not dropped**. Those
-Horizon endpoints answer HTTP 200 either way and report the failure in the body, so the 10.4 cells
-still call them and expect the negative answer:
+| | |
+| --- | --- |
+| Storage | BanyanDB 0.11 standalone — the cheapest backend that still exercises a real one |
+| UI override | `ui.config.session.ttlMinutes=17`, which makes the chart render and mount the UI ConfigMap |
+| OAP override | `oap.config.log4j2\.xml=<Configuration …>`, mounted at `/skywalking/config/log4j2.xml` |
+| Cases | Four |
 
-| Case | OAP 11 expects | OAP 10.4 expects |
-| --- | --- | --- |
-| `GET /api/preflight?refresh=1` | `expected/horizon-admin-live.yml` — `adminReachable: true`, `templatesMode: live`, `uiManagement: true` | `expected/horizon-admin-readonly.yml` — `adminReachable: false`, `templatesMode: readonly` |
-| `GET /api/admin/templates/sync-status?force=true` | `expected/horizon-templates-live.yml` — `mode: live`, `unreachable: false` | `expected/horizon-templates-readonly.yml` — `mode: readonly`, `unreachable: false` |
+It is deliberately cheap — no Istio, no bookinfo, no traffic generator. What is under test is
+whether the overrides are read, which needs none of that, so it skips the `MESH` fixture entirely
+and never queries a metric.
 
-`unreachable: false` in readonly mode is the point of that second row: readonly still serves
-templates, from the image, without ever contacting the OAP. The OAP 10.4 cells run six verify cases
-to the OAP 11 cells' seven — the missing one is the Zipkin check, since they do not enable Zipkin.
+The mount is the riskier path, and the reason this cell exists. Mounting over Horizon's
+`/app/horizon.yaml` *replaces* it, so the chart has to merge its computed values back in as
+`${HORIZON_*:default}` tokens. Two of the four cases exist to catch that regression rather than to
+check the ConfigMap: logging in proves the `HORIZON_AUTH_LOCAL_USERS` token survived the mount
+(without it the pod is Ready and nobody can sign in), and `/api/oap/info` proves `queryUrl` did not
+revert to `127.0.0.1`.
+
+### There are no OAP 10.4 cells
+
+CI covers the OAP 11 line only. [Version Compatibility](../evaluate/version-compatibility.md) still
+documents running Horizon 1.0.0 against OAP 10.4.0 — `oap.ports.admin=null` and
+`HORIZON_TEMPLATES_MODE=readonly` — but nothing here tests it, so treat that combination as
+documented rather than verified.
 
 ## The traffic fixture: everything lands in `MESH`
 
@@ -246,7 +257,7 @@ bash test/e2e/script/horizon.sh http://localhost:8080 get /api/layer/MESH/servic
 ## How CI runs them
 
 `.github/workflows/e2e.ci.yaml` runs the suite from one matrix job, `als`, with `fail-fast: false`
-and a matrix of five entries — one per cell — each with a 60-minute timeout, so one failing storage
+and a matrix of four entries — one per cell — each with a 60-minute timeout, so one failing storage
 backend does not cancel the other four:
 
 ```yaml
@@ -256,7 +267,7 @@ strategy:
     test:
       - name: Horizon + OAP 11 + Elasticsearch
         config: test/e2e/e2e-oap11-elasticsearch.yaml
-      # …and the two OAP 11 BanyanDB cells plus the two OAP 10.4 cells
+      # …the two OAP 11 BanyanDB cells, and e2e-config-override.yaml
 ```
 
 Each entry logs in to `ghcr.io` (the Satellite and BanyanDB 0.11 images live there), sets up Go 1.24,
@@ -278,9 +289,10 @@ filter applies only to the push trigger, so a docs-only pull request still runs 
 
 ## Adding a case
 
-1. Add the `query:` to **all five** cells unless it is version-specific, and put the expectation in
-   `test/e2e/expected/`. If the answer differs between OAP 11 and 10.4, invert it into a second
-   expected file rather than skipping the case — see the table above.
+1. Add the `query:` to **all three traffic cells**, and put the expectation in
+   `test/e2e/expected/`. Leave `e2e-config-override.yaml` alone unless the case is about
+   configuration: it installs no Istio and generates no traffic, so anything asking for a metric
+   will never pass there.
 2. Go through `test/e2e/script/horizon.sh`. Anything that calls the OAP directly is testing the OAP.
 3. Query the `MESH` layer, and project the response with `yq` down to the fields that carry meaning.
 4. Keep image references as `$OAP_REPO` / `$OAP_TAG` style variables so `test/e2e/env` stays the only

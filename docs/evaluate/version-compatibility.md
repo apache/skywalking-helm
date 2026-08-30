@@ -111,7 +111,7 @@ Details: [Elasticsearch](../storage/elasticsearch.md), [BanyanDB](../storage/ban
 ## Kubernetes and Helm
 
 - **Helm 3 or newer**, and **3.8 or newer** for the `oci://` install above. Chart `5.0.0` is `apiVersion: v2`, which rules out Helm 2; the chart README and [Quick Start](../install/quick-start.md) both list 3.8+ because the chart is only published as an OCI artifact.
-- All five e2e cells run on one kind config, `test/e2e/kind28.yaml` — **`kindest/node:v1.28.15`**, a control plane and three workers. The chart declares no `kubeVersion` constraint.
+- Every e2e cell runs on one kind config, `test/e2e/kind28.yaml` — **`kindest/node:v1.28.15`**, a control plane and three workers. The chart declares no `kubeVersion` constraint.
 
 ## Before you change a version
 

@@ -12,7 +12,7 @@ default (Elasticsearch) path requires.
 | `kubectl` | matching your cluster | Used to watch the install (`kubectl get pods -w`) and for all troubleshooting. |
 
 CI exercises the chart on a four-node [kind](https://kind.sigs.k8s.io/) cluster running
-`kindest/node:v1.28.15` (`test/e2e/kind28.yaml`) — all five e2e suites use it — so 1.28 is the
+`kindest/node:v1.28.15` (`test/e2e/kind28.yaml`) — every e2e cell uses it — so 1.28 is the
 version with the most coverage.
 
 The chart adapts to older Ingress APIs (`ui-ingress.yaml` falls back from
