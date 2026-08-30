@@ -43,16 +43,25 @@ log()  { echo "  $*"; }
 step() { echo; echo "=== $* ==="; }
 die()  { echo "ERROR: $*" >&2; exit 1; }
 
+# upload_to_svn stages the signed artifacts in a temp directory. The cleanup is registered here,
+# at script scope, over a script-scope variable: an EXIT trap runs after the function has already
+# returned, so it cannot see a `local`, and under `set -u` the unbound name would make the trap
+# fail and take the script's exit status with it.
+WORKDIR=""
+cleanup() { [[ -n "${WORKDIR}" ]] && rm -rf "${WORKDIR}"; return 0; }
+trap cleanup EXIT
+
 # ---------------------------------------------------------------------------
 
 preflight() {
   step "Preflight"
 
-  # make clean is a prerequisite of make release, and its recipe is a single
-  # backslash-continued rm whose later -rf tokens sit mid-argument-list. GNU rm
-  # permutes those; BSD rm does not. So on macOS it exits 2 and leaves
-  # chart/skywalking/charts/ behind, and the release is built from a dirty tree.
-  [[ "$(uname -s)" == "Linux" ]] || die "build the release on Linux -- 'make clean' does not work on macOS (BSD rm), see docs/contributing/release.md"
+  # No OS check. There used to be one: `make clean` was a backslash-continued rm
+  # whose later -rf tokens sat mid-argument-list, which GNU rm permutes and BSD rm
+  # does not, so on macOS it exited 2 and left chart/skywalking/charts/ behind.
+  # That recipe is now a single rm -rf over one operand list, which both accept,
+  # and the whole path -- clean, release-src, package, gpg sign, shasum, and the
+  # verify checks below -- has been run through to completion on macOS.
 
   # Report every missing tool at once. Dying on the first means one failed run
   # per package, and this check exists precisely to spend zero of them.
@@ -102,14 +111,21 @@ ${strays}"
   TAG="v${VERSION}"
   log "version ${VERSION} (from chart/skywalking/Chart.yaml)"
 
-  git rev-parse "${TAG}" >/dev/null 2>&1 && die "tag ${TAG} already exists -- bump Chart.yaml or delete the tag"
+  # `if`, not `X && die`. An && list that fails on its left side returns non-zero, and when it is
+  # the last statement in a function that becomes the function's return value -- which `set -e`
+  # then treats as a failed call, killing the run with no message. `if` returns 0 when the
+  # condition is false, which is the normal path here.
+  if git rev-parse "${TAG}" >/dev/null 2>&1; then
+    die "tag ${TAG} already exists -- bump Chart.yaml or delete the tag"
+  fi
 
   # A re-run after a partial upload would mkdir a local ${VERSION} over a path that already exists
   # in svn, and only find out at commit time -- after the build, the signing and the tag push.
   # Safe to read a non-zero exit as "not there" only because the svn check above already
   # established that the repository is reachable and the credentials work.
-  svn ls "${SVN_DEV_URL}/helm/${VERSION}" >/dev/null 2>&1 \
-    && die "${SVN_DEV_URL}/helm/${VERSION} already exists -- delete it, or bump the version"
+  if svn ls "${SVN_DEV_URL}/helm/${VERSION}" >/dev/null 2>&1; then
+    die "${SVN_DEV_URL}/helm/${VERSION} already exists -- delete it, or bump the version"
+  fi
 
 }
 
@@ -167,11 +183,8 @@ upload_to_svn() {
   step "Upload to ${SVN_DEV_URL}/helm/${VERSION}"
   cd "${PROJECT_DIR}"
 
-  # EXIT, not RETURN: a RETURN trap does not fire when `set -e` kills the shell part-way through
-  # the function, which would leave a temp directory holding a copy of the signed artifacts.
-  local workdir
-  workdir=$(mktemp -d)
-  trap 'rm -rf "${workdir}"' EXIT
+  WORKDIR=$(mktemp -d)
+  local workdir="${WORKDIR}"
 
   # Sparse checkout: a full checkout of dist/dev/skywalking pulls every
   # sub-project's staging area, which is gigabytes.
