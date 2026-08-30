@@ -54,9 +54,34 @@ preflight() {
   # chart/skywalking/charts/ behind, and the release is built from a dirty tree.
   [[ "$(uname -s)" == "Linux" ]] || die "build the release on Linux -- 'make clean' does not work on macOS (BSD rm), see docs/contributing/release.md"
 
-  for tool in helm gpg shasum svn git make; do
-    command -v "${tool}" >/dev/null || die "${tool} is not installed"
+  # Report every missing tool at once. Dying on the first means one failed run
+  # per package, and this check exists precisely to spend zero of them.
+  local missing=""
+  for tool in helm gpg shasum svn git make tar awk; do
+    command -v "${tool}" >/dev/null || missing="${missing} ${tool}"
   done
+  [[ -z "${missing}" ]] || die "not installed:${missing}"
+
+  # Present is not the same as usable, and each of these fails LATE otherwise:
+  # a missing signing key after the whole build, bad svn credentials after the
+  # tag is already pushed.
+  # 3.8, not 3: the chart is published only as an OCI artifact, and `helm push` to an
+  # oci:// registry landed in 3.8. Helm 4 is fine -- Chart.yaml is apiVersion v2, which
+  # both majors read -- so this bounds from below only, and does not cap the major.
+  local helm_ver helm_major helm_minor
+  helm_ver=$(helm version --short 2>/dev/null | sed 's/^v//; s/[-+].*//')
+  helm_major=${helm_ver%%.*}
+  helm_minor=$(printf '%s' "${helm_ver}" | cut -d. -f2)
+  [[ -n "${helm_major}" ]] || die "could not parse 'helm version --short'"
+  if (( helm_major < 3 || (helm_major == 3 && helm_minor < 8) )); then
+    die "helm 3.8 or newer is required, found ${helm_ver}"
+  fi
+
+  gpg --list-secret-keys >/dev/null 2>&1 && [[ -n "$(gpg --list-secret-keys --with-colons 2>/dev/null | grep '^sec')" ]] \
+    || die "gpg has no secret key -- 'make release' signs the artifacts and would fail after the build"
+
+  svn ls "${SVN_DEV_URL}" >/dev/null 2>&1 \
+    || die "cannot read ${SVN_DEV_URL} -- check your network and your ASF svn credentials"
 
   cd "${PROJECT_DIR}"
   [[ -z "$(git status --porcelain)" ]] || die "working tree is dirty -- the source tarball archives the working tree, not HEAD"
@@ -69,12 +94,22 @@ preflight() {
   [[ -z "${strays}" ]] || die "stray release artifacts in the working tree, run 'make clean' first:
 ${strays}"
 
-  VERSION=$(grep '^version: ' "${CHART_FILE}" | awk '{print $2}')
-  [[ -n "${VERSION}" ]] || die "could not read version from ${CHART_FILE}"
+  # awk, not `grep | awk`: grep exits 1 when it matches nothing, pipefail promotes that to the
+  # pipeline, and `set -e` then kills the script during the assignment -- silently, and before the
+  # check below can report anything. awk exits 0 either way, so the check is reachable.
+  VERSION=$(awk '/^version: /{print $2; exit}' "${CHART_FILE}")
+  [[ -n "${VERSION}" ]] || die "could not read a 'version:' line from ${CHART_FILE}"
   TAG="v${VERSION}"
   log "version ${VERSION} (from chart/skywalking/Chart.yaml)"
 
   git rev-parse "${TAG}" >/dev/null 2>&1 && die "tag ${TAG} already exists -- bump Chart.yaml or delete the tag"
+
+  # A re-run after a partial upload would mkdir a local ${VERSION} over a path that already exists
+  # in svn, and only find out at commit time -- after the build, the signing and the tag push.
+  # Safe to read a non-zero exit as "not there" only because the svn check above already
+  # established that the repository is reachable and the credentials work.
+  svn ls "${SVN_DEV_URL}/helm/${VERSION}" >/dev/null 2>&1 \
+    && die "${SVN_DEV_URL}/helm/${VERSION} already exists -- delete it, or bump the version"
 
 }
 
@@ -132,9 +167,11 @@ upload_to_svn() {
   step "Upload to ${SVN_DEV_URL}/helm/${VERSION}"
   cd "${PROJECT_DIR}"
 
+  # EXIT, not RETURN: a RETURN trap does not fire when `set -e` kills the shell part-way through
+  # the function, which would leave a temp directory holding a copy of the signed artifacts.
   local workdir
   workdir=$(mktemp -d)
-  trap 'rm -rf "${workdir}"' RETURN
+  trap 'rm -rf "${workdir}"' EXIT
 
   # Sparse checkout: a full checkout of dist/dev/skywalking pulls every
   # sub-project's staging area, which is gigabytes.
