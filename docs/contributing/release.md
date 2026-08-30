@@ -137,8 +137,10 @@ gpg --list-secret-keys --keyid-format=long
 
 ## 3. Build, verify, tag, upload and call the vote — `release.sh`
 
-**On Linux, from a pristine clone of the release commit.** Preflight aborts unless `uname -s` is
-`Linux`, and there is no override flag.
+**From a pristine clone of the release commit.** Linux and macOS both work — the build was
+verified end to end on each. A pristine clone matters for a different reason: preflight refuses to
+run against a dirty tree, and `release-src` archives the working *tree*, so any untracked file
+sitting in the checkout would otherwise be shipped inside the source release.
 
 ```shell
 git clone git@github.com:apache/skywalking-helm && cd skywalking-helm
@@ -168,7 +170,6 @@ irreversible step comes last, and a failure leaves nothing on the remote to clea
 
 Preflight refuses to start when:
 
-- the host is not Linux;
 - any of `helm`, `gpg`, `shasum`, `svn`, `git`, `make`, `tar`, `awk` is missing. All of them are
   reported in one message — finding them one at a time costs one failed run per package;
 - `helm` is older than 3.8. The chart ships only as an OCI artifact, and `helm push` to an `oci://`
@@ -571,7 +572,8 @@ applied and `-f` swallowed the stray `rm` operands, and the target did what it r
 macOS — stops option parsing at the first operand, so `-r` never took effect: it failed with
 `rm: bin/: is a directory`, left `bin/` and `chart/skywalking/charts/` behind, and exited `1`, which
 aborted `make clean`, `make release-src` and `make release`. The recipe is one `rm -rf` again and
-survives BSD `rm`; the Linux requirement now lives in `release.sh`'s preflight, not in this recipe.
+survives BSD `rm`. `release.sh` carried a Linux-only guard for as long as that recipe was broken;
+with the recipe fixed the guard was obsolete, and it has been removed.
 If you touch it, keep it a single `rm -rf` and re-read the whole thing rather than one line.
 
 Because `clean` wipes `charts/` and `Chart.lock`, the next `package` re-resolves dependencies from
