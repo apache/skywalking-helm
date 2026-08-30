@@ -10,255 +10,64 @@ a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) p
 
 ## Prerequisites
 
-- Kubernetes 1.9.6+
+- Kubernetes 1.21+ — the floor its `eck-operator` 3.3.1 and `eck-elasticsearch` 0.18.1
+  dependencies declare (both a `kubeVersion` floor of `1.21.0-0`). This chart sets no
+  `kubeVersion` of its own, and its templates use only `v1`, `apps/v1`, `batch/v1` and
+  `rbac.authorization.k8s.io/v1`, falling back from `networking.k8s.io/v1` Ingress to `v1beta1`
+  to `extensions/v1beta1` — so nothing here raises the floor above what ECK asks for.
+- Helm 3.8+ — this chart and its BanyanDB dependency are published as OCI artifacts.
 - PV dynamic provisioning support on the underlying infrastructure (StorageClass)
-- Helm 3
 
 ## Installing the Chart
 
-To install the chart with the release name `my-release`:
+There is no default install: three values have no default, and the render fails on each one
+independently.
+
+| name | description | example |
+| ---- | ----------- | ------- |
+| `oap.image.tag` | the OAP docker image tag | `11.0.0` |
+| `oap.storageType` | the storage type of the OAP | `elasticsearch`, `postgresql`, `banyandb` |
+| `ui.image.tag` | the Horizon UI docker image tag | `horizon-1.0.0` |
+
+`banyandb.image.tag` is required as well whenever the BanyanDB subchart is enabled
+(`banyandb.enabled=true`).
 
 ```shell
-$ helm install my-release skywalking -n <namespace>
+helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+  --version 5.0.0 -n skywalking --create-namespace \
+  --set oap.image.tag=11.0.0 \
+  --set oap.storageType=banyandb \
+  --set ui.image.tag=horizon-1.0.0 \
+  --set elasticsearch.enabled=false \
+  --set banyandb.enabled=true \
+  --set banyandb.image.tag=0.11.0
 ```
 
-The command deploys Apache SkyWalking on the Kubernetes cluster in the default configuration.
-The [configuration](#configuration) section lists the parameters that can be configured during installation.
+`elasticsearch.enabled` defaults to `true`, and that path needs the ECK CRDs installed before the
+chart — see [Quick Start](../../docs/install/quick-start.md).
+
+**A fresh install has no login.** Horizon UI ships no default credentials and does not fail closed —
+the pod reports Ready and nobody can sign in until you configure users. See
+[Set Up Logins](../../docs/ui/logins.md).
 
 > **Tip**: List all releases using `helm list`
 
 ## Uninstalling the Chart
 
-To uninstall/delete the `my-release` deployment:
+To uninstall/delete the `skywalking` deployment:
 
 ```shell
-$ helm uninstall my-release -n <namespace>
+$ helm uninstall skywalking -n <namespace>
 ```
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
 
 ## Configuration
 
-The following table lists the configurable parameters of the Skywalking chart and their default values.
+Every value this chart accepts is documented in the values reference:
 
-| Parameter                              | Description                                                                                                                                                                                                                                                                                                                | Default                                                                                                                  |
-|----------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| `nameOverride`                         | Override name                                                                                                                                                                                                                                                                                                              | `nil`                                                                                                                    |
-| `serviceAccounts.oap.create`           | Create of the OAP service account                                                                                                                                                                                                                                                                                          | `true`                                                                                                                   |
-| `serviceAccounts.oap.name`             | Name of the OAP service account to use custom service account when `serviceAccounts.oap.create` is set to false                                                                                                                                                                                                            | ``                                                                                                                       |
-| `imagePullSecrets`                     | Image pull secrets                                                                                                                                                                                                                                                                                                         | `[]`                                                                                                                     |
-| `oap.name`                             | OAP deployment name                                                                                                                                                                                                                                                                                                        | `oap`                                                                                                                    |
-| `oap.dynamicConfig.enabled`            | Enable oap dynamic configuration through k8s configmap                                                                                                                                                                                                                                                                     | `false`                                                                                                                  |
-| `oap.dynamicConfig.period`             | Sync period in seconds                                                                                                                                                                                                                                                                                                     | `60`                                                                                                                     |
-| `oap.dynamicConfig.config`             | Oap dynamic configuration [documentation](https://github.com/apache/skywalking/blob/master/docs/en/setup/backend/dynamic-config.md)                                                                                                                                                                                        | `{}`                                                                                                                     |
-| `oap.image.repository`                 | OAP container image name                                                                                                                                                                                                                                                                                                   | `skywalking.docker.scarf.sh/apache/skywalking-oap-server`                                                                |
-| `oap.image.tag`                        | OAP container image tag                                                                                                                                                                                                                                                                                                    | `6.1.0`                                                                                                                  |
-| `oap.image.pullPolicy`                 | OAP container image pull policy                                                                                                                                                                                                                                                                                            | `IfNotPresent`                                                                                                           |
-| `oap.ports.grpc`                       | OAP grpc port for tracing or metric                                                                                                                                                                                                                                                                                        | `11800`                                                                                                                  |
-| `oap.ports.rest`                       | OAP http port for the GraphQL query protocol (used by the UI and by `swctl`)                                                                                                                                                                                                                                               | `12800`                                                                                                                  |
-| `oap.ports.admin`                      | OAP admin REST port (runtime-rule, DSL debugging, inspect, status). Required by Horizon UI's admin features; available on OAP 10.5+                                                                                                                                                                                        | `17128`                                                                                                                  |
-| `oap.ports.zipkin-receiver`            | OAP http port for Zipkin receiver(not exposed by default)                                                                                                                                                                                                                                                                  | `9411`                                                                                                                   |
-| `oap.ports.zipkin-query`               | OAP http port for querying Zipkin traces and UI(not exposed by default)                                                                                                                                                                                                                                                    | `9412`                                                                                                                   |
-| `oap.replicas`                         | OAP k8s deployment replicas                                                                                                                                                                                                                                                                                                | `2`                                                                                                                      |
-| `oap.service.type`                     | OAP svc type                                                                                                                                                                                                                                                                                                               | `ClusterIP`                                                                                                              |
-| `oap.service.annotations`              | OAP svc annotations                                                                                                                                                                                                                                                                                                        | `{}`                                                                                                                     |
-| `oap.javaOpts`                         | Parameters to be added to `JAVA_OPTS`environment variable for OAP                                                                                                                                                                                                                                                          | `-Xms2g -Xmx2g`                                                                                                          |
-| `oap.antiAffinity`                     | OAP anti-affinity policy                                                                                                                                                                                                                                                                                                   | `soft`                                                                                                                   |
-| `oap.nodeAffinity`                     | OAP node affinity policy                                                                                                                                                                                                                                                                                                   | `{}`                                                                                                                     |
-| `oap.nodeSelector`                     | OAP labels for master pod assignment                                                                                                                                                                                                                                                                                       | `{}`                                                                                                                     |
-| `oap.tolerations`                      | OAP tolerations                                                                                                                                                                                                                                                                                                            | `[]`                                                                                                                     |
-| `oap.resources`                        | OAP node resources requests & limits                                                                                                                                                                                                                                                                                       | `{} - cpu limit must be an integer`                                                                                      |
-| `oap.startupProbe`                     | Configuration fields for the [startupProbe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/). The default budget (`failureThreshold` * `periodSeconds` = 300s) is large enough for OAP to wait in no-init mode while the OAP init Job creates the storage schema.    | `tcpSocket.port: 12800` <br> `failureThreshold: 30` <br> `periodSeconds: 10`                                             
-| `oap.livenessProbe`                    | Configuration fields for the [livenessProbe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)                                                                                                                                                                        | `tcpSocket.port: 12800` <br> `initialDelaySeconds: 5` <br> `periodSeconds: 10`                                           
-| `oap.readinessProbe`                   | Configuration fields for the [readinessProbe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)                                                                                                                                                                       | `tcpSocket.port: 12800` <br> `initialDelaySeconds: 5` <br> `periodSeconds: 10`                                           
-| `oap.env`                              | OAP environment variables                                                                                                                                                                                                                                                                                                  | `[]`                                                                                                                     |
-| `oap.securityContext`                  | Allows you to set the [securityContext](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod) for the pod                                                                                                                                                         | `fsGroup: 1000`<br>`runAsUser: 1000`                                                                                     |
-| `oap.sidecars`                         | Extra sidecar containers to run in the OAP pod (appended to the pod's `containers` list, rendered through `tpl`)                                                                                                                                                                                                            | `[]`                                                                                                                     |
-| `ui.enabled`                           | Deploy the Horizon UI. Set `false` to skip the UI Deployment, Service, Ingress, ConfigMap, and PVC entirely (useful when an external UI talks to OAP directly)                                                                                                                                                             | `true`                                                                                                                   |
-| `ui.name`                              | Web UI deployment name                                                                                                                                                                                                                                                                                                     | `ui`                                                                                                                     |
-| `ui.replicas`                          | Web UI k8s deployment replicas. Keep at `1` unless your ingress provides sticky sessions — the Horizon BFF holds the session table in memory                                                                                                                                                                               | `1`                                                                                                                      |
-| `ui.image.repository`                  | Horizon UI container image. Release images: Docker Hub `apache/skywalking-ui` tagged `horizon-x.y.z`. Dev images: `ghcr.io/apache/skywalking-horizon-ui`                                                                                                                                                                   | `skywalking.docker.scarf.sh/apache/skywalking-ui`                                                                        |
-| `ui.image.tag`                         | Horizon UI image tag (required), e.g. `horizon-0.6.0`                                                                                                                                                                                                                                                                      | `null`                                                                                                                   |
-| `ui.image.pullPolicy`                  | Web UI container image pull policy                                                                                                                                                                                                                                                                                         | `IfNotPresent`                                                                                                           |
-| `ui.nodeAffinity`                      | Web UI node affinity policy                                                                                                                                                                                                                                                                                                | `{}`                                                                                                                     |
-| `ui.nodeSelector`                      | Web UI labels for pod assignment                                                                                                                                                                                                                                                                                           | `{}`                                                                                                                     |
-| `ui.tolerations`                       | Web UI tolerations                                                                                                                                                                                                                                                                                                         | `[]`                                                                                                                     |
-| `ui.ingress.enabled`                   | Create Ingress for Web UI                                                                                                                                                                                                                                                                                                  | `false`                                                                                                                  |
-| `ui.ingress.annotations`               | Associate annotations to the Ingress                                                                                                                                                                                                                                                                                       | `{}`                                                                                                                     |
-| `ui.ingress.path`                      | Associate path with the Ingress                                                                                                                                                                                                                                                                                            | `/`                                                                                                                      |
-| `ui.ingress.hosts`                     | Associate hosts with the Ingress                                                                                                                                                                                                                                                                                           | `[]`                                                                                                                     |
-| `ui.ingress.tls`                       | Associate TLS with the Ingress                                                                                                                                                                                                                                                                                             | `[]`                                                                                                                     |
-| `ui.service.type`                      | Web UI svc type                                                                                                                                                                                                                                                                                                            | `ClusterIP`                                                                                                              |
-| `ui.service.externalPort`              | external port for the service                                                                                                                                                                                                                                                                                              | `80`                                                                                                                     |
-| `ui.service.internalPort`              | internal port for the service (Horizon BFF binds 8081)                                                                                                                                                                                                                                                                     | `8081`                                                                                                                   |
-| `ui.service.externalIPs`               | external IP addresses                                                                                                                                                                                                                                                                                                      | `nil`                                                                                                                    |
-| `ui.service.loadBalancerIP`            | Load Balancer IP address                                                                                                                                                                                                                                                                                                   | `nil`                                                                                                                    |
-| `ui.service.annotations`               | Kubernetes service annotations                                                                                                                                                                                                                                                                                             | `{}`                                                                                                                     |
-| `ui.service.loadBalancerSourceRanges`  | Limit load balancer source IPs to list of CIDRs (where available))                                                                                                                                                                                                                                                         | `[]`                                                                                                                     |
-| `ui.securityContext`                   | Pod [securityContext](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod). The image runs as the non-root `horizon` user; `fsGroup` makes mounted PVCs group-writable for that user                                                                             | `fsGroup: 101`                                                                                                           |
-| `ui.livenessProbe`                     | TCP liveness probe                                                                                                                                                                                                                                                                                                         | `tcpSocket.port: 8081`                                                                                                   |
-| `ui.readinessProbe`                    | HTTP readiness probe; verifies the BFF is up and the auth backend is healthy. `/api/auth/health` is the only unauthenticated BFF health endpoint                                                                                                                                                                           | `httpGet.path: /api/auth/health, port: 8081`                                                                             |
-| `ui.persistence.enabled`               | Mount a PVC at `/data` for audit log / setup / alarm state / wire debug log. When `false`, state lands in the container's writable layer and is lost on pod restart                                                                                                                                                        | `false`                                                                                                                  |
-| `ui.persistence.existingClaim`         | Use a pre-created PVC; if empty, the chart creates one                                                                                                                                                                                                                                                                     | `""`                                                                                                                     |
-| `ui.persistence.storageClass`          | Storage class for the chart-managed PVC                                                                                                                                                                                                                                                                                    | `""`                                                                                                                     |
-| `ui.persistence.accessModes`           | PVC access modes                                                                                                                                                                                                                                                                                                           | `[ReadWriteOnce]`                                                                                                        |
-| `ui.persistence.size`                  | PVC size                                                                                                                                                                                                                                                                                                                   | `1Gi`                                                                                                                    |
-| `ui.config`                            | `horizon.yaml` content (deep-merged onto chart defaults that point `oap.queryUrl`/`adminUrl`/`zipkinUrl` at the in-cluster OAP; `zipkinUrl` is derived from `oap.ports.zipkin-query` and only resolves to a usable URL when that port is set). See the upstream [`horizon.example.yaml`](https://github.com/apache/skywalking-horizon-ui/blob/main/horizon.example.yaml) and [horizon.yaml reference](https://github.com/apache/skywalking-horizon-ui/blob/main/docs/setup/horizon-yaml.md). `auth.local.users` defaults to empty (BFF refuses to start); see the root README "Web UI" section for a demo snippet and the production Secret pattern | see `values.yaml`                                                                                                        |
-| `ui.envFromSecret`                     | Reference a Secret whose keys are exposed as env vars in the BFF container, for use with `${VAR}` interpolation in `ui.config` (e.g. admin password hash)                                                                                                                                                                  | `""`                                                                                                                     |
-| `ui.extraEnv`                          | Extra env vars passed to the BFF container                                                                                                                                                                                                                                                                                 | `[]`                                                                                                                     |
-| `oapInit.nodeAffinity`                 | OAP init job node affinity policy                                                                                                                                                                                                                                                                                          | `{}`                                                                                                                     |
-| `oapInit.nodeSelector`                 | OAP init job labels for master pod assignment                                                                                                                                                                                                                                                                              | `{}`                                                                                                                     |
-| `oapInit.tolerations`                  | OAP init job tolerations                                                                                                                                                                                                                                                                                                   | `[]`                                                                                                                     |
-| `oapInit.extraPodLabels`               | OAP init job metadata labels                                                                                                                                                                                                                                                                                               | `[]`                                                                                                                     |
-| `oapInit.ttlSecondsAfterFinished`      | Seconds after which the finished OAP init Job (and its Pod) is auto-deleted by the Kubernetes TTL-after-finished controller. Empty keeps the Job. Leave empty with GitOps tools (Argo CD/Flux), which would recreate it after deletion.                                                                                       | `""`                                                                                                                     |
-| `satellite.name`                       | Satellite deployment name                                                                                                                                                                                                                                                                                                  | `satellite`                                                                                                              |
-| `satellite.replicas`                   | Satellite k8s deployment replicas                                                                                                                                                                                                                                                                                          | `1`                                                                                                                      |
-| `satellite.enabled`                    | Is enable Satellite                                                                                                                                                                                                                                                                                                        | `false`                                                                                                                  |
-| `satellite.image.repository`           | Satellite container image name                                                                                                                                                                                                                                                                                             | `skywalking.docker.scarf.sh/apache/skywalking-satellite`                                                                 |
-| `satellite.image.tag`                  | Satellite container image tag                                                                                                                                                                                                                                                                                              | `v0.4.0`                                                                                                                 |
-| `satellite.image.pullPolicy`           | Satellite container image pull policy                                                                                                                                                                                                                                                                                      | `IfNotPresent`                                                                                                           |
-| `satellite.antiAffinity`               | Satellite anti-affinity policy                                                                                                                                                                                                                                                                                             | `soft`                                                                                                                   |
-| `satellite.nodeAffinity`               | Satellite node affinity policy                                                                                                                                                                                                                                                                                             | `{}`                                                                                                                     |
-| `satellite.nodeSelector`               | Satellite labels for pod assignment                                                                                                                                                                                                                                                                                        | `{}`                                                                                                                     |
-| `satellite.tolerations`                | Satellite tolerations                                                                                                                                                                                                                                                                                                      | `[]`                                                                                                                     |
-| `satellite.service.type`               | Satellite svc type                                                                                                                                                                                                                                                                                                         | `ClusterIP`                                                                                                              |
-| `satellite.ports.grpc`                 | Satellite grpc port for tracing, metrics, logs, events                                                                                                                                                                                                                                                                     | `11800`                                                                                                                  |
-| `satellite.ports.prometheus`           | Satellite http port for Prometheus monitoring                                                                                                                                                                                                                                                                              | `1234`                                                                                                                   |
-| `satellite.resources`                  | Satellite node resources requests & limits                                                                                                                                                                                                                                                                                 | `{} - cpu limit must be an integer`                                                                                      |
-| `satellite.podAnnotations`             | Configurable [annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) applied to all Satellite pods                                                                                                                                                                                   | `{}`                                                                                                                     |
-| `satellite.env`                        | Satellite environment variables                                                                                                                                                                                                                                                                                            | `[]`                                                                                                                     |
-| `satellite.securityContext`            | Allows you to set the [securityContext](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod) for the pod                                                                                                                                                         | `fsGroup: 1000`<br>`runAsUser: 1000`                                                                                     |
+- on the website: [skywalking Chart Values](https://skywalking.apache.org/docs/skywalking-helm/next/reference/skywalking-chart-values/)
+- in this repository: [`docs/reference/skywalking-chart-values.md`](../../docs/reference/skywalking-chart-values.md)
 
-### Elasticsearch (ECK)
-
-Elasticsearch is deployed via [ECK (Elastic Cloud on Kubernetes)](https://github.com/elastic/cloud-on-k8s).
-The chart includes the ECK operator and an `eck-elasticsearch` subchart, both controlled by `elasticsearch.enabled`.
-Because Elasticsearch CRDs must exist before the ES custom resource can be created, the ECK operator CRDs need to be installed separately before deploying the chart. See the main [README](../../README.md) for installation steps.
-
-#### Top-level parameters
-
-| Parameter | Description | Default |
-|---|---|---|
-| `elasticsearch.enabled` | Deploy the ECK operator and an ECK-managed Elasticsearch cluster | `true` |
-| `elasticsearch.version` | Elasticsearch version to deploy | `8.18.8` |
-| `elasticsearch.fullnameOverride` | Override the Elasticsearch resource name. The ECK service will be `{name}-es-http` | `""` |
-| `elasticsearch.labels` | Labels applied to the Elasticsearch resource | `{}` |
-| `elasticsearch.annotations` | Annotations applied to the Elasticsearch resource | `{}` |
-| `elasticsearch.http` | HTTP layer settings. TLS is disabled by default for OAP connectivity | `tls.selfSignedCertificate.disabled: true` |
-| `elasticsearch.secureSettings` | [Secure settings](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-es-secure-settings.html) to inject from Kubernetes secrets | `[]` |
-| `elasticsearch.updateStrategy` | [Update strategy](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-update-strategy.html) controlling simultaneous changes | `{}` |
-| `elasticsearch.volumeClaimDeletePolicy` | Policy for PVC deletion on scale-down or cluster deletion | `""` |
-| `elasticsearch.ingress.enabled` | Enable ingress to expose Elasticsearch externally | `false` |
-
-#### External Elasticsearch (when `elasticsearch.enabled` is `false`)
-
-| Parameter | Description | Default |
-|---|---|---|
-| `elasticsearch.config.host` | Elasticsearch host | `elasticsearch` |
-| `elasticsearch.config.port.http` | Elasticsearch HTTP port | `9200` |
-| `elasticsearch.config.user` | Elasticsearch user (optional) | `""` |
-| `elasticsearch.config.password` | Elasticsearch password (optional) | `""` |
-
-#### Node sets (`elasticsearch.nodeSets[]`)
-
-ECK [node sets](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-node-configuration.html) define the topology of the Elasticsearch cluster. Each entry in the list creates a group of Elasticsearch nodes.
-
-| Parameter | Description | Default |
-|---|---|---|
-| `nodeSets[].name` | Name of the node set | `default` |
-| `nodeSets[].count` | Number of Elasticsearch nodes in this set | `3` |
-| `nodeSets[].config` | Elasticsearch configuration (e.g. `node.store.allow_mmap`, `node.roles`) | `node.store.allow_mmap: false` |
-| `nodeSets[].volumeClaimTemplates` | Persistent storage for Elasticsearch data | `[]` (ECK default: EmptyDir) |
-
-#### Pod template (`elasticsearch.nodeSets[].podTemplate`)
-
-The pod template follows standard Kubernetes Pod spec nested under `podTemplate.spec`. This controls scheduling, resources, init containers, etc.
-
-| Parameter | Description | Default |
-|---|---|---|
-| `podTemplate.metadata.annotations` | Pod annotations (e.g. `iam.amazonaws.com/role`) | `{}` |
-| `podTemplate.metadata.labels` | Extra pod labels | `{}` |
-| `podTemplate.spec.affinity` | Pod [affinity](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-advanced-node-scheduling.html) rules | not set |
-| `podTemplate.spec.nodeSelector` | Node selector for pod assignment | not set |
-| `podTemplate.spec.tolerations` | Pod tolerations | not set |
-| `podTemplate.spec.imagePullSecrets` | Image pull secrets | not set |
-| `podTemplate.spec.priorityClassName` | Priority class name | not set |
-| `podTemplate.spec.terminationGracePeriodSeconds` | Grace period for pod termination | not set |
-| `podTemplate.spec.initContainers` | Init containers (e.g. sysctl `vm.max_map_count`) | not set |
-| `podTemplate.spec.containers[].resources` | Container resource requests & limits | `requests: 100m cpu, 2Gi mem` <br> `limits: 2Gi mem` |
-| `podTemplate.spec.containers[].env` | Environment variables (e.g. `ES_JAVA_OPTS`) | not set |
-| `podTemplate.spec.containers[].securityContext` | Container-level security context | not set (ECK managed) |
-
-Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
-
-```console
-$ helm install myrelease skywalking --set nameOverride=newSkywalking
-```
-
-Alternatively, a YAML file that specifies the values for the above parameters can be provided while installing the
-chart. For example,
-
-```console
-$ helm install my-release skywalking -f values.yaml
-```
-
-> **Tip**: You can use the default [values.yaml](values.yaml)
-
-### RBAC Configuration
-
-Roles and RoleBindings resources will be created automatically for `OAP` .
-
-> **Tip**: You can refer to the default `oap-role.yaml` file in [templates](templates/) to customize your own.
-
-### Ingress TLS
-
-If your cluster allows automatic create/retrieve of TLS certificates (
-e.g. [kube-lego](https://github.com/jetstack/kube-lego)), please refer to the documentation for that mechanism.
-
-To manually configure TLS, first create/retrieve a key & certificate pair for the address(skywalking ui) you wish to
-protect. Then create a TLS secret in the namespace:
-
-```console
-kubectl create secret tls skywalking-tls --cert=path/to/tls.cert --key=path/to/tls.key
-```
-
-Include the secret's name, along with the desired hostnames, in the skywalking-ui Ingress TLS section of your
-custom `values.yaml` file:
-
-```yaml
-ui:
-  ingress:
-    ## If true, Skywalking ui server Ingress will be created
-    ##
-    enabled: true
-
-    ## Skywalking ui server Ingress hostnames
-    ## Must be provided if Ingress is enabled
-    ##
-    hosts:
-      - skywalking
-
-    ## Skywalking ui server Ingress TLS configuration
-    ## Secrets must be manually created in the namespace
-    ##
-    tls:
-      - secretName: skywalking
-        hosts:
-          - skywalking
-```
-
-### Envoy ALS
-
-Envoy ALS(access log service) provides fully logs about RPC routed, including HTTP and TCP.
-
-If you want to open envoy ALS, you can do this by modifying values.yaml. default open.
-
-```yaml
-serviceAccounts:
-  oap:
-    create: true
-```
-
-When envoy als ,will give ServiceAccount clusterrole permission.
-More envoy als ,please refer
-to https://github.com/apache/skywalking/blob/master/docs/en/setup/envoy/als_setting.md#observe-service-mesh-through-als
+Full documentation for the charts in this repository lives at
+[skywalking.apache.org/docs/skywalking-helm](https://skywalking.apache.org/docs/skywalking-helm/next/readme/).

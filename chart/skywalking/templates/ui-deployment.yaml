@@ -109,6 +109,9 @@ spec:
           readOnly: true
         - name: horizon-data
           mountPath: /data
+{{- with .Values.ui.extraVolumeMounts }}
+{{ toYaml . | indent 8 }}
+{{- end }}
       volumes:
       - name: horizon-config
         configMap:
@@ -122,5 +125,8 @@ spec:
           claimName: {{ default (printf "%s-data" (include "skywalking.ui.fullname" .)) .Values.ui.persistence.existingClaim }}
 {{- else }}
         emptyDir: {}
+{{- end }}
+{{- with .Values.ui.extraVolumes }}
+{{ toYaml . | indent 6 }}
 {{- end }}
 {{- end }}

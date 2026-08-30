@@ -1,10 +1,9 @@
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
@@ -14,45 +13,119 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Publish Snapshot Helm Chart
+name: publish-helm
 
+# Two paths, following apache/skywalking's publish-docker workflow:
+#   push to master   -> a snapshot chart on ghcr.io, versioned 0.0.0-<sha>
+#   a GitHub release -> the release chart on Docker Hub, versioned from the tag
+#
+# The release chart is a convenience binary. The Apache release is the signed
+# source tarball that the PMC votes on; this only publishes after that vote has
+# passed and the GitHub release has been created.
 on:
   push:
     branches:
       - master
-
-env:
-  HUB: ghcr.io/apache/skywalking-helm
-  VERSION: 0.0.0-${{ github.sha }}
+  release:
+    types:
+      - released
 
 jobs:
   publish:
+    if: github.repository == 'apache/skywalking-helm'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     timeout-minutes: 20
-    name: Publish Snapshot Helm Chart
-    strategy:
-      matrix:
-        chart:
-          - path: chart/adapter
-            name: skywalking-helm-swck-adapter
-          - path: chart/operator
-            name: skywalking-helm-swck-operator
-          - path: chart/skywalking
-            name: skywalking-helm
+    name: Publish Helm Chart
     steps:
-      - uses: actions/checkout@v3
-      - name: Log in to the Container registry
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # RELEASE_TAG arrives through env, never through ${{ }} interpolation into
+      # the script body: a tag is attacker-influenceable text that git permits to
+      # contain ';' and '$( )', and this step runs after the Docker Hub
+      # credentials have been written to $GITHUB_ENV. It is also validated
+      # against the only shape this project releases.
+      - name: Set environment variables
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            if [[ ! "${RELEASE_TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::release tag '${RELEASE_TAG}' is not vMAJOR.MINOR.PATCH"
+              exit 1
+            fi
+            echo "HUB=registry-1.docker.io/apache" >> $GITHUB_ENV
+            echo "DOCKER_REGISTRY=registry-1.docker.io" >> $GITHUB_ENV
+            echo "DOCKER_USERNAME=${{ secrets.DOCKERHUB_USER }}" >> $GITHUB_ENV
+            echo "DOCKER_PASSWORD=${{ secrets.DOCKERHUB_TOKEN }}" >> $GITHUB_ENV
+            echo "VERSION=${RELEASE_TAG#v}" >> $GITHUB_ENV
+          else
+            echo "HUB=ghcr.io/apache/skywalking-helm" >> $GITHUB_ENV
+            echo "DOCKER_REGISTRY=ghcr.io" >> $GITHUB_ENV
+            echo "DOCKER_USERNAME=${{ github.actor }}" >> $GITHUB_ENV
+            echo "DOCKER_PASSWORD=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+            echo "VERSION=0.0.0-${{ github.sha }}" >> $GITHUB_ENV
+          fi
+
+      # Docker Hub credentials are org secrets. Fail with a readable message
+      # rather than an opaque unauthorized from the registry.
+      - name: Check the release credentials
+        if: github.event_name == 'release'
+        run: |
+          if [[ -z "${DOCKER_USERNAME}" || -z "${DOCKER_PASSWORD}" ]]; then
+            echo "::error::DOCKERHUB_USER / DOCKERHUB_TOKEN are not available to this repository."
+            exit 1
+          fi
+
+      # The chart version is the release tag, not whatever happens to be in
+      # Chart.yaml. Publishing 5.0.0 from a v5.1.0 tag would be silent and
+      # unfixable once the tag is immutable, so refuse instead.
+      - name: Check the chart version matches the tag
+        if: github.event_name == 'release'
+        run: |
+          CHART_VERSION=$(grep '^version: ' chart/skywalking/Chart.yaml | awk '{print $2}')
+          if [[ "${CHART_VERSION}" != "${VERSION}" ]]; then
+            echo "::error::chart/skywalking/Chart.yaml is ${CHART_VERSION} but the release tag is ${VERSION}."
+            exit 1
+          fi
+
+      - name: Log in to the container registry
         uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
         with:
-          registry: ${{ env.HUB }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Deploy SkyWalking Helm Chart
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
+
+      - name: Package and push the chart
         run: |
-          sed -i "s/^version: .*/version: $VERSION/" ${{ matrix.chart.path }}/Chart.yaml
-          helm dep up ${{ matrix.chart.path }}
-          helm package ${{ matrix.chart.path }}
-          helm push ${{ matrix.chart.name }}-$VERSION.tgz oci://${{ env.HUB }}
+          # Snapshots are versioned by commit; a release keeps the version the
+          # previous step just verified against the tag.
+          if [[ ${{ github.event_name }} != "release" ]]; then
+            sed -i "s/^version: .*/version: ${VERSION}/" chart/skywalking/Chart.yaml
+          fi
+          # `make package` runs `prepare` first, which copies NOTICE and LICENSE
+          # into the chart directory. Calling `helm package` directly publishes an
+          # ASF artifact without its legal files -- which is what this did before.
+          make package
+          test -f "skywalking-helm-${VERSION}.tgz" || { echo "::error::package did not produce skywalking-helm-${VERSION}.tgz"; exit 1; }
+          for f in LICENSE NOTICE; do
+            tar tzf "skywalking-helm-${VERSION}.tgz" | grep -qx "skywalking-helm/${f}" \
+              || { echo "::error::${f} missing from the packaged chart"; exit 1; }
+          done
+          helm push "skywalking-helm-${VERSION}.tgz" "oci://${HUB}"
+
+      - name: Report what was published
+        run: |
+          echo "Pushed skywalking-helm ${VERSION} to oci://${HUB}" >> $GITHUB_STEP_SUMMARY
+          echo '```shell' >> $GITHUB_STEP_SUMMARY
+          {
+            echo "helm install skywalking oci://${HUB}/skywalking-helm --version ${VERSION} \\"
+            echo "  --set oap.image.tag=<oap-version> \\"
+            echo "  --set oap.storageType=<elasticsearch|postgresql|banyandb> \\"
+            echo "  --set ui.image.tag=<horizon-version>"
+          } >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

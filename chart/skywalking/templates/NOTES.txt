@@ -34,8 +34,15 @@ its GraphQL port (default 12800) for any external UI you point at it.
 {{- else }}
 Get the UI URL by running these commands:
 {{- if .Values.ui.ingress.enabled }}
+{{- $tls := .Values.ui.ingress.tls }}
 {{- range .Values.ui.ingress.hosts }}
-  http{{ if $.Values.ui.ingress.tls }}s{{ end }}://{{ . }}{{ $.Values.ui.ingress.path }}
+{{- $entry := . }}
+{{- $host := first (splitList "/" $entry) }}
+{{- $scheme := "http" }}
+{{- range $tls }}
+{{- if or (empty (.hosts | default list)) (has $host (.hosts | default list)) }}{{ $scheme = "https" }}{{ end }}
+{{- end }}
+  {{ $scheme }}://{{ $entry }}{{ $.Values.ui.ingress.path }}
 {{- end }}
 {{- else if contains "NodePort" .Values.ui.service.type }}
   export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "skywalking.ui.fullname" . }})
@@ -53,18 +60,32 @@ Get the UI URL by running these commands:
 
 NOTE on Horizon UI auth:
 
-The web UI is Apache SkyWalking Horizon UI. Its BFF refuses to start when
-no users are configured — there is no built-in "admin/admin" fallback.
+The web UI is Apache SkyWalking Horizon UI. There is no built-in
+"admin/admin" fallback, and no login is configured by default.
 
-If your `ui.config.auth.local.users` list is empty, the UI pod will
-CrashLoopBackOff. See the README "Web UI" section for:
+The BFF does NOT fail closed: with no users it still boots, serves the login
+page, and answers the readiness probe — so the pod reports Ready and nobody
+can log in. Configure users before you rely on it. See the README "Web UI"
+section for:
 
   - a copy-pastable demo snippet (publicly-known admin/admin hash)
   - the production Secret + ${VAR} interpolation pattern
 
-Full horizon.yaml config reference and upstream example:
+Running against OAP 10.x? Set BOTH:
+
+  --set ui.config.templates.mode=readonly
+  --set oap.ports.admin=null
+
+Horizon reads dashboard templates from OAP 11's /ui-management REST API by
+default, and OAP 10 does not serve it. The admin host is an OAP 11 addition
+too -- on 10.x port 17128 is the AI-pipeline URI-recognition server, so leaving
+it exposed points Horizon at the wrong service.
+
+Full horizon.yaml config reference:
   https://github.com/apache/skywalking-horizon-ui/blob/main/docs/setup/horizon-yaml.md
-  https://github.com/apache/skywalking-horizon-ui/blob/main/horizon.example.yaml
-  (also shipped inside the image at /app/horizon.example.yaml)
+
+Horizon 1.0.0 ships its commented example AS the shipped config — the image's
+/app/horizon.yaml is fully env-tokenized. This chart replaces that file with
+the ConfigMap rendered from `ui.config`.
 {{- end }}
 

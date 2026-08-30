@@ -33,19 +33,24 @@ package: prepare
 	rm -rf ${CHART_DIR}/NOTICE
 	rm -rf ${CHART_DIR}/LICENSE
 
+# One rm, one list of operands. Repeating "rm -rf" on the continuation lines
+# left those tokens sitting in the argument list: GNU rm permutes arguments so
+# it happened to work, but BSD rm (macOS) stops option parsing at the first
+# operand, so -r never took effect and clean died on the first directory --
+# taking release-src and release, which depend on it, down with it.
 clean:
-	rm -f $(TMPDIR)/$(RELEASE_SRC).tgz \
-	rm -rf bin/ \
-	rm -rf ${CHART_DIR}/NOTICE \
-	rm -rf ${CHART_DIR}/LICENSE \
-	rm -rf ${CHART_DIR}/Chart.lock \
-	rm -rf ${CHART_DIR}/charts \
-	rm -rf ${CHART_NAME}-${VERSION}.tgz \
-	rm -rf ${CHART_NAME}-${VERSION}.tgz.asc \
-	rm -rf ${CHART_NAME}-${VERSION}.tgz.sha512 \
-	rm -rf ${RELEASE_SRC}.tgz \
-	rm -rf ${RELEASE_SRC}.tgz.asc \
-	rm -rf ${RELEASE_SRC}.tgz.sha512
+	rm -rf $(TMPDIR)/$(RELEASE_SRC).tgz \
+		bin/ \
+		${CHART_DIR}/NOTICE \
+		${CHART_DIR}/LICENSE \
+		${CHART_DIR}/Chart.lock \
+		${CHART_DIR}/charts \
+		${CHART_NAME}-${VERSION}.tgz \
+		${CHART_NAME}-${VERSION}.tgz.asc \
+		${CHART_NAME}-${VERSION}.tgz.sha512 \
+		${RELEASE_SRC}.tgz \
+		${RELEASE_SRC}.tgz.asc \
+		${RELEASE_SRC}.tgz.sha512
 
 release-src: clean
 	tar -zcvf $(TMPDIR)/$(RELEASE_SRC).tgz \
