@@ -16,21 +16,30 @@
 
 # Everything up to and including the call for vote.
 #
-#   bash tools/releasing/release.sh              # build, verify, upload, print the vote mail
-#   bash tools/releasing/release.sh --dry-run    # do everything except svn commit
+#   bash tools/releasing/release.sh              # ask for the versions, then do it
+#   bash tools/releasing/release.sh --dry-run    # everything except the four writes
 #
-# The version comes from chart/skywalking/Chart.yaml -- the same place the Makefile reads it, so
-# there is one source of truth and no way to sign 5.0.0 while uploading it as 5.0.1.
+# The release is built from a FRESH CLONE this script makes for itself, under
+# tools/releasing/, not from your checkout. `make release-src` archives the working tree rather
+# than HEAD, so releasing from a working copy ships whatever untracked files happen to be sitting
+# in it -- editor state, agent directories, a half-finished values file. Cloning removes the
+# question entirely. Your own checkout is only read, for the default version.
 #
-# After this: send the printed mail, wait 72h, then tools/releasing/release-passed.sh.
+# The four irreversible writes, all skipped by --dry-run:
+#   the git tag, the svn commit, the next-version branch push, and the PR.
+#
+# After this: send the printed mail, merge the next-version PR, wait 72h, then
+# tools/releasing/release-passed.sh.
 
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PROJECT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
-CHART_FILE="${PROJECT_DIR}/chart/skywalking/Chart.yaml"
-SVN_DEV_URL="https://dist.apache.org/repos/dist/dev/skywalking"
 PRODUCT_NAME="skywalking-helm"
+REPO_URL="https://github.com/apache/skywalking-helm.git"
+CLONE_DIR="${SCRIPT_DIR}/${PRODUCT_NAME}"
+SVN_DEV_URL="https://dist.apache.org/repos/dist/dev/skywalking"
+CHART_FILE_REL="chart/skywalking/Chart.yaml"
 
 DRY_RUN=false
 case "${1:-}" in
@@ -43,40 +52,81 @@ log()  { echo "  $*"; }
 step() { echo; echo "=== $* ==="; }
 die()  { echo "ERROR: $*" >&2; exit 1; }
 
-# upload_to_svn stages the signed artifacts in a temp directory. The cleanup is registered here,
-# at script scope, over a script-scope variable: an EXIT trap runs after the function has already
-# returned, so it cannot see a `local`, and under `set -u` the unbound name would make the trap
-# fail and take the script's exit status with it.
+ask() {
+  # `read` exits 1 at EOF. Without this the script dies with no message at all when it is piped
+  # or run from CI -- the exact silent failure this script is careful to avoid elsewhere.
+  local reply
+  read -r -p "  $1" reply || die "nothing on stdin -- run this script from a terminal"
+  printf '%s' "${reply}"
+}
+
+# The svn staging area lives in a temp directory, outside both your checkout and the clone, so it
+# can never be swept up by `make release-src`. The cleanup is registered here, at script scope,
+# over a script-scope variable: an EXIT trap runs after the function has already returned and so
+# cannot see a `local`, and under `set -u` the unbound name would make the trap itself fail and
+# take the script's exit status with it.
 WORKDIR=""
 cleanup() { [[ -n "${WORKDIR}" ]] && rm -rf "${WORKDIR}"; return 0; }
 trap cleanup EXIT
 
 # ---------------------------------------------------------------------------
 
+resolve_versions() {
+  step "Versions"
+
+  local current major minor
+  current=$(awk '/^version: /{print $2; exit}' "${PROJECT_DIR}/${CHART_FILE_REL}" 2>/dev/null || true)
+
+  RELEASE_VERSION="${current}"
+  NEXT_RELEASE_VERSION=""
+  if [[ "${RELEASE_VERSION}" =~ ^([0-9]+)\.([0-9]+)\.[0-9]+$ ]]; then
+    major="${BASH_REMATCH[1]}"
+    minor="${BASH_REMATCH[2]}"
+    NEXT_RELEASE_VERSION="${major}.$((minor + 1)).0"
+  fi
+
+  log "release version:  ${RELEASE_VERSION:-<unreadable>}   (from your checkout's ${CHART_FILE_REL})"
+  log "next dev version: ${NEXT_RELEASE_VERSION:-<unreadable>}"
+  echo
+
+  local reply
+  reply=$(ask "Are these correct? [y/N] ")
+  if [[ "${reply}" != "y" && "${reply}" != "Y" ]]; then
+    RELEASE_VERSION=$(ask "Enter release version:  ")
+    NEXT_RELEASE_VERSION=$(ask "Enter next dev version: ")
+  fi
+
+  # Both get interpolated into a git tag, an svn path and a branch name. Refusing anything that
+  # is not plain semver keeps all three predictable, and keeps shell metacharacters out of them.
+  [[ "${RELEASE_VERSION}"      =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "release version '${RELEASE_VERSION}' is not MAJOR.MINOR.PATCH"
+  [[ "${NEXT_RELEASE_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "next version '${NEXT_RELEASE_VERSION}' is not MAJOR.MINOR.PATCH"
+  [[ "${RELEASE_VERSION}" != "${NEXT_RELEASE_VERSION}" ]] || die "the release and next versions are both ${RELEASE_VERSION}"
+
+  TAG="v${RELEASE_VERSION}"
+  log "releasing ${RELEASE_VERSION}, then opening a PR to move master to ${NEXT_RELEASE_VERSION}"
+}
+
 preflight() {
   step "Preflight"
 
-  # No OS check. There used to be one: `make clean` was a backslash-continued rm
-  # whose later -rf tokens sat mid-argument-list, which GNU rm permutes and BSD rm
-  # does not, so on macOS it exited 2 and left chart/skywalking/charts/ behind.
-  # That recipe is now a single rm -rf over one operand list, which both accept,
-  # and the whole path -- clean, release-src, package, gpg sign, shasum, and the
-  # verify checks below -- has been run through to completion on macOS.
+  # Running this from inside the throwaway clone would nest another clone beneath it.
+  [[ "${PROJECT_DIR}" != "${CLONE_DIR}" ]] || die "you are inside the throwaway clone -- run this from your own checkout"
 
-  # Report every missing tool at once. Dying on the first means one failed run
-  # per package, and this check exists precisely to spend zero of them.
+  # Report every missing tool at once. Dying on the first means one failed run per package, and
+  # this check exists precisely to spend zero of them.
   local missing=""
-  for tool in helm gpg shasum svn git make tar awk; do
+  for tool in helm gpg shasum svn git make tar awk yq gh; do
     command -v "${tool}" >/dev/null || missing="${missing} ${tool}"
   done
   [[ -z "${missing}" ]] || die "not installed:${missing}"
 
-  # Present is not the same as usable, and each of these fails LATE otherwise:
-  # a missing signing key after the whole build, bad svn credentials after the
-  # tag is already pushed.
-  # 3.8, not 3: the chart is published only as an OCI artifact, and `helm push` to an
-  # oci:// registry landed in 3.8. Helm 4 is fine -- Chart.yaml is apiVersion v2, which
-  # both majors read -- so this bounds from below only, and does not cap the major.
+  # Present is not the same as usable, and each of these otherwise fails LATE: a missing signing
+  # key after the whole build, bad svn credentials after the tag is already pushed, an
+  # unauthenticated gh after the vote candidate is already staged.
+  #
+  # 3.8, not 3: the chart is published only as an OCI artifact, and `helm push` to an oci://
+  # registry landed in 3.8. Helm 4 is fine -- Chart.yaml is apiVersion v2, which both majors
+  # read -- so this bounds from below only, and does not cap the major.
   local helm_ver helm_major helm_minor
   helm_ver=$(helm version --short 2>/dev/null | sed 's/^v//; s/[-+].*//')
   helm_major=${helm_ver%%.*}
@@ -86,79 +136,67 @@ preflight() {
     die "helm 3.8 or newer is required, found ${helm_ver}"
   fi
 
-  gpg --list-secret-keys >/dev/null 2>&1 && [[ -n "$(gpg --list-secret-keys --with-colons 2>/dev/null | grep '^sec')" ]] \
-    || die "gpg has no secret key -- 'make release' signs the artifacts and would fail after the build"
+  local seckeys
+  seckeys=$(gpg --list-secret-keys --with-colons 2>/dev/null | grep -c '^sec' || true)
+  [[ "${seckeys}" -gt 0 ]] || die "gpg has no secret key -- 'make release' signs the artifacts and would fail after the build"
+
+  gh auth status >/dev/null 2>&1 || die "gh is not authenticated -- run 'gh auth login'. It opens the next-version PR at the end."
 
   svn ls "${SVN_DEV_URL}" >/dev/null 2>&1 \
     || die "cannot read ${SVN_DEV_URL} -- check your network and your ASF svn credentials"
 
-  cd "${PROJECT_DIR}"
-  [[ -z "$(git status --porcelain)" ]] || die "working tree is dirty -- the source tarball archives the working tree, not HEAD"
-
-  # release-src tars the working directory, and *.tgz is gitignored -- so a
-  # leftover chart package from a previous release is invisible to git status
-  # and would be embedded in this release's source archive.
-  local strays
-  strays=$(ls -1 ./*.tgz ./*.tgz.asc ./*.tgz.sha512 2>/dev/null || true)
-  [[ -z "${strays}" ]] || die "stray release artifacts in the working tree, run 'make clean' first:
-${strays}"
-
-  # awk, not `grep | awk`: grep exits 1 when it matches nothing, pipefail promotes that to the
-  # pipeline, and `set -e` then kills the script during the assignment -- silently, and before the
-  # check below can report anything. awk exits 0 either way, so the check is reachable.
-  VERSION=$(awk '/^version: /{print $2; exit}' "${CHART_FILE}")
-  [[ -n "${VERSION}" ]] || die "could not read a 'version:' line from ${CHART_FILE}"
-  TAG="v${VERSION}"
-  log "version ${VERSION} (from chart/skywalking/Chart.yaml)"
-
-  # `if`, not `X && die`. An && list that fails on its left side returns non-zero, and when it is
-  # the last statement in a function that becomes the function's return value -- which `set -e`
-  # then treats as a failed call, killing the run with no message. `if` returns 0 when the
-  # condition is false, which is the normal path here.
-  if git rev-parse "${TAG}" >/dev/null 2>&1; then
-    die "tag ${TAG} already exists -- bump Chart.yaml or delete the tag"
+  # `if`, not `X && die`. An && list that fails on its left side returns non-zero, and as a
+  # function's last statement that becomes the function's return value, which `set -e` treats as
+  # a failed call and uses to kill the run -- with no message at all.
+  if git ls-remote --exit-code --tags "${REPO_URL}" "refs/tags/${TAG}" >/dev/null 2>&1; then
+    die "tag ${TAG} already exists on the remote -- bump the version, or delete the tag"
   fi
 
-  # A re-run after a partial upload would mkdir a local ${VERSION} over a path that already exists
-  # in svn, and only find out at commit time -- after the build, the signing and the tag push.
   # Safe to read a non-zero exit as "not there" only because the svn check above already
   # established that the repository is reachable and the credentials work.
-  if svn ls "${SVN_DEV_URL}/helm/${VERSION}" >/dev/null 2>&1; then
-    die "${SVN_DEV_URL}/helm/${VERSION} already exists -- delete it, or bump the version"
+  if svn ls "${SVN_DEV_URL}/helm/${RELEASE_VERSION}" >/dev/null 2>&1; then
+    die "${SVN_DEV_URL}/helm/${RELEASE_VERSION} already exists -- delete it, or bump the version"
   fi
 
+  log "all checks passed"
+}
+
+clone_repo() {
+  step "Clone ${REPO_URL}"
+
+  # Not --depth 1: the tag is created and pushed from here, and prepare_next_version branches
+  # from here. Both want real history.
+  rm -rf "${CLONE_DIR}"
+  git clone --quiet "${REPO_URL}" "${CLONE_DIR}"
+  cd "${CLONE_DIR}"
+  log "cloned $(git rev-parse --short HEAD) on $(git rev-parse --abbrev-ref HEAD)"
+
+  # This project tags master as it stands, with the version bump landing in its own PR
+  # beforehand. If the clone does not already say RELEASE_VERSION then master is not ready, and
+  # setting it here would tag a commit that exists nowhere but this throwaway directory.
+  local cloned
+  cloned=$(awk '/^version: /{print $2; exit}' "${CHART_FILE_REL}")
+  [[ "${cloned}" == "${RELEASE_VERSION}" ]] \
+    || die "master's ${CHART_FILE_REL} says ${cloned}, not ${RELEASE_VERSION} -- land a 'Ready to release ${RELEASE_VERSION}' PR first"
+  log "${CHART_FILE_REL} says ${cloned}, matching the release version"
 }
 
 build() {
   step "Build"
-  cd "${PROJECT_DIR}"
+  cd "${CLONE_DIR}"
   make clean
   make release
 }
 
-tag() {
-  # Deliberately after the build and the artifact checks: a tag pushed before
-  # them survives a failure, and preflight then refuses to re-run because the
-  # tag exists. Fail before the irreversible step, not after it.
-  step "Tag ${TAG}"
-  cd "${PROJECT_DIR}"
-  if ${DRY_RUN}; then
-    log "dry run: not creating or pushing ${TAG}"
-  else
-    git tag -a "${TAG}" -m "Release Apache SkyWalking Helm ${VERSION}"
-    git push origin "${TAG}"
-  fi
-}
-
 verify_artifacts() {
   step "Verify the artifacts"
-  cd "${PROJECT_DIR}"
+  cd "${CLONE_DIR}"
 
-  # Six files: the source tarball and the packaged chart, each signed and
-  # checksummed. Both are voted artifacts for this project.
+  # Six files: the source tarball and the packaged chart, each signed and checksummed. Both are
+  # voted artifacts for this project.
   local expected=(
-    "${PRODUCT_NAME}-${VERSION}-src.tgz"
-    "${PRODUCT_NAME}-${VERSION}.tgz"
+    "${PRODUCT_NAME}-${RELEASE_VERSION}-src.tgz"
+    "${PRODUCT_NAME}-${RELEASE_VERSION}.tgz"
   )
 
   for f in "${expected[@]}"; do
@@ -173,55 +211,130 @@ verify_artifacts() {
 
   # A chart that lints but renders nothing is a valid chart. Render it.
   local rendered
-  rendered=$(helm template rel "${PRODUCT_NAME}-${VERSION}.tgz" \
+  rendered=$(helm template rel "${PRODUCT_NAME}-${RELEASE_VERSION}.tgz" \
     --set oap.image.tag=x --set ui.image.tag=x --set oap.storageType=elasticsearch 2>/dev/null | grep -c '^kind:' || true)
   [[ "${rendered}" -gt 0 ]] || die "the packaged chart renders no resources"
   log "packaged chart renders ${rendered} resources"
+
+  # tar does not honour .gitignore, so nothing about ignoring the clone directory keeps it out of
+  # the archive. Check the archive itself.
+  local strays
+  strays=$(tar tzf "${PRODUCT_NAME}-${RELEASE_VERSION}-src.tgz" \
+    | grep -E "tools/releasing/${PRODUCT_NAME}/|\.tgz\$|/charts/|Chart\.lock" || true)
+  [[ -z "${strays}" ]] || die "the source tarball contains things it should not:
+${strays}"
+  log "source tarball carries no build output"
+}
+
+tag() {
+  # Deliberately after the build and the artifact checks: a tag pushed before them survives a
+  # failure, and preflight then refuses to re-run because the tag exists. Fail before the
+  # irreversible step, not after it.
+  step "Tag ${TAG}"
+  cd "${CLONE_DIR}"
+  if ${DRY_RUN}; then
+    log "dry run: not creating or pushing ${TAG}"
+  else
+    git tag -a "${TAG}" -m "Release Apache SkyWalking Helm ${RELEASE_VERSION}"
+    git push origin "${TAG}"
+    log "pushed ${TAG} at $(git rev-parse --short "${TAG}")"
+  fi
 }
 
 upload_to_svn() {
-  step "Upload to ${SVN_DEV_URL}/helm/${VERSION}"
-  cd "${PROJECT_DIR}"
+  step "Upload to ${SVN_DEV_URL}/helm/${RELEASE_VERSION}"
+  cd "${CLONE_DIR}"
 
   WORKDIR=$(mktemp -d)
-  local workdir="${WORKDIR}"
 
-  # Sparse checkout: a full checkout of dist/dev/skywalking pulls every
-  # sub-project's staging area, which is gigabytes.
-  svn co --depth empty "${SVN_DEV_URL}" "${workdir}/skywalking" >/dev/null
-  svn up --depth empty "${workdir}/skywalking/helm" >/dev/null 2>&1 || true
-  mkdir -p "${workdir}/skywalking/helm/${VERSION}"
-  cp "${PRODUCT_NAME}-${VERSION}"*.tgz* "${workdir}/skywalking/helm/${VERSION}/"
+  # Sparse checkout: a full checkout of dist/dev/skywalking pulls every sub-project's staging
+  # area, which is gigabytes.
+  svn co --depth empty "${SVN_DEV_URL}" "${WORKDIR}/skywalking" >/dev/null
+  svn up --depth empty "${WORKDIR}/skywalking/helm" >/dev/null 2>&1 || true
+  mkdir -p "${WORKDIR}/skywalking/helm/${RELEASE_VERSION}"
+  cp "${PRODUCT_NAME}-${RELEASE_VERSION}"*.tgz* "${WORKDIR}/skywalking/helm/${RELEASE_VERSION}/"
 
-  cd "${workdir}/skywalking/helm"
-  svn add "${VERSION}"
+  cd "${WORKDIR}/skywalking/helm"
+  svn add "${RELEASE_VERSION}" >/dev/null
 
   if ${DRY_RUN}; then
     log "dry run: not committing. staged files:"
     svn status | sed 's/^/    /'
   else
-    svn commit -m "Draft Apache SkyWalking Helm release ${VERSION}"
+    svn commit -m "Draft Apache SkyWalking Helm release ${RELEASE_VERSION}"
     log "uploaded"
+  fi
+}
+
+prepare_next_version() {
+  step "Next iteration ${NEXT_RELEASE_VERSION}"
+  cd "${CLONE_DIR}"
+
+  local branch="bump-to-${NEXT_RELEASE_VERSION}"
+  git checkout --quiet -b "${branch}"
+
+  # sed, not `yq -i`: yq rewrites the whole document, and on this file that reindents every list
+  # and drops a blank line -- a 53-line diff for a one-line change.
+  sed -i.bak -E "s/^version: .*/version: ${NEXT_RELEASE_VERSION}/" "${CHART_FILE_REL}"
+  rm -f "${CHART_FILE_REL}.bak"
+  log "${CHART_FILE_REL} -> ${NEXT_RELEASE_VERSION}"
+
+  # Rotate the changelog: what was being written becomes the released version's own page, and a
+  # fresh one starts from the template.
+  git mv docs/changes/changes.md "docs/changes/changes-${RELEASE_VERSION}.md"
+  sed "s/NEXT_RELEASE_VERSION/${NEXT_RELEASE_VERSION}/g" docs/changes/changes.tpl > docs/changes/changes.md
+  log "changes.md -> changes-${RELEASE_VERSION}.md, and a new changelog for ${NEXT_RELEASE_VERSION}"
+
+  # Insert the released version directly after "Current Version", so the in-progress changelog
+  # keeps the top of the Changelog menu and the released ones stay in descending order.
+  yq -i "(.catalog[] | select(.name == \"Changelog\") | .catalog) |= [.[] | select(.name == \"Current Version\")] + [{\"name\": \"${RELEASE_VERSION}\", \"path\": \"/changes/changes-${RELEASE_VERSION}\"} | .name style=\"double\" | .path style=\"double\"] + [.[] | select(.name != \"Current Version\")]" docs/menu.yml
+  log "docs/menu.yml -> Changelog gains ${RELEASE_VERSION}"
+
+  git add "${CHART_FILE_REL}" docs
+  git commit --quiet -m "Start the next iteration ${NEXT_RELEASE_VERSION}"
+
+  if ${DRY_RUN}; then
+    log "dry run: not pushing ${branch}, not opening a PR. It would carry:"
+    git show --stat --oneline HEAD | sed 's/^/    /'
+  else
+    git push --quiet --set-upstream origin "${branch}"
+    gh pr create --repo apache/skywalking-helm --base master --head "${branch}" \
+      --title "Start the next iteration ${NEXT_RELEASE_VERSION}" \
+      --body "Opened by \`tools/releasing/release.sh\` while staging the ${RELEASE_VERSION} vote.
+
+- \`${CHART_FILE_REL}\` moves to ${NEXT_RELEASE_VERSION}
+- \`docs/changes/changes.md\` becomes \`changes-${RELEASE_VERSION}.md\`, and a fresh changelog starts for ${NEXT_RELEASE_VERSION}
+- \`docs/menu.yml\` gains the ${RELEASE_VERSION} changelog entry
+
+Merge once the ${RELEASE_VERSION} vote thread is open. It does not affect the artifacts under vote, which were built from \`${TAG}\`."
+    log "PR opened"
   fi
 }
 
 vote_mail() {
   step "Vote mail -- copy from here"
-  cd "${PROJECT_DIR}"
+  cd "${CLONE_DIR}"
 
-  local checksums
-  checksums=$(for f in "${PRODUCT_NAME}-${VERSION}"*.tgz.sha512; do printf '   - '; cat "${f}"; done)
+  local checksums commit
+  checksums=$(for f in "${PRODUCT_NAME}-${RELEASE_VERSION}"*.tgz.sha512; do printf '   - '; cat "${f}"; done)
+  # HEAD is wrong here: prepare_next_version has already moved the clone onto the bump branch, so
+  # resolve the tag itself, falling back in a dry run to what would have been tagged.
+  #
+  # --verify --quiet, not `2>/dev/null`: a plain `git rev-parse` ECHOES an unresolvable ref back on
+  # STDOUT and exits 128, so `$(git rev-parse X 2>/dev/null || git rev-parse master)` captures the
+  # literal "v5.1.0^{commit}" AND the fallback hash, and the vote mail goes out with a broken link.
+  commit=$(git rev-parse --verify --quiet "${TAG}^{commit}" || git rev-parse --verify master)
 
   cat <<EOF
 
 =========================================================================
-Subject: [VOTE] Release Apache SkyWalking Helm Chart version ${VERSION}
+Subject: [VOTE] Release Apache SkyWalking Helm Chart version ${RELEASE_VERSION}
 
 Content:
 
 Hi the SkyWalking Community,
 
-This is a call for vote to release Apache SkyWalking Helm Chart version ${VERSION}.
+This is a call for vote to release Apache SkyWalking Helm Chart version ${RELEASE_VERSION}.
 
 Release notes:
 
@@ -229,7 +342,7 @@ Release notes:
 
 Release Candidate:
 
- * ${SVN_DEV_URL}/helm/${VERSION}
+ * ${SVN_DEV_URL}/helm/${RELEASE_VERSION}
  * sha512 checksums
 ${checksums}
 
@@ -239,7 +352,7 @@ Release Tag :
 
 Release Commit Hash :
 
- * https://github.com/apache/skywalking-helm/tree/$(git rev-parse HEAD)
+ * https://github.com/apache/skywalking-helm/tree/${commit}
 
 Keys to verify the Release Candidate :
 
@@ -263,13 +376,21 @@ EOF
 
 # ---------------------------------------------------------------------------
 
+resolve_versions
 preflight
+clone_repo
 build
 verify_artifacts
 tag
 upload_to_svn
+prepare_next_version
 vote_mail
 
 step "Done"
+log "release version:  ${RELEASE_VERSION}"
+log "next dev version: ${NEXT_RELEASE_VERSION}"
+log "build clone kept: ${CLONE_DIR}"
+echo
 log "1. send the vote mail above to dev@skywalking.apache.org"
-log "2. after 72h and three +1 PMC votes, run: bash tools/releasing/release-passed.sh ${VERSION}"
+log "2. merge the 'Start the next iteration ${NEXT_RELEASE_VERSION}' PR"
+log "3. after 72h and three +1 PMC votes, run: bash tools/releasing/release-passed.sh ${RELEASE_VERSION}"

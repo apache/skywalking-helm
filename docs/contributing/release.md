@@ -137,32 +137,60 @@ gpg --list-secret-keys --keyid-format=long
 
 ## 3. Build, verify, tag, upload and call the vote — `release.sh`
 
-**From a pristine clone of the release commit.** Linux and macOS both work — the build was
-verified end to end on each. A pristine clone matters for a different reason: preflight refuses to
-run against a dirty tree, and `release-src` archives the working *tree*, so any untracked file
-sitting in the checkout would otherwise be shipped inside the source release.
+**Run it from your own checkout.** Linux and macOS both work — the build was verified end to end
+on each.
 
 ```shell
-git clone git@github.com:apache/skywalking-helm && cd skywalking-helm
-
-bash tools/releasing/release.sh --dry-run   # everything except the tag push and the svn commit
+bash tools/releasing/release.sh --dry-run   # everything except the four writes
 bash tools/releasing/release.sh
 ```
 
-`--dry-run` still builds, signs and verifies, and still runs the svn checkout — it prints
-`svn status` instead of committing, and creates no tag. Use it to find out whether the build is good
-before anything leaves your machine.
+You do not need a clean tree, because the script does not build from your tree. It clones
+`apache/skywalking-helm` fresh into `tools/releasing/skywalking-helm/` and does everything there.
+That is not tidiness: `make release-src` archives the working *tree*, not `HEAD`, so releasing from
+a working copy ships whatever untracked files happen to be sitting in it — editor state, an agent
+directory, a half-finished values file. Cloning removes the question. Your checkout is only read,
+for the default version.
+
+Note that ignoring such a directory does **not** protect you — `tar` does not read `.gitignore`, so
+a gitignored directory is silently archived. That is why the clone is excluded in the Makefile *and*
+`verify_artifacts` inspects the finished tarball.
+
+It asks for both versions before doing anything, defaulting from your checkout's `Chart.yaml`:
+
+```
+=== Versions ===
+  release version:  5.1.0   (from your checkout's chart/skywalking/Chart.yaml)
+  next dev version: 5.2.0
+
+  Are these correct? [y/N]
+```
+
+Answer anything but `y` to type them in. Both must be plain `MAJOR.MINOR.PATCH` — they end up in a
+git tag, an svn path and a branch name, and refusing anything else keeps shell metacharacters out of
+all three.
+
+`--dry-run` still clones, builds, signs and verifies, and still runs the svn checkout and the
+next-version commit. It skips exactly four things: the tag push, the svn commit, the branch push and
+the PR.
 
 ### The order matters
 
 | Stage | What it does |
 | --- | --- |
+| `resolve_versions` | asks for the release and next-dev versions, defaulting from your `Chart.yaml` |
 | `preflight` | refuses to start (see below) |
-| `build` | `make clean` then `make release` — six files in the repository root |
-| `verify_artifacts` | signature, checksum and a real render of the packaged chart |
+| `clone_repo` | fresh clone into `tools/releasing/skywalking-helm/`; everything below runs there |
+| `build` | `make clean` then `make release` — six files in the clone |
+| `verify_artifacts` | signature, checksum, a real render, and an inspection of the source tarball |
 | `tag` | `git tag -a v$VERSION` and `git push origin v$VERSION` |
 | `upload_to_svn` | sparse checkout of `dist/dev/skywalking`, then `svn add` + `svn commit` |
+| `prepare_next_version` | rotates the changelog, bumps the chart, opens the next-version PR |
 | `vote_mail` | prints the mail, with the real checksums and commit hash filled in |
+
+`clone_repo` also refuses to continue unless master's `Chart.yaml` already says the release version.
+This project tags master as it stands, so if the version is not already there then master is not
+ready — and setting it inside the clone would tag a commit that exists nowhere else.
 
 The tag is pushed **after** the build and the artifact checks, deliberately. A tag pushed first
 survives a failed build, and preflight then refuses to re-run because `v$VERSION` exists — so the
@@ -177,12 +205,10 @@ Preflight refuses to start when:
   read;
 - `gpg` holds no secret key. `make release` signs with `gpg --batch`, so without one the run would
   fail *after* building and packaging everything;
+- `gh` is not authenticated. It opens the next-version PR at the very end, so an unauthenticated
+  `gh` would otherwise surface only after the vote candidate is already staged;
 - `dist/dev/skywalking` cannot be read — a network problem, or svn credentials that are not set up;
-- the working tree is dirty — `release-src` archives the working *tree*, not `HEAD`;
-- a `*.tgz`, `*.tgz.asc` or `*.tgz.sha512` is lying in the repository root. Those are gitignored, so
-  `git status` cannot see them, and a leftover from a previous release would be embedded in this
-  release's source tarball;
-- `v$VERSION` already exists, or `dist/dev/skywalking/helm/$VERSION` already does. The second catches
+- `v$VERSION` already exists on the remote, or `dist/dev/skywalking/helm/$VERSION` already does. The second catches
   a re-run after a partial upload, which would otherwise only surface at `svn commit` — after the
   build, the signing and the tag push.
 
@@ -194,7 +220,23 @@ the remote; preflight is the only place where stopping is free.
 are present, that `gpg --batch --verify` passes and that `shasum -a 512 -c` passes. It then runs
 `helm template` over the packaged chart and requires at least one rendered `kind:` — a chart that
 lints but renders nothing is a valid chart. That render uses `oap.storageType=elasticsearch` with
-`elasticsearch.enabled` left at its default `true`, so it exercises the ECK path.
+`elasticsearch.enabled` left at its default `true`, so it exercises the ECK path. Finally it lists
+the source tarball and fails if it contains the build clone, a `.tgz`, a `charts/` directory or a
+`Chart.lock`.
+
+### The next-version PR
+
+`prepare_next_version` runs after the candidate is staged, on a `bump-to-$NEXT` branch of the clone:
+
+- `chart/skywalking/Chart.yaml` moves to the next dev version — with `sed`, not `yq`, because `yq`
+  rewrites the whole document and turns a one-line bump into a fifty-line reindent;
+- `docs/changes/changes.md` becomes `docs/changes/changes-$VERSION.md`, and a fresh changelog is
+  rendered from `docs/changes/changes.tpl`;
+- `docs/menu.yml` gains the released version, inserted directly after `Current Version` so the
+  in-progress changelog keeps the top of the menu and released versions stay newest-first.
+
+Merge it once the vote thread is open. It cannot affect the artifacts under vote — those were built
+from the tag, before this branch existed.
 
 ### Send the vote mail
 
@@ -358,6 +400,7 @@ as a no *without* aborting, so it walks the whole plan and does none of it.
 
 | Stage | Prompt | Declining |
 | --- | --- | --- |
+| `resolve_version` | confirm the version to publish | — |
 | `preflight` | — | fails if `svn` / `gh` / `git` are missing, if `gh` is not authenticated, if `dist/release/skywalking` cannot be read, or if `dist/dev/skywalking/helm/$VERSION` does not exist |
 | `promote_artifacts` | `svn mv` from `dist/dev` to `dist/release` | aborts |
 | `remove_previous` | remove everything under `release/helm/` other than `$VERSION` | **skips and continues** — the one exception |

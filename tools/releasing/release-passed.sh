@@ -32,17 +32,28 @@ SVN_DEV_URL="https://dist.apache.org/repos/dist/dev/skywalking"
 SVN_RELEASE_URL="https://dist.apache.org/repos/dist/release/skywalking"
 PRODUCT_NAME="skywalking-helm"
 
-VERSION="${1:-}"
+# Order-independent, so `--dry-run 5.0.0` and `5.0.0 --dry-run` both work, and the version may be
+# left out entirely -- it is then read from the staging area and confirmed.
+VERSION=""
 DRY_RUN=false
-case "${2:-}" in
-  "")         ;;
-  --dry-run)  DRY_RUN=true ;;
-  *)          echo "ERROR: unknown argument '${2}' -- did you mean --dry-run?" >&2; exit 1 ;;
-esac
+for arg in "$@"; do
+  case "${arg}" in
+    --dry-run)                  DRY_RUN=true ;;
+    [0-9]*.[0-9]*.[0-9]*)       VERSION="${arg}" ;;
+    *)                          echo "ERROR: unknown argument '${arg}' -- usage: $0 [<version>] [--dry-run]" >&2; exit 1 ;;
+  esac
+done
 
 log()  { echo "  $*"; }
 step() { echo; echo "=== $* ==="; }
 die()  { echo "ERROR: $*" >&2; exit 1; }
+
+ask() {
+  # `read` exits 1 at EOF, which under set -e would kill the run with no message.
+  local reply
+  read -r -p "  $1" reply || die "nothing on stdin -- run this script from a terminal"
+  printf '%s' "${reply}"
+}
 
 # Declining ABORTS. These steps are ordered and dependent -- saying no to the
 # svn promotion and then continuing would create a GitHub release, and publish
@@ -60,10 +71,43 @@ confirm() {
 
 # ---------------------------------------------------------------------------
 
+resolve_version() {
+  step "Version"
+
+  # Unlike release.sh this cannot default from Chart.yaml: by the time the vote passes, master
+  # has usually moved on to the next development version. The staging area is the authority on
+  # what is actually up for release.
+  if [[ -z "${VERSION}" ]]; then
+    local staged count
+    staged=$(svn ls "${SVN_DEV_URL}/helm" 2>/dev/null | sed 's#/$##' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || true)
+    count=$(printf '%s' "${staged}" | grep -c . || true)
+
+    if [[ "${count}" -eq 1 ]]; then
+      VERSION="${staged}"
+      log "staged for release: ${VERSION}"
+    elif [[ "${count}" -gt 1 ]]; then
+      log "more than one version is staged:"
+      printf '%s\n' "${staged}" | sed 's/^/    /'
+    else
+      log "nothing is staged under ${SVN_DEV_URL}/helm"
+    fi
+  else
+    log "version given on the command line: ${VERSION}"
+  fi
+
+  local reply
+  if [[ -n "${VERSION}" ]]; then
+    reply=$(ask "Publish ${VERSION}? [y/N] ")
+    [[ "${reply}" == "y" || "${reply}" == "Y" ]] || VERSION=""
+  fi
+  [[ -n "${VERSION}" ]] || VERSION=$(ask "Enter the version to publish: ")
+
+  [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "version '${VERSION}' is not MAJOR.MINOR.PATCH"
+  TAG="v${VERSION}"
+}
+
 preflight() {
   step "Preflight"
-  [[ -n "${VERSION}" ]] || die "usage: $0 <version> [--dry-run]   e.g. $0 5.0.0"
-  TAG="v${VERSION}"
   log "publishing ${VERSION}"
 
   local missing=""
@@ -213,11 +257,12 @@ remaining() {
   log "2. send the ANNOUNCE mail above to dev@skywalking.apache.org and announce@apache.org"
   log "     from your @apache.org address, with the vote permalink filled in"
   log "3. close the 5.0.0 milestone here and 'Helm - ${VERSION}' on apache/skywalking"
-  log "4. bump chart/skywalking/Chart.yaml to the next development version"
+  log "4. the next-version PR was opened by release.sh; merge it if you have not already"
 }
 
 # ---------------------------------------------------------------------------
 
+resolve_version
 preflight
 promote_artifacts
 remove_previous

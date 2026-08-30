@@ -89,4 +89,8 @@ catalog:
       - name: "Package and Publish a Release"
         path: "/contributing/release"
   - name: "Changelog"
-    path: "/changes/changes"
+    catalog:
+      - name: "Current Version"
+        path: "/changes/changes"
+      - name: "5.0.0"
+        path: "/changes/changes-5.0.0"
