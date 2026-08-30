@@ -4,7 +4,7 @@ Which OAP, UI and storage versions go together for chart **5.0.0**. Only two pai
 
 ## The tested set
 
-This is the combination the three OAP 11 cells in `test/e2e/` install on every CI run, so it is the set the chart is best known to work with. The other two cells hold the OAP 10.4 line described further down.
+This is the combination every cell in `test/e2e/` installs on each CI run, so it is the set the chart is best known to work with. The OAP 10.4 line described further down is documented but **not** covered by CI.
 
 | Component | Version | Where you set it |
 |---|---|---|

@@ -92,10 +92,19 @@ Details worth knowing:
 
 - The host entry is used **verbatim**, path included: `hosts: [skywalking.example.com/ui]` yields `publicUrl: http://skywalking.example.com/ui`.
 - The scheme is decided by `ui.ingress.tls` alone. TLS terminated further out (a cloud LB in front of an ingress with no `tls:` block) still renders `http://` — set the value yourself in that case.
-- It is written as a `${HORIZON_PUBLIC_URL:...}` token, so the derived value is only a default: `ui.extraEnv`/`ui.envFromSecret` can still override it at runtime.
+- It is written as a `${HORIZON_PUBLIC_URL:...}` token, so the derived value is only a default: `ui.extraEnv` can still override it at runtime. `ui.envFromSecret` cannot: Kubernetes gives an explicit `env` entry precedence over `envFrom`, and the chart sets this one in `env`.
 - To pin it in the chart instead, set `ui.config.server.publicUrl` — a literal there wins over the derived default, and makes `HORIZON_PUBLIC_URL` inert. See [Configure Horizon](../ui/configure.md).
 
-Also set `ui.config.session.cookieSecure: true` when you serve the UI over HTTPS, so the session cookie is not sent in the clear. The `HORIZON_SESSION_COOKIE_SECURE` env var will not do it — the chart's `horizon.yaml` omits the `session:` block, so there is no token to expand. See [TLS](tls.md).
+Also set `HORIZON_SESSION_COOKIE_SECURE=true` when you serve the UI over HTTPS, so the session cookie is not sent in the clear:
+
+```yaml
+ui:
+  extraEnv:
+    - name: HORIZON_SESSION_COOKIE_SECURE
+      value: "true"
+```
+
+See [TLS](tls.md).
 
 ## `server.trustProxy` and the client address
 
@@ -112,7 +121,7 @@ Accepted forms are a **hop count** (`1` = one proxy in front, `2` = a proxy behi
 
 `true` is **refused at boot** — the pod will not start. Blanket trust would let any caller set `X-Forwarded-For` and choose the address written to the audit log, so Horizon requires you to name how far the trust extends. Pick the hop count or CIDR that matches your actual topology; too large a hop count has the same problem as `true`.
 
-Set it in `ui.config`, not via `ui.extraEnv`. `HORIZON_TRUST_PROXY` is inert under this chart: the generated `horizon.yaml` has no `server.trustProxy` line, so there is no `${...}` token for Horizon to expand and the schema default (`false`) wins. Write `trustProxy: "${HORIZON_TRUST_PROXY:1}"` under `ui.config.server` if you want it env-overridable. `server.trustProxy` is read once when the HTTP server is constructed, so it only takes effect on a pod restart — the Deployment's `checksum/config` annotation makes `helm upgrade` do that for you.
+Set it with `HORIZON_TRUST_PROXY` in `ui.extraEnv` — a hop count (`1` for one proxy in front) or the ingress address/CIDR. `true` is refused at boot, since it would let any caller choose the address recorded. It is read once when the HTTP server is constructed, so a change takes effect on the next pod restart.
 
 ## Replicas and sticky sessions
 

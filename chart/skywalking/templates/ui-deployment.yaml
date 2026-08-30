@@ -43,9 +43,11 @@ spec:
         component: "{{ .Values.ui.name }}"
         release: {{ .Release.Name }}
       annotations:
-        # Roll the pod when horizon.yaml changes — ConfigMap subPath mounts
-        # don't auto-update at runtime.
+{{- if .Values.ui.config }}
+        # A subPath mount never updates in place, so roll the pod when the
+        # rendered horizon.yaml changes.
         checksum/config: {{ include (print $.Template.BasePath "/ui-configmap.yaml") . | sha256sum }}
+{{- end }}
         {{- with .Values.ui.podAnnotations }}
 {{ toYaml . | indent 8 }}
         {{- end }}
@@ -91,34 +93,67 @@ spec:
         readinessProbe:
 {{ toYaml .Values.ui.readinessProbe | indent 10 }}
 {{- end }}
-{{- if or .Values.ui.envFromSecret .Values.ui.extraEnv }}
+{{- $oap := include "skywalking.oap.fullname" . }}
         env:
+        # Horizon's image ships a fully env-tokenized /app/horizon.yaml, so the
+        # chart supplies only what it can compute and leaves every other field to
+        # the image's own defaults -- which keeps all of them settable through
+        # ui.extraEnv / ui.envFromSecret. Mounting a file here instead would
+        # replace that file and silently make those variables inert.
+        - name: HORIZON_SERVER_PORT
+          value: {{ .Values.ui.service.internalPort | quote }}
+        - name: HORIZON_OAP_QUERY_URL
+          value: "http://{{ $oap }}:{{ .Values.oap.ports.rest }}"
+{{- if .Values.oap.ports.admin }}
+        - name: HORIZON_OAP_ADMIN_URL
+          value: "http://{{ $oap }}:{{ .Values.oap.ports.admin }}"
+{{- end }}
+{{- $zipkin := index .Values.oap.ports "zipkin-query" }}
+{{- if $zipkin }}
+        - name: HORIZON_OAP_ZIPKIN_URL
+          value: "http://{{ $oap }}:{{ $zipkin }}/zipkin"
+{{- end }}
+{{- if and .Values.ui.ingress.enabled .Values.ui.ingress.hosts }}
+{{- $entry := first .Values.ui.ingress.hosts }}
+{{- $host := first (splitList "/" $entry) }}
+{{- $scheme := "http" }}
+{{- range .Values.ui.ingress.tls }}
+{{- if or (empty (.hosts | default list)) (has $host (.hosts | default list)) }}{{ $scheme = "https" }}{{ end }}
+{{- end }}
+        # SSO callbacks and the OAuth issuer are built from this; derived per
+        # host, since a tls block may cover only some of them.
+        - name: HORIZON_PUBLIC_URL
+          value: "{{ $scheme }}://{{ $entry }}"
+{{- end }}
 {{- range .Values.ui.extraEnv }}
         - {{ toYaml . | nindent 10 | trim }}
-{{- end }}
 {{- end }}
 {{- if .Values.ui.envFromSecret }}
         envFrom:
         - secretRef:
-            name: {{ .Values.ui.envFromSecret }}
+            name: {{ .Values.ui.envFromSecret | quote }}
 {{- end }}
         volumeMounts:
+{{- if .Values.ui.config }}
         - name: horizon-config
           mountPath: /app/horizon.yaml
           subPath: horizon.yaml
           readOnly: true
+{{- end }}
         - name: horizon-data
           mountPath: /data
 {{- with .Values.ui.extraVolumeMounts }}
 {{ toYaml . | indent 8 }}
 {{- end }}
       volumes:
+{{- if .Values.ui.config }}
       - name: horizon-config
         configMap:
           name: {{ template "skywalking.ui.fullname" . }}
           items:
           - key: horizon.yaml
             path: horizon.yaml
+{{- end }}
       - name: horizon-data
 {{- if .Values.ui.persistence.enabled }}
         persistentVolumeClaim:

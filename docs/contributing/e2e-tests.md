@@ -50,8 +50,6 @@ each of those pairings needs.
 | `test/e2e/e2e-oap11-elasticsearch.yaml` | `$OAP_REPO:$OAP_TAG` (11.0.0) | `oap.storageType=elasticsearch` against the ECK subchart, left on by the chart's `elasticsearch.enabled: true` | Pre-installs the ECK CRDs out of `chart/skywalking/charts/eck-operator-3.3.1.tgz` and passes `eck-operator.installCRDs=false`. |
 | `test/e2e/e2e-oap11-banyandb-standalone.yaml` | 11.0.0 | BanyanDB 0.11 (`$BANYANDB_REPO:$BANYANDB_TAG`) | `oap.storageType=banyandb`, `elasticsearch.enabled=false`, `banyandb.enabled=true`, `banyandb.standalone.enabled=true`, `banyandb.cluster.enabled=false`, `banyandb.auth.enabled=true`. |
 | `test/e2e/e2e-oap11-banyandb-cluster.yaml` | 11.0.0 | BanyanDB 0.11, cluster mode | As above but `banyandb.standalone.enabled=false`, `banyandb.cluster.enabled=true`. |
-| `test/e2e/e2e-oap10-elasticsearch.yaml` | `$OAP_10_REPO:$OAP_10_TAG` (10.4.0) | ECK Elasticsearch, with the same CRD pre-install and `eck-operator.installCRDs=false` as the cell above | `oap.ports.admin=null`, `ui.config.templates.mode=readonly`. |
-| `test/e2e/e2e-oap10-banyandb.yaml` | 10.4.0 | BanyanDB 0.10.3 (`$BANYANDB_0_10_REPO:$BANYANDB_0_10_TAG`), standalone with auth | `oap.ports.admin=null`, `ui.config.templates.mode=readonly`. |
 
 The three OAP 11 cells also switch Zipkin on — `oap.ports.zipkin-query=9412` plus
 `SW_RECEIVER_ZIPKIN=default` and `SW_QUERY_ZIPKIN=default` — because the chart only emits
@@ -191,8 +189,6 @@ versions under test are pinned.
 | `UI_REPO` / `UI_TAG` | `docker.io/apache/skywalking-ui` : `horizon-1.0.0` | Yes. Dev images live on GHCR (`apache/skywalking-horizon-ui`) if CI needs an unreleased fix. |
 | `BANYANDB_REPO` / `BANYANDB_TAG` | `ghcr.io/apache/skywalking-banyandb` at commit `3b83e18…` | Yes. A GHCR commit pin rather than `docker.io/apache/skywalking-banyandb:0.11.0` **on purpose**: that commit *is* the v0.11.0 tag, and naming it pins the exact source under test instead of a tag that can be re-pushed. The release image is published; user-facing install docs quote it. |
 | `SATELLITE_REPO` / `SATELLITE_TAG` | `ghcr.io/apache/skywalking-satellite/skywalking-satellite` at a commit tag | Yes. |
-| `OAP_10_REPO` / `OAP_10_TAG` | `docker.io/apache/skywalking-oap-server` : `10.4.0` | **No — frozen.** 10.4.0 is the last v10 release. |
-| `BANYANDB_0_10_REPO` / `BANYANDB_0_10_TAG` | `docker.io/apache/skywalking-banyandb` : `0.10.3` | **No — frozen.** OAP 10.4.0 pins `compatibleServerApiVersions` to BanyanDB API 0.10, so this pair never moves again. |
 
 The OAP 11 line moves as a trio: OAP 11.0.0 accepts BanyanDB server API 0.11 only, and Horizon 1.0.0
 is the UI tested against it — see [Version Compatibility](../evaluate/version-compatibility.md).

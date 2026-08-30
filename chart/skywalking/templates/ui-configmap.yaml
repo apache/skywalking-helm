@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- if .Values.ui.enabled }}
+{{- if and .Values.ui.enabled .Values.ui.config }}
 {{- /*
 horizon.yaml is built by deep-merging chart-computed values with `ui.config`.
 
@@ -67,7 +67,12 @@ default/wildcard certificate, so it covers this host too. */ -}}
 {{- end }}
 {{- $_ := set $serverDefaults "publicUrl" (printf "${HORIZON_PUBLIC_URL:%s://%s}" $scheme $entry) }}
 {{- end }}
-{{- $defaults := dict "oap" $oapDefaults "server" $serverDefaults }}
+{{- /* Mounting this file replaces the image's, so any token it does not carry
+is lost and the matching HORIZON_* variable goes inert. Users are the one field
+where that is silently fatal -- the pod still reports Ready -- so the token is
+preserved here unless the operator writes users of their own. */ -}}
+{{- $authDefaults := dict "local" (dict "users" "${HORIZON_AUTH_LOCAL_USERS:[]}") }}
+{{- $defaults := dict "oap" $oapDefaults "server" $serverDefaults "auth" $authDefaults }}
 {{- $userConfig := default (dict) .Values.ui.config }}
 {{- $merged := mergeOverwrite (deepCopy $defaults) (deepCopy $userConfig) }}
 apiVersion: v1

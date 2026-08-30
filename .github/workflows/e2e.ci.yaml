@@ -45,12 +45,9 @@ jobs:
           - name: Horizon + OAP 11 + BanyanDB (cluster)
             config: test/e2e/e2e-oap11-banyandb-cluster.yaml
             slug: oap11-banyandb-cluster
-          - name: Horizon + OAP 10.4 + Elasticsearch
-            config: test/e2e/e2e-oap10-elasticsearch.yaml
-            slug: oap10-elasticsearch
-          - name: Horizon + OAP 10.4 + BanyanDB 0.10
-            config: test/e2e/e2e-oap10-banyandb.yaml
-            slug: oap10-banyandb
+          - name: Config override via ConfigMap (OAP + Horizon)
+            config: test/e2e/e2e-config-override.yaml
+            slug: config-override
     name: ${{ matrix.test.name }}
     steps:
       - uses: actions/checkout@v2

@@ -135,13 +135,15 @@ ui:
       cookieSecure: true
 ```
 
-**Set it in `ui.config`, not as an env var.** The `HORIZON_SESSION_COOKIE_SECURE`
-environment variable is inert under this chart. The chart mounts its own generated
-`horizon.yaml` over `/app/horizon.yaml`, and that file omits the `session:` block
-entirely. Horizon expands `${...}` over the raw *text* of the config file, so with no
-`session:` block there is no token to expand and the schema default (`false`) wins —
-`ui.extraEnv` will not change it. This is the general rule for the chart's ConfigMap and
-is covered in [Configure Horizon](../ui/configure.md).
+Set `HORIZON_SESSION_COOKIE_SECURE=true` whenever the UI is served over HTTPS — browsers refuse a
+`Secure` cookie over plain HTTP, so without it the session cookie travels in the clear:
+
+```yaml
+ui:
+  extraEnv:
+    - name: HORIZON_SESSION_COOKIE_SECURE
+      value: "true"
+```
 
 If you still want the value overridable by env — for example to keep one values file for
 both an HTTP dev cluster and an HTTPS production one — write the token yourself, quoted so

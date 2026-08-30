@@ -4,6 +4,10 @@ Horizon UI ships with **no accounts at all**, and a chart install that skips thi
 Deployment that reports healthy while nobody can sign in. This page shows how to confirm that state,
 how to seed a throwaway demo login, and how to configure real users from a Kubernetes Secret.
 
+Both paths set one variable, `HORIZON_AUTH_LOCAL_USERS`, whose value is a **JSON array of users**.
+The image's `/app/horizon.yaml` reads it (`users: ${HORIZON_AUTH_LOCAL_USERS:[]}`), and the chart
+mounts nothing over that file by default — so an environment variable is all it takes.
+
 ## There is no default login, and the pod still goes Ready
 
 Horizon has no built-in `admin/admin` fallback, and the chart configures no users of its own. The BFF
@@ -38,8 +42,8 @@ kubectl logs -n "${SKYWALKING_RELEASE_NAMESPACE}" \
 ## Demo logins (publicly-known credentials)
 
 For a first run on a trusted network, paste this into a values file. It seeds `admin/admin` and
-`skywalking/skywalking` using `argon2id` hashes of those exact plaintexts — the same pair the chart's
-own e2e tests use.
+`skywalking/skywalking` using `argon2id` hashes of those exact plaintexts — byte-for-byte what
+`test/e2e/values.yaml` feeds the chart's own e2e.
 
 > **These hashes are published in this repository.** Anyone can read them and derive the passwords.
 > Use them only on a network you control, and replace them before the UI is reachable by anyone else.
@@ -47,17 +51,11 @@ own e2e tests use.
 ```yaml
 # demo-values.yaml
 ui:
-  config:
-    auth:
-      backend: local          # the default; shown for clarity
-      local:
-        users:
-          - username: admin            # password: admin
-            passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$eemqy1r72oSXR58y8VpRqw$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM"
-            roles: [admin]
-          - username: skywalking       # password: skywalking
-            passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q"
-            roles: [viewer, maintainer]
+  extraEnv:
+    - name: HORIZON_AUTH_LOCAL_USERS
+      value: >-
+        [{"username":"admin","passwordHash":"$argon2id$v=19$m=65536,t=3,p=4$eemqy1r72oSXR58y8VpRqw$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM","roles":["admin"]},
+        {"username":"skywalking","passwordHash":"$argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q","roles":["viewer","maintainer"]}]
 ```
 
 ```shell
@@ -82,10 +80,18 @@ kubectl port-forward -n "${SKYWALKING_RELEASE_NAMESPACE}" \
 open http://127.0.0.1:8080
 ```
 
-Pass the hashes through a values **file**, not `--set`: a hash is full of `,` and `=`, which `--set`
-reads as its own separators (and of `$`, which the shell would expand first).
+Two rules for the value, both about how it is carried rather than what it means:
 
-## Production: hashes from a Secret
+- Pass it through a values **file**, not `--set`: a hash is full of `,` and `=`, which `--set` reads
+  as its own separators (and of `$`, which the shell would expand first).
+- The value must reach the container as **one line**. Horizon expands the variable into the text of
+  `horizon.yaml` and then parses the file, so a newline inside the value lands mid-sequence at column
+  0 and the parse fails — the BFF exits at boot and the pod crash-loops. To wrap it for readability
+  use a folded block (`>-`) with every continuation line at the **same** indentation as the first, as
+  above: YAML folds those into single spaces. Indenting a continuation line deeper, or using `|-`,
+  keeps the newline and breaks the pod.
+
+## Production: users from a Secret
 
 Generate your own hash first. The CLI lives in the Horizon UI repository and reads the password from
 `argv` or stdin:
@@ -99,22 +105,7 @@ HASH=$(pnpm --filter bff cli:hash 'your-strong-password' | tail -1)
 Passwords longer than 64 characters are refused — the login route rejects them too, so a hash of one
 could never be signed in with.
 
-From there, pick one of two shapes. Both put the hash in a Secret and reference it with
-`ui.envFromSecret`, which the chart turns into an `envFrom.secretRef` on the UI container.
-
-### Why a token in `ui.config` is required either way
-
-The chart mounts its ConfigMap **over** the image's `/app/horizon.yaml`, and that rendered file
-contains only `oap.*` and `server.*` — no `auth:` block. Horizon expands `${VAR}` over the raw text of
-whatever file is at that path, so a `HORIZON_*` variable is read only if a matching token is present
-in the text. `auth.local.users` has a plain `[]` schema default and is **not** env-backed.
-
-**Setting `HORIZON_AUTH_LOCAL_USERS` through `ui.envFromSecret` alone therefore does nothing** — the
-token it would fill is not in the file the chart mounted. You must write the token into `ui.config`.
-
-### Option A — one JSON array for all users
-
-Best when users are managed as a unit and you would rather not restate them in the values file.
+Put the same JSON in a Secret, under the key `HORIZON_AUTH_LOCAL_USERS`:
 
 ```shell
 kubectl create secret generic horizon-users \
@@ -122,57 +113,15 @@ kubectl create secret generic horizon-users \
   --from-literal=HORIZON_AUTH_LOCAL_USERS='[{"username":"admin","passwordHash":"'"$HASH"'","roles":["admin"]}]'
 ```
 
+Point the chart at it. `ui.envFromSecret` becomes an `envFrom.secretRef` on the UI container, so
+**every** key of that Secret arrives as an environment variable — one Secret can carry the users,
+`HORIZON_OAP_AUTH`, and anything else sensitive:
+
 ```yaml
 # my-values.yaml
 ui:
   envFromSecret: horizon-users
-  config:
-    auth:
-      local:
-        users: "${HORIZON_AUTH_LOCAL_USERS:[]}"
 ```
-
-The JSON must be a **single line** — it is substituted into YAML text, where a newline would end the
-value. If the Secret key is missing or empty the token falls back to `[]`, which is the silent
-lockout again, so check `/api/auth/health` after rolling out.
-
-### Option B — a `${VAR}` per hash
-
-Best when the user list is stable and belongs in version control, with only the secrets held out.
-
-```shell
-kubectl create secret generic horizon-admin \
-  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --from-literal=HORIZON_ADMIN_HASH="$HASH"
-```
-
-```yaml
-# my-values.yaml
-ui:
-  envFromSecret: horizon-admin
-  config:
-    auth:
-      local:
-        users:
-          - username: admin
-            passwordHash: "${HORIZON_ADMIN_HASH}"
-            roles: [admin]
-```
-
-Use `ui.extraEnv` instead of `ui.envFromSecret` when you want to pick individual keys out of an
-existing Secret:
-
-```yaml
-ui:
-  extraEnv:
-    - name: HORIZON_ADMIN_HASH
-      valueFrom:
-        secretKeyRef:
-          name: horizon-admin
-          key: passwordHash
-```
-
-### Install with it
 
 ```shell
 helm install "${SKYWALKING_RELEASE_NAME}" \
@@ -188,14 +137,40 @@ helm install "${SKYWALKING_RELEASE_NAME}" \
   -f my-values.yaml
 ```
 
-A `helm upgrade` that changes `ui.config` rolls the UI pod on its own: the Deployment carries a
-`checksum/config` annotation over the rendered ConfigMap. Changing only the **Secret** does not — env
-vars are read once at container start, so restart the Deployment yourself:
+Use `ui.extraEnv` instead when the users live under a different key of a Secret you already have,
+or when you want only that one key out of it:
+
+```yaml
+ui:
+  extraEnv:
+    - name: HORIZON_AUTH_LOCAL_USERS
+      valueFrom:
+        secretKeyRef:
+          name: horizon-users
+          key: users.json
+```
+
+Check `/api/auth/health` after the rollout: an empty or missing value falls back to `[]`, which is
+the silent lockout again. `configured: true` is the confirmation.
+
+### Rolling the pod after a change
+
+Editing `ui.extraEnv` changes a pod field, so `helm upgrade` rolls the UI on its own. Editing the
+**contents** of the Secret behind `ui.envFromSecret` changes no pod field and rolls nothing — and env
+is read once at container start, so restart it yourself:
 
 ```shell
 kubectl rollout restart -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   deploy/${SKYWALKING_RELEASE_NAME}-skywalking-helm-ui
 ```
+
+### If you also set `ui.config`
+
+`ui.config` is empty by default and nothing is mounted. Setting it replaces the image's
+`/app/horizon.yaml` with a rendered one — but the chart keeps the
+`${HORIZON_AUTH_LOCAL_USERS:[]}` token in it unless you write users of your own, so the Secret above
+keeps working either way. Write `auth.local.users` in `ui.config` only if you want to pin users
+regardless of the environment.
 
 ## Roles
 
@@ -208,18 +183,25 @@ kubectl rollout restart -n "${SKYWALKING_RELEASE_NAMESPACE}" \
 | `operator` | Maintainer, plus writes — dashboard and overview templates, DSL rules, live debugging, profiling tasks, source maps. Alarm rules stay read-only for every role |
 | `admin` | `*` |
 
-A user with an empty `roles` list can sign in and see nothing. Define your own names by setting
-`ui.config.rbac.roles`; see the [horizon.yaml reference](https://github.com/apache/skywalking-horizon-ui/blob/main/docs/setup/horizon-yaml.md).
+A user with an empty `roles` list can sign in and see nothing. Define your own names with
+`HORIZON_RBAC_ROLES`, whose value is the whole `rbac.roles` block as JSON; see the
+[horizon.yaml reference](https://github.com/apache/skywalking-horizon-ui/blob/main/docs/setup/horizon-yaml.md).
 
 ## Beyond local users
 
-LDAP, SSO (OIDC/OAuth2), break-glass accounts and API tokens are all configured under `auth` in the
-same `ui.config` block, and follow the same rule: write the field there, keep the secret in a Secret
-and reference it with a `${VAR}` token.
+The other auth backends work the same way — one variable, one JSON value, from `ui.extraEnv` or a
+Secret via `ui.envFromSecret`:
 
-`auth.tokensFile` — API tokens for callers with no browser (scripts, CI, MCP clients) — takes a
-**path**, not a value, so it also needs `ui.extraVolumes` / `ui.extraVolumeMounts`. See
-[Configure Horizon](configure.md).
+| what | variable | value |
+|---|---|---|
+| Pick the backend | `HORIZON_AUTH_BACKEND` | `local` (default) or `ldap` |
+| LDAP directory | `HORIZON_AUTH_LDAP` | `{"url":"ldaps://ldap.corp:636","userBaseDn":"...","groupMappings":[...]}` |
+| SSO (OIDC/OAuth2) | `HORIZON_AUTH_SSO` | `{"providers":[...],"roles":{...}}`; additive to the backend, not a replacement |
+| Break-glass account | `HORIZON_AUTH_BREAK_GLASS` | JSON; honoured only with `backend: ldap`, and only while the LDAP probe fails |
+
+`auth.tokensFile` — API tokens for callers with no browser (scripts, CI, MCP clients) — is the
+exception: `HORIZON_AUTH_TOKENS_FILE` takes a **path**, not a value, so the tokens themselves need
+`ui.extraVolumes` / `ui.extraVolumeMounts`. See [Configure Horizon](configure.md).
 
 - [Horizon UI in This Chart](horizon-ui.md) — what the BFF is and how it talks to OAP
 - [UI and Login Problems](../troubleshooting/ui-and-login.md) — symptoms and fixes

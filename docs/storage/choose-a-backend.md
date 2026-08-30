@@ -41,13 +41,14 @@ fails the render). On top of that:
 
 Anything else you pass to `oap.storageType` is forwarded to `SW_STORAGE` unchanged, but the chart
 adds **no** connection env vars and **no** init container for it — you would have to supply the
-whole connection through `oap.env.*` yourself, which emits literal `value:` entries only.
+whole connection yourself through `oap.env` (literal `value:` entries), `oap.extraEnv` (entries may
+carry `valueFrom`) or `oap.envFromSecret`.
 
 ### Where the connection details come from
 
 | | Embedded (`*.enabled=true`) | External (`*.enabled=false`) |
 |---|---|---|
-| Elasticsearch | `{release}-elasticsearch-es-http:9200` (name from `elasticsearch.fullnameOverride` when set; the port is hard-coded `9200`, `elasticsearch.config.port.http` applies to external clusters only); user is `elastic`, password read from the ECK-generated secret `{release}-elasticsearch-es-elastic-user`, key `elastic` | `elasticsearch.config.host` + `elasticsearch.config.port.http`; `elasticsearch.config.user` / `.password` are rendered as **plaintext env values**, and `oap.env` is no better — the OAP templates have no `envFrom` / `secretKeyRef` path, so OAP credentials always land in the Deployment as literals |
+| Elasticsearch | `{release}-elasticsearch-es-http:9200` (name from `elasticsearch.fullnameOverride` when set; the port is hard-coded `9200`, `elasticsearch.config.port.http` applies to external clusters only); user is `elastic`, password read from the ECK-generated secret `{release}-elasticsearch-es-elastic-user`, key `elastic` | `elasticsearch.config.host` + `elasticsearch.config.port.http`; `elasticsearch.config.user` / `.password` are rendered as **plaintext env values**; leave both empty and supply `SW_ES_USER` / `SW_ES_PASSWORD` from a Secret instead, via `oap.envFromSecret` or `oap.extraEnv` — see [Storage credentials from a Secret](../operate/oap-configuration.md#storage-credentials-from-a-secret) |
 | PostgreSQL | host `{release}-postgresql`, port `postgresql.containerPorts.postgresql` (`5432`), database `postgresql.auth.database` (`skywalking`) | `postgresql.config.host`; the port, database, username and password still come from `postgresql.containerPorts.postgresql` and `postgresql.auth.*` — there is no `postgresql.config.port` |
 | BanyanDB | `{release}-banyandb-grpc:<port>` / `-http:<port>`, ports taken from `banyandb.standalone.*Svc.port` or `banyandb.cluster.liaison.*Svc.port` (defaults `17912` gRPC, `17913` HTTP) | `banyandb.config.grpcAddress` (default `banyandb-grpc:17912`) and `banyandb.config.httpAddress` (default `banyandb-http:17913`) |
 

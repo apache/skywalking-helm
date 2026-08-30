@@ -113,7 +113,7 @@ server:
 ```
 
 The in-cluster address is the default and the env var still wins. Anything **you** write into
-`ui.config` is emitted as a plain literal, and a literal makes the matching variable inert — which is
+`ui.config`, when you set it, is emitted as a plain literal, and a literal makes the matching variable inert — which is
 why `ui.config` is empty by default.
 
 Check what actually got mounted before anything else:
@@ -186,18 +186,15 @@ URI registered with the provider, and if a gateway serves Horizon under a path p
 (`https://example.com/horizon/`), `publicUrl` must carry that prefix — it is also what the BFF uses
 to build root-relative redirects back to `/login`.
 
-While you are here, two neighbouring settings — and both belong in `ui.config`, not in `ui.extraEnv`.
-Unlike `server.publicUrl`, neither field's schema default reads the environment, so with the chart's
-ConfigMap mounted over `/app/horizon.yaml` neither of the two situations above applies, and a
-`HORIZON_SESSION_COOKIE_SECURE` or `HORIZON_TRUST_PROXY` variable is inert:
+While you are here, two neighbouring settings, both plain environment variables:
 
 ```yaml
 ui:
-  config:
-    session:
-      cookieSecure: true   # serving over HTTPS
-    server:
-      trustProxy: 1        # hop count — 1 = one proxy in front; an address/CIDR list also works
+  extraEnv:
+    - name: HORIZON_SESSION_COOKIE_SECURE
+      value: "true"        # serving over HTTPS
+    - name: HORIZON_TRUST_PROXY
+      value: "1"           # hop count — 1 = one proxy in front; an address/CIDR list also works
 ```
 
 `trustProxy` is what makes the login audit record the real client address rather than the ingress.
