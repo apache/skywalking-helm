@@ -33,24 +33,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
+      fail-fast: false
       matrix:
         test:
-          - name: Run Skywalking E2E Test (Elasticsearch as database)
-            config: test/e2e/e2e-elasticsearch.yaml
-          - name: Run Skywalking E2E Test (standalone BanyanDB as database)
-            config: test/e2e/e2e-banyandb-standalone.yaml
-          - name: Run Skywalking E2E Test (BanyanDB cluster as database)
-            config: test/e2e/e2e-banyandb-cluster.yaml
-          - name: Run SWCK oap-agent-adapter-hpa Test
-            config: test/e2e/swck/oap-agent-adapter-hpa.yaml
-          - name: Run SWCK oap-agent-banyandb Test
-            config: test/e2e/swck/oap-agent-banyandb.yaml
-          - name: Run SWCK oap-ui-agent-elasticsearch Test
-            config: test/e2e/swck/oap-ui-agent-elasticsearch.yaml
-          - name: Run SWCK oap-ui-agent-oapserverconfig Test
-            config: test/e2e/swck/oap-ui-agent-oapserverconfig.yaml
-          - name: Run SWCK oap-ui-agent-satellite Test
-            config: test/e2e/swck/oap-ui-agent-satellite.yaml
+          - name: Horizon + OAP 11 + Elasticsearch
+            config: test/e2e/e2e-oap11-elasticsearch.yaml
+            slug: oap11-elasticsearch
+          - name: Horizon + OAP 11 + BanyanDB (standalone)
+            config: test/e2e/e2e-oap11-banyandb-standalone.yaml
+            slug: oap11-banyandb-standalone
+          - name: Horizon + OAP 11 + BanyanDB (cluster)
+            config: test/e2e/e2e-oap11-banyandb-cluster.yaml
+            slug: oap11-banyandb-cluster
+          - name: Horizon + OAP 10.4 + Elasticsearch
+            config: test/e2e/e2e-oap10-elasticsearch.yaml
+            slug: oap10-elasticsearch
+          - name: Horizon + OAP 10.4 + BanyanDB 0.10
+            config: test/e2e/e2e-oap10-banyandb.yaml
+            slug: oap10-banyandb
     name: ${{ matrix.test.name }}
     steps:
       - uses: actions/checkout@v2
@@ -80,7 +80,7 @@ jobs:
         if: ${{ failure() }}
         name: Upload Logs
         with:
-          name: logs
+          name: logs-${{ matrix.test.slug }}
           path: "${{ env.SW_INFRA_E2E_LOG_DIR }}"
 
 

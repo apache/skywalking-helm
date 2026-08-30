@@ -41,10 +41,11 @@ oap:
     # zabbix: 10051
     grpc: 11800
     rest: 12800
-    # admin REST exposed by OAP 10.5+. Horizon UI's BFF talks to this for
-    # runtime-rule, DSL debugging, inspect, status, and config dump. Set to
-    # null (or remove) if the deployed OAP version predates 10.5 — Horizon
-    # admin features will be unavailable in that case.
+    # admin REST host: /status/*, /debugging/*, inspect, dsl-debugging,
+    # runtime-rule, and the dashboard template store Horizon uses when
+    # `ui.config.templates.mode` is `live`. Introduced in OAP 11 -- set this to
+    # null on any 10.x release, where 17128 is the AI-pipeline URI-recognition
+    # server instead, so pointing Horizon at it reaches the wrong service.
     admin: 17128
     # zipkin-receiver: 9411
     # zipkin-query: 9412
@@ -122,10 +123,6 @@ oap:
   #   <Configuration status="DEBUG">
   #     <!-- ... -->
   #   </Configuration>
-  # ui-initialized-templates:
-  #   general:
-  #     general-service.json: |
-  #       [{"id":"General-Service" ... }]
   # When 'dynamicConfig.enabled' set to true, enable oap dynamic configuration through k8s configmap，
   # Note: The default configmap data is empty, please refer to the detailed documentation (https://github.com/apache/skywalking/blob/master/docs/en/setup/backend/dynamic-config.md)
   # Sync period in seconds. Defaults to 60 seconds.
@@ -164,11 +161,20 @@ ui:
   replicas: 1
   image:
     # Horizon UI release images ship to Docker Hub `apache/skywalking-ui`
-    # tagged `horizon-<x.y.z>` (e.g. `horizon-0.6.0`). Dev / pre-release
-    # images live at `ghcr.io/apache/skywalking-horizon-ui` and are tagged
-    # by SHA / `vX.Y.Z` / `main`.
+    # tagged `horizon-<x.y.z>` (e.g. `horizon-1.0.0`). Dev / pre-release
+    # images live at `ghcr.io/apache/skywalking-horizon-ui`, tagged by full
+    # commit SHA, `<x.y.z>` and `main`.
+    #
+    # Horizon releases independently of OAP — there is no 1:1 version mapping.
+    # Horizon 1.0.0 works against OAP 10.4.0 -- the last 10.x release -- as
+    # well as OAP 11.x, so pin it whichever OAP release you run; on 10.4 also
+    # set `ui.config.templates.mode: readonly` and `oap.ports.admin: null`,
+    # neither of which 10.x serves.
+    #
+    # This must be a `horizon-*` tag. The legacy booster UI is not supported —
+    # see the README.
     repository: skywalking.docker.scarf.sh/apache/skywalking-ui
-    tag: null # Must be set explicitly, e.g. horizon-0.6.0
+    tag: null # Must be set explicitly, e.g. horizon-1.0.0
     pullPolicy: IfNotPresent
   # podAnnotations:
   #   example: oap-foo
@@ -212,9 +218,10 @@ ui:
     annotations: {}
     ## Limit load balancer source ips to list of CIDRs (where available)
     # loadBalancerSourceRanges: []
-  # The image runs as a non-root alpine system user `horizon`. PVCs mounted
-  # at /data and (optionally) /app/bundled_templates must be group-writable
-  # by that user; fsGroup defaults to 101 (alpine's typical `nobody` GID).
+  # The image runs as a non-root alpine system user `horizon`. Any volume
+  # mounted into the container (/data, and anything added via
+  # `ui.extraVolumeMounts`) must be group-writable by that user; fsGroup
+  # defaults to 101 (alpine's typical `nobody` GID).
   securityContext:
     fsGroup: 101
   # Persistent state directory used by the BFF for audit log, setup state,
@@ -231,7 +238,9 @@ ui:
   resources: {}
   livenessProbe:
     tcpSocket:
-      port: 8081
+      # the container port is named from ui.service.internalPort, so the probe
+      # follows it rather than pinning a number that can drift
+      port: page
     initialDelaySeconds: 30
     periodSeconds: 20
   readinessProbe:
@@ -240,53 +249,56 @@ ui:
     # to an unauthenticated kubelet probe.
     httpGet:
       path: /api/auth/health
-      port: 8081
+      port: page
     initialDelaySeconds: 10
     periodSeconds: 10
     failureThreshold: 6
-  # `config` is rendered verbatim into the `horizon.yaml` ConfigMap mounted
-  # at /app/horizon.yaml. Schema and field reference:
+  # Extra `horizon.yaml` content, deep-merged over the values the chart computes
+  # (the in-cluster OAP URLs, the ingress-derived publicUrl, and the BFF port).
+  # Schema reference:
   # https://github.com/apache/skywalking-horizon-ui/blob/main/docs/setup/horizon-yaml.md
-  # See also /app/horizon.example.yaml inside the image for the upstream
-  # commented example.
   #
-  # Chart-managed defaults wire `oap.queryUrl` / `oap.adminUrl` to the
-  # in-cluster OAP service. Anything you set here merges over the defaults
-  # via Helm's mergeOverwrite semantics.
+  # EMPTY BY DESIGN. Horizon's image ships a fully env-tokenized
+  # /app/horizon.yaml, and the chart's ConfigMap replaces it -- so every field
+  # written here as a literal makes its `HORIZON_*` env var inert. Prefer
+  # `ui.extraEnv` / `ui.envFromSecret` for anything the chart does not compute,
+  # and set a field here only when you want to pin it regardless of env.
   #
-  # `auth.local.users` is intentionally empty by default — Horizon's BFF
-  # refuses to start without it, which is the upstream's "no default
-  # admin/admin" stance. See the README "Web UI" section for two paths:
-  # a copy-pastable demo snippet (publicly-known admin/admin hash) or the
-  # production Secret + `${VAR}` interpolation pattern.
-  config:
-    server:
-      host: 0.0.0.0
-      port: 8081
-    oap:
-      # queryUrl / adminUrl default to the in-cluster OAP service when unset.
-      # Override here if you point the UI at an external OAP cluster.
-      # queryUrl: http://skywalking-oap:12800
-      # adminUrl: http://skywalking-oap:17128
-      timeoutMs: 15000
-      # auth:
-      #   username: skywalking
-      #   password: "${HORIZON_OAP_PW}"
-    auth:
-      backend: local
-      local:
-        users: []
-        # - username: admin
-        #   passwordHash: "${HORIZON_ADMIN_HASH}"
-        #   roles: [admin]
-    rbac:
-      enabled: true
-    session:
-      ttlMinutes: 60
-      cookieName: horizon_sid
-      # Flip to true when serving over HTTPS (browser refuses Secure
-      # cookies over plain HTTP).
-      cookieSecure: false
+  # Some examples, with the env var that does the same job:
+  #
+  # Only fields whose built-in default reads the environment can be set by a
+  # bare env var -- templates.mode, server.*, ai.*, mcp.*, oauth.*, audit.enabled
+  # among them:
+  #
+  #   templates.mode        HORIZON_TEMPLATES_MODE   `readonly` on OAP 10.x
+  #                                                  (with oap.ports.admin: null)
+  #
+  # Everything else has a literal default, so its HORIZON_* var is reachable ONLY
+  # through a `${...}` token written here. Setting the var alone does nothing:
+  #
+  #   session:
+  #     cookieSecure: ${HORIZON_SESSION_COOKIE_SECURE:false}
+  #   server:
+  #     trustProxy: ${HORIZON_TRUST_PROXY:false}
+  #   oap:
+  #     auth: ${HORIZON_OAP_AUTH:null}
+  #
+  # NO LOGIN IS CONFIGURED BY DEFAULT, and the BFF does not refuse to start
+  # without one -- it boots, logs an error, serves the login page, and answers
+  # the readiness probe with 200, so the pod goes Ready and nobody can log in.
+  # Supply users before you rely on the deployment. auth.local.users has a
+  # literal default, so HORIZON_AUTH_LOCAL_USERS in a Secret does NOTHING on its
+  # own -- the token has to be written here for the variable to reach it. Put the
+  # token in `config` and the value in a Secret named by `ui.envFromSecret`:
+  #
+  #   config:
+  #     auth:
+  #       local:
+  #         users:
+  #           - username: admin
+  #             passwordHash: "${HORIZON_ADMIN_HASH}"
+  #             roles: [admin]
+  config: {}
   # Optional: pass extra env vars into the BFF container. Use this to
   # provide values referenced by `${VAR}` interpolation in `config`
   # (e.g. admin password hash, OAP basic-auth password) without baking
@@ -304,6 +316,30 @@ ui:
   # ${VAR} interpolation.
   # envFromSecret: horizon-secrets
   envFromSecret: ""
+  # Extra volumes / mounts for the BFF container. Two things in Horizon 1.0.0
+  # are configured by PATH rather than by value and therefore need one:
+  #
+  #   auth.tokensFile        — API tokens for scripts / CI / MCP clients
+  #   sourceMaps.bootMountDir — durable .map files for the Browser Errors tab
+  #                             (the image sets it to /app/sourcemaps; runtime
+  #                             uploads without a volume are in-memory only and
+  #                             are lost on pod restart)
+  #
+  # extraVolumes:
+  #   - name: horizon-tokens
+  #     secret:
+  #       secretName: horizon-tokens
+  #   - name: horizon-sourcemaps
+  #     persistentVolumeClaim:
+  #       claimName: horizon-sourcemaps
+  # extraVolumeMounts:
+  #   - name: horizon-tokens
+  #     mountPath: /app/tokens
+  #     readOnly: true
+  #   - name: horizon-sourcemaps
+  #     mountPath: /app/sourcemaps
+  extraVolumes: []
+  extraVolumeMounts: []
 
 
 oapInit:

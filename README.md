@@ -9,333 +9,53 @@ Apache SkyWalking Kubernetes Helm
 SkyWalking Kubernetes Helm repository provides ways to install and configure SkyWalking in a Kubernetes cluster.
 The scripts are written in Helm 3.
 
-# Chart Detailed Configuration
+# Documentation
 
-Chart detailed configuration can be found at [Chart Readme](./chart/skywalking/README.md)
+**Full documentation: [skywalking.apache.org/docs/skywalking-helm/next/readme/](https://skywalking.apache.org/docs/skywalking-helm/next/readme/)**
+— or read it in this repository under [`docs/`](docs/README.md).
 
-There are required values that you must set explicitly when deploying SkyWalking.
+| | |
+|---|---|
+| Install | [Quick Start](docs/install/quick-start.md) · [Where to Get the Chart](docs/install/chart-sources.md) |
+| Storage | [Pick a Backend](docs/storage/choose-a-backend.md) · [Elasticsearch](docs/storage/elasticsearch.md) · [BanyanDB](docs/storage/banyandb.md) · [PostgreSQL](docs/storage/postgresql.md) |
+| Web UI | [Horizon UI](docs/ui/horizon-ui.md) · [Set Up Logins](docs/ui/logins.md) · [Configure Horizon](docs/ui/configure.md) |
+| Operate | [OAP Init Job](docs/operate/oap-init-job.md) · [Configure OAP](docs/operate/oap-configuration.md) · [Scaling](docs/operate/scaling.md) · [Satellite](docs/operate/satellite.md) |
+| Upgrade | [Upgrade](docs/upgrade/upgrading.md) · [Version Compatibility](docs/evaluate/version-compatibility.md) |
+| Trouble | [Install and Startup](docs/troubleshooting/install-and-startup.md) · [UI and Login](docs/troubleshooting/ui-and-login.md) |
+| Values | [Chart Values](docs/reference/skywalking-chart-values.md) |
+
+# Required values
+
+Three values have no default and must be set explicitly on every install.
 
 | name | description | example |
 | ---- | ----------- | ------- |
-| `oap.image.tag` | the OAP docker image tag | `10.4.0` |
-| `oap.storageType` | the storage type of the OAP | `elasticsearch`, `postgresql`, `banyandb`, etc. |
-| `ui.image.tag` | the Horizon UI docker image tag | `horizon-0.6.0` |
+| `oap.image.tag` | the OAP docker image tag | `11.0.0` |
+| `oap.storageType` | the storage type of the OAP | `elasticsearch`, `postgresql`, `banyandb` |
+| `ui.image.tag` | the Horizon UI docker image tag | `horizon-1.0.0` |
 
-You can set these required values via command line (e.g. `--set oap.image.tag=10.4.0 --set oap.storageType=elasticsearch`),
-or edit them in a separate file(e.g. [`values.yaml`](chart/skywalking/values.yaml), [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml))
-and use `-f <filename>` or `--values=<filename>` to set them.
-
-## Web UI (Horizon UI)
-
-The web UI shipped by this chart is [Apache SkyWalking Horizon UI](https://github.com/apache/skywalking-horizon-ui),
-which replaces the legacy `skywalking-booster-ui`. Compared to booster-ui:
-
-- The container bundles a Node-based BFF in front of the SPA. It connects to OAP on **two** ports: the GraphQL query port (`12800`, `oap.ports.rest`) and the admin REST port (`17128`, `oap.ports.admin`, available on OAP 10.5+).
-- The container exposes **port 8081** (was 8080) and **does not pass-through `/graphql`** to OAP. Callers that previously talked to the UI's GraphQL endpoint (e.g. `swctl --base-url=http://<ui>/graphql`) must now talk to the OAP service directly (`http://<oap>:12800/graphql`).
-- The BFF requires **authentication**. There is no built-in `admin/admin` fallback — `ui.config.auth.local.users` ships **empty**, and the BFF refuses to start until you provide at least one user.
-- The full `horizon.yaml` schema (server, oap, auth, rbac, session, audit, debugLog) is owned upstream:
-  - Canonical commented example: [horizon.example.yaml](https://github.com/apache/skywalking-horizon-ui/blob/main/horizon.example.yaml) (also shipped inside the image at `/app/horizon.example.yaml`)
-  - Per-section reference: [docs/setup/horizon-yaml.md](https://github.com/apache/skywalking-horizon-ui/blob/main/docs/setup/horizon-yaml.md)
-
-  Anything you set under `ui.config:` in your Helm values is rendered verbatim into `horizon.yaml`, so the upstream docs apply 1:1.
-- Release images are published to Docker Hub as `apache/skywalking-ui:horizon-x.y.z`. Pre-release / dev images live at `ghcr.io/apache/skywalking-horizon-ui` (tags: SHA, `vX.Y.Z`, `main`).
-
-### Quick demo install (publicly-known credentials)
-
-For a first-run / trusted-network demo, paste the snippet below into a values file. It seeds two users — **`admin/admin`** (admin role) and **`skywalking/skywalking`** (viewer + maintainer) — using `argon2id` hashes of those plaintext passwords.
-
-> ⚠ The hashes below are publicly known in this repo. Use only on trusted networks; rotate before exposing the UI externally.
-
-```yaml
-# demo-values.yaml
-ui:
-  config:
-    auth:
-      backend: local
-      local:
-        users:
-          - username: admin            # password: admin
-            passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$eemqy1r72oSXR58y8VpRqw$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM"
-            roles: [admin]
-          - username: skywalking       # password: skywalking
-            passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q"
-            roles: [viewer, maintainer]
-```
-
-```shell
-helm install "${SKYWALKING_RELEASE_NAME}" \
-  oci://registry-1.docker.io/apache/skywalking-helm \
-  --version "${SKYWALKING_RELEASE_VERSION}" \
-  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=<release> \
-  --set oap.storageType=elasticsearch \
-  --set ui.image.tag=horizon-<release> \
-  -f demo-values.yaml
-```
-
-Then port-forward and log in as `admin/admin`:
-
-```shell
-kubectl port-forward -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  svc/${SKYWALKING_RELEASE_NAME}-skywalking-helm-ui 8080:80
-open http://127.0.0.1:8080
-```
-
-### Production: hash via Kubernetes Secret
-
-For anything beyond a demo, swap the publicly-known hash for one you generated yourself and feed it through a Secret + `${VAR}` interpolation:
-
-```shell
-HASH=$(cd skywalking-horizon-ui && pnpm --filter bff cli:hash 'your-strong-password' | tail -1)
-
-kubectl create secret generic horizon-admin \
-  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --from-literal=HORIZON_ADMIN_HASH="$HASH"
-
-cat > my-values.yaml <<'EOF'
-ui:
-  envFromSecret: horizon-admin
-  config:
-    auth:
-      local:
-        users:
-          - username: admin
-            passwordHash: "${HORIZON_ADMIN_HASH}"
-            roles: [admin]
-EOF
-
-helm install "${SKYWALKING_RELEASE_NAME}" \
-  oci://registry-1.docker.io/apache/skywalking-helm \
-  --version "${SKYWALKING_RELEASE_VERSION}" \
-  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=<release> \
-  --set oap.storageType=elasticsearch \
-  --set ui.image.tag=horizon-<release> \
-  -f my-values.yaml
-```
-
-Full `horizon.yaml` reference: https://github.com/apache/skywalking-horizon-ui/blob/main/docs/setup/horizon-yaml.md
+Set them on the command line, or put them in a values file and pass `-f my-values.yaml`.
 
 # Install
 
-Let's set some variables for convenient use later.
-
 ```shell
-export SKYWALKING_RELEASE_VERSION=4.9.0  # change the release version according to your need
-export SKYWALKING_RELEASE_NAME=skywalking  # change the release name according to your scenario
-export SKYWALKING_RELEASE_NAMESPACE=default  # change the namespace to where you want to install SkyWalking
-```
-
-## Install released version using Docker Helm repository (>= 4.3.0)
-
-```shell
-helm install "${SKYWALKING_RELEASE_NAME}" \
-  oci://registry-1.docker.io/apache/skywalking-helm \
-  --version "${SKYWALKING_RELEASE_VERSION}" \
-  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=10.4.0 \
-  --set oap.storageType=elasticsearch \
-  --set ui.image.tag=horizon-0.6.0
-```
-
-To use BanyanDB as storage solution, you can try
-
-```shell
-helm install "${SKYWALKING_RELEASE_NAME}" \
-  oci://registry-1.docker.io/apache/skywalking-helm \
-  --version "${SKYWALKING_RELEASE_VERSION}" \
-  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=10.4.0 \
+helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+  --version 5.0.0 -n skywalking --create-namespace \
+  --set oap.image.tag=11.0.0 \
   --set oap.storageType=banyandb \
-  --set ui.image.tag=horizon-0.6.0 \
+  --set ui.image.tag=horizon-1.0.0 \
   --set elasticsearch.enabled=false \
   --set banyandb.enabled=true \
-  --set banyandb.image.tag=0.10.1
+  --set banyandb.image.tag=0.11.0
 ```
 
-BanyanDB can be configured through various parameters. A comprehensive list of these parameters can be found in the configuration section of [BanyanDB Helm](https://github.com/apache/skywalking-banyandb-helm?tab=readme-ov-file#configuration) repository. These parameters allow you to customize aspects such as replication, resource allocation, persistence, and more to suit your specific deployment needs. Remember to prepend 'banyandb.' to all parameter names when applying the settings. For example, `banyandb.image.tag` can be used to specify the version of BanyanDB.
+The default storage backend is Elasticsearch, which needs its CRDs installed first — see
+[Quick Start](docs/install/quick-start.md) for that path and for the other chart sources
+(development snapshots, building from source).
 
-
-## Install released version using Apache Jfrog Helm repository (<= 4.3.0)
-
-```shell
-export REPO=skywalking
-helm repo add ${REPO} https://apache.jfrog.io/artifactory/skywalking-helm
-```
-
-## Install development version of SkyWalking using master branch
-
-This is needed **only** when you want to install SkyWalking from master branch.
-
-```shell script
-export REPO=chart
-git clone https://github.com/apache/skywalking-helm
-cd skywalking-helm
-helm repo add elastic https://helm.elastic.co
-helm dep up ${REPO}/skywalking
-```
-
-## Install development version of SWCK Adapter using master branch
-
-This is needed **only** when you want to install [SWCK Adapter](https://github.com/apache/skywalking-swck/tree/master/adapter) from master branch. 
-
-SWCK Adapter chart detailed configuration can be found at [Adapter Chart Readme](./chart/adapter/README.md).
-
-You can install the Adapter with the default configuration as follows.
-
-```shell script
-export REPO=chart
-git clone https://github.com/apache/skywalking-helm
-cd skywalking-helm
-helm -n skywalking-custom-metrics-system install adapter ${REPO}/adapter --create-namespace
-```
-
-## Install development version of SWCK Operator using master branch
-
-This is needed **only** when you want to install [SWCK Operator](https://github.com/apache/skywalking-swck/tree/master/operator) from master branch. 
-
-Before installing Operator, you have to install [cert-manager](https://cert-manager.io/) at first.
-
-```shell script
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
-```
-
-SWCK Operator chart detailed configuration can be found at [Operator Chart Readme](./chart/operator/README.md).
-
-You can install the Operator with the default configuration as follows.
-
-```shell script
-export REPO=chart
-git clone https://github.com/apache/skywalking-helm
-cd skywalking-helm
-helm -n skywalking-swck-system install operator ${REPO}/operator
-```
-
-## Install a specific version of SkyWalking
-
-In theory, you can deploy all versions of SkyWalking that are >= 6.0.0-GA, by specifying the desired `oap.image.tag`/`ui.image.tag`.
-
-Please note that some configurations that are added in the later versions of SkyWalking may not work in earlier versions, and thus if you
-specify those configurations, they may take no effect.
-
-here are some examples.
-
-- Deploy SkyWalking 10.4.0
-
-```shell script
-helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=10.4.0 \
-  --set oap.storageType=elasticsearch \
-  --set ui.image.tag=horizon-0.6.0 \
-  --set eck-operator.installCRDs=false
-```
-
-Elasticsearch is deployed via [ECK (Elastic Cloud on Kubernetes)](https://github.com/elastic/cloud-on-k8s).
-When `elasticsearch.enabled=true` (the default), the chart deploys both the ECK operator and an Elasticsearch 8.18.8 cluster.
-Because Elasticsearch CRDs must exist before the chart can be installed, you need to install them first:
-
-```shell
-helm dep up chart/skywalking
-tar xzf chart/skywalking/charts/eck-operator-3.3.1.tgz -C /tmp eck-operator/charts/eck-operator-crds
-helm install eck-crds /tmp/eck-operator/charts/eck-operator-crds -n "${SKYWALKING_RELEASE_NAMESPACE}" --create-namespace
-```
-
-Then install the chart with `--set eck-operator.installCRDs=false` to avoid duplicating the CRDs.
-
-To use an existing external Elasticsearch instead, disable the embedded deployment (no CRD pre-install needed):
-
-```yaml
-elasticsearch:
-  enabled: false
-  config:
-    host: elasticsearch-es-http
-    port:
-      http: 9200
-    user: "xxx"         # [optional]
-    password: "xxx"     # [optional]
-```
-
-The same goes for PostgreSQL and BanyanDB.
-
-## Install development version using ghcr.io Helm repository
-
-If you are willing to help testing the latest codes that are not released yet, we provided a snapshot
-Helm repository on ghcr.io for convenient use, replace the full commit hash in the version option to
-deploy the revision that you want to test.
-
-```shell
-helm -n istio-system install skywalking \
-  oci://ghcr.io/apache/skywalking-helm/skywalking-helm \
-  --version "0.0.0-b670c41d94a82ddefcf466d54bab5c492d88d772" \
-  -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set oap.image.tag=10.4.0 \
-  --set oap.storageType=elasticsearch \
-  --set ui.image.tag=horizon-0.6.0
-```
-
-## Install development version using source codes
-
-This is needed **only** when you want to install source codes.
-
-```shell script
-helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" 
-```
-
-## Install a specific version of SkyWalking with an existing database
-
-If you want to use an existing Elasticsearch cluster as storage solution, modify the connection information in file [`values-my-es.yaml`](chart/skywalking/values-my-es.yaml).
-
-```shell script
-helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  -f ./skywalking/values-my-es.yaml
-```
-
-## Install SkyWalking with Satellite
-
-Enable the satellite as gateway, and set the satellite image tag.
-
-```shell script
-helm install "${SKYWALKING_RELEASE_NAME}" ${REPO}/skywalking -n "${SKYWALKING_RELEASE_NAMESPACE}" \
-  --set satellite.enabled=true \
-  --set satellite.image.tag=v0.4.0
-```
-
-After satellite have been installed, you should replace the `oap` address to the `satellite` address, the address from agent or `istio`, such as `skywalking-satellite.istio-system:11800`.
-
-## Customization
-
-- Override configuration files
-
-You can override the configuration files for OAP or Satellite by adding configuration section `oap.config` and `satellite.config`,
-check [the examples](chart/skywalking/values.yaml), search keyword `config: {}`.
-
-- Pass environment variables to OAP
-
-The SkyWalking OAP exposes many configurations that can be specified by environment variables, as listed in [the main repo](https://github.com/apache/skywalking/blob/master/docs/en/setup/backend/configuration-vocabulary.md).
-You can set those environment variables by `--set oap.env.<ENV_NAME>=<ENV_VALUE>`, such as `--set oap.env.SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS=k8s-mesh`.
-
-> The environment variables take priority over the overrode configuration files.
-
-## OAP init job
-
-The OAP storage schema (Elasticsearch indices / SQL tables / BanyanDB groups) is created by a
-one-shot `*-oap-init-*` Job that runs OAP in `-Dmode=init`. The main OAP Deployment runs in
-`-Dmode=no-init` and blocks (its `12800` port stays closed, so it is not Ready) until that schema
-exists. The init Job is a **normal release resource** that runs in the main install/upgrade phase,
-so `helm upgrade --install --wait` works: the Job creates the schema while OAP waits for it. To get
-Helm to surface init-Job failures directly (instead of only seeing OAP fail to become Ready), add
-`--wait-for-jobs` alongside `--wait`.
-
-The Job name carries a hash of the chart values, so any `helm upgrade` that changes a value
-re-creates the Job and re-runs init automatically (Helm prunes the previous one).
-
-To **force a rerun** without changing any value — delete the Job and re-run `helm upgrade`; Helm
-recreates the (now missing) Job and init runs again:
-
-```shell
-kubectl delete job -n "${SKYWALKING_RELEASE_NAMESPACE}" -l release=$SKYWALKING_RELEASE_NAME
-helm upgrade "$SKYWALKING_RELEASE_NAME" <chart> -n "${SKYWALKING_RELEASE_NAMESPACE}" --reuse-values
-```
+**A fresh install has no login.** Horizon UI ships no default credentials and does not fail closed:
+the pod reports Ready and nobody can sign in until you configure users. See
+[Set Up Logins](docs/ui/logins.md).
 
 # Contact Us
 * Submit an [issue](https://github.com/apache/skywalking/issues)

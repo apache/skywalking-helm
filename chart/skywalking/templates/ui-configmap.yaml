@@ -15,23 +15,59 @@
 
 {{- if .Values.ui.enabled }}
 {{- /*
-horizon.yaml is built by deep-merging:
-  1. chart-managed defaults that point at the in-cluster OAP service
-  2. whatever the operator put in `ui.config`
-The merge order means user values win on every field except oap.queryUrl /
-oap.adminUrl, where we always default to the in-cluster service if the
-operator left them unset. zipkinUrl is only injected when the Zipkin query
-port is enabled — Horizon's BFF rejects an empty/non-URL value at startup.
+horizon.yaml is built by deep-merging chart-computed values with `ui.config`.
+
+The chart-computed values are emitted as `${VAR:default}` TOKENS, not literals,
+and that is load-bearing. Horizon expands `${...}` over the raw file TEXT before
+parsing it (apps/bff/src/config/loader.ts), so a literal-valued file silently
+makes the matching HORIZON_* env var inert -- and for a field the file omits,
+env only applies to the handful whose schema default reads process.env. Writing
+tokens keeps the in-cluster value as the default AND leaves every field
+overridable by env, which is how the image is meant to be configured.
+
+Only values the image cannot know belong here. Anything equal to Horizon's own
+default is left out so upstream owns it.
 */ -}}
+{{- $oap := include "skywalking.oap.fullname" . }}
 {{- $oapDefaults := dict
-  "queryUrl" (printf "http://%s:%v" (include "skywalking.oap.fullname" .) .Values.oap.ports.rest)
-  "adminUrl" (printf "http://%s:%v" (include "skywalking.oap.fullname" .) (default 17128 .Values.oap.ports.admin))
+  "queryUrl" (printf "${HORIZON_OAP_QUERY_URL:http://%s:%v}" $oap .Values.oap.ports.rest)
 }}
+{{- /* The admin host arrived in OAP 11. On a 10.x release 17128 is the
+AI-pipeline URI-recognition server, so advertising an adminUrl there would point
+Horizon at the wrong service -- only emit it when the port is actually exposed. */ -}}
+{{- if .Values.oap.ports.admin }}
+{{- $_ := set $oapDefaults "adminUrl" (printf "${HORIZON_OAP_ADMIN_URL:http://%s:%v}" $oap .Values.oap.ports.admin) }}
+{{- end }}
+{{- /* zipkinUrl only when the Zipkin query port is exposed -- the schema
+requires a valid URL, so an empty value fails at boot. */ -}}
 {{- $zipkinQueryPort := index .Values.oap.ports "zipkin-query" }}
 {{- if $zipkinQueryPort }}
-{{- $_ := set $oapDefaults "zipkinUrl" (printf "http://%s:%v/zipkin" (include "skywalking.oap.fullname" .) $zipkinQueryPort) }}
+{{- $_ := set $oapDefaults "zipkinUrl" (printf "${HORIZON_OAP_ZIPKIN_URL:http://%s:%v/zipkin}" $oap $zipkinQueryPort) }}
 {{- end }}
-{{- $defaults := dict "oap" $oapDefaults }}
+{{- /* server.port is chart-derived rather than a token: the container port and
+the probes both come from ui.service.internalPort, so the BFF has to bind the
+same one. server.host is omitted -- the image's own ENV already sets it. */ -}}
+{{- $serverDefaults := dict "port" (.Values.ui.service.internalPort | int) }}
+{{- /* Horizon derives its public base URL per-request when publicUrl is blank,
+which is wrong behind an ingress that rewrites Host: SSO callbacks and the OAuth
+issuer would be built from the internal address. */ -}}
+{{- if and .Values.ui.ingress.enabled .Values.ui.ingress.hosts }}
+{{- $entry := first .Values.ui.ingress.hosts }}
+{{- /* an entry may carry a path -- ui-ingress.yaml splits it on "/" -- while
+tls[].hosts holds bare hostnames, so compare only the hostname. */ -}}
+{{- $host := first (splitList "/" $entry) }}
+{{- /* https only when THIS host is covered by a tls block -- a tls entry for a
+different host does not make this one https, and an https publicUrl on a plain
+host breaks the SSO callback. */ -}}
+{{- $scheme := "http" }}
+{{- range .Values.ui.ingress.tls }}
+{{- /* an entry with no `hosts` is valid: Kubernetes reads it as the controller's
+default/wildcard certificate, so it covers this host too. */ -}}
+{{- if or (empty (.hosts | default list)) (has $host (.hosts | default list)) }}{{ $scheme = "https" }}{{ end }}
+{{- end }}
+{{- $_ := set $serverDefaults "publicUrl" (printf "${HORIZON_PUBLIC_URL:%s://%s}" $scheme $entry) }}
+{{- end }}
+{{- $defaults := dict "oap" $oapDefaults "server" $serverDefaults }}
 {{- $userConfig := default (dict) .Values.ui.config }}
 {{- $merged := mergeOverwrite (deepCopy $defaults) (deepCopy $userConfig) }}
 apiVersion: v1

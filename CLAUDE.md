@@ -18,16 +18,24 @@ chart/
       ui-*.yaml        # UI templates
       satellite-*.yaml # Satellite templates
       NOTES.txt        # Post-install notes
-  adapter/             # SWCK Adapter chart
-  operator/            # SWCK Operator chart
+docs/                  # Published to skywalking.apache.org via docs/menu.yml
 test/e2e/              # E2E test configs (skywalking-infra-e2e format)
-  e2e-elasticsearch.yaml
-  e2e-banyandb-*.yaml
-  values.yaml          # Test-specific value overrides
-  swck/                # SWCK-specific e2e tests
+  e2e-oap11-*.yaml     # OAP 11.0.0 cells (ES, BanyanDB standalone, BanyanDB cluster)
+  e2e-oap10-*.yaml     # OAP 10.4.0 compatibility cells (ES, BanyanDB 0.10)
+  script/horizon.sh    # Logs into Horizon and calls its BFF; every assertion goes through it
+  values.yaml          # Test-specific value overrides, incl. the admin/admin login
+  env                  # Image pins: OAP 11 line moves, the OAP 10.4 line is frozen
 .github/workflows/
   e2e.ci.yaml          # CI pipeline running all e2e tests
 ```
+
+## Scope
+
+This repository packages **one** chart: `chart/skywalking` (OAP, Horizon UI, optional Satellite,
+optional storage). It does not package the SWCK operator or its custom-metrics adapter -- those
+live with the operator in [apache/skywalking-swck](https://github.com/apache/skywalking-swck),
+where the CRDs and the image are generated and released together. Chart, docs and tests here should
+contain no SWCK.
 
 ## Chart Dependencies
 

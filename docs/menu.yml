@@ -1,0 +1,92 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+catalog:
+  - name: "Welcome"
+    path: "/readme"
+  - name: "Evaluate"
+    catalog:
+      - name: "What This Chart Deploys"
+        path: "/evaluate/what-this-chart-deploys"
+      - name: "Requirements"
+        path: "/evaluate/requirements"
+      - name: "Version Compatibility"
+        path: "/evaluate/version-compatibility"
+  - name: "Install"
+    catalog:
+      - name: "Quick Start"
+        path: "/install/quick-start"
+      - name: "Where to Get the Chart"
+        path: "/install/chart-sources"
+  - name: "Choose Storage"
+    catalog:
+      - name: "Pick a Storage Backend"
+        path: "/storage/choose-a-backend"
+      - name: "Elasticsearch"
+        path: "/storage/elasticsearch"
+      - name: "BanyanDB"
+        path: "/storage/banyandb"
+      - name: "PostgreSQL"
+        path: "/storage/postgresql"
+  - name: "Configure the UI"
+    catalog:
+      - name: "Horizon UI in This Chart"
+        path: "/ui/horizon-ui"
+      - name: "Set Up Logins"
+        path: "/ui/logins"
+      - name: "Configure Horizon"
+        path: "/ui/configure"
+  - name: "Expose It"
+    catalog:
+      - name: "UI Service and Ingress"
+        path: "/expose/ui-service-and-ingress"
+      - name: "TLS"
+        path: "/expose/tls"
+      - name: "OAP Endpoints for Agents"
+        path: "/expose/oap-endpoints"
+  - name: "Operate"
+    catalog:
+      - name: "The OAP Init Job"
+        path: "/operate/oap-init-job"
+      - name: "Configure OAP"
+        path: "/operate/oap-configuration"
+      - name: "Scaling and the OAP Cluster"
+        path: "/operate/scaling"
+      - name: "Satellite Gateway"
+        path: "/operate/satellite"
+  - name: "Upgrade"
+    path: "/upgrade/upgrading"
+  - name: "Troubleshoot"
+    catalog:
+      - name: "Install and Startup Failures"
+        path: "/troubleshooting/install-and-startup"
+      - name: "UI and Login Problems"
+        path: "/troubleshooting/ui-and-login"
+  - name: "Values Reference"
+    catalog:
+      - name: "Chart Values"
+        path: "/reference/skywalking-chart-values"
+      - name: "OAP Configuration Vocabulary"
+        path: "https://skywalking.apache.org/docs/main/latest/en/setup/backend/configuration-vocabulary/"
+      - name: "horizon.yaml Reference"
+        path: "https://github.com/apache/skywalking-horizon-ui/blob/main/docs/setup/horizon-yaml.md"
+  - name: "Contributing"
+    catalog:
+      - name: "Run the E2E Tests"
+        path: "/contributing/e2e-tests"
+      - name: "Package and Publish a Release"
+        path: "/contributing/release"
+  - name: "Changelog"
+    path: "/changes/changes"
