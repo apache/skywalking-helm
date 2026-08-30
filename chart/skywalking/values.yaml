@@ -104,9 +104,41 @@ oap:
   #   image: my/query-proxy:1.0.0
   #   ports:
   #     - { name: http, containerPort: 8080 }
+  # OAP can be configured three ways, the same as the UI below:
+  #
+  #   1. `oap.env` / `oap.extraEnv` -- environment variables. `env` is a plain
+  #      map; `extraEnv` is a list, so it can carry `valueFrom` for a single
+  #      value out of a Secret or the downward API.
+  #   2. `oap.envFromSecret`        -- every key of a Secret as an env var. Note
+  #      Kubernetes gives an explicit `env` entry precedence over `envFrom`, and
+  #      the chart sets SW_ES_PASSWORD / SW_DATA_SOURCE_PASSWORD itself from the
+  #      storage values -- so to source those from a Secret use `extraEnv`
+  #      (below), which lands in `env` and wins. `envFromSecret` suits variables
+  #      the chart does not set.
+  #   3. `oap.config`               -- files rendered into a ConfigMap and
+  #      mounted at /skywalking/config. Unlike Horizon, OAP reads real files for
+  #      things like log4j2.xml and the OAL/MAL rules, so this is the only way to
+  #      supply those.
   env: # more env, please refer to https://hub.docker.com/r/apache/skywalking-oap-server
 
   # or https://github.com/apache/skywalking-docker/blob/master/6/6.4/oap/README.md#sw_telemetry
+
+  # A list, so entries may use valueFrom. Use it where `oap.env` cannot reach --
+  # a single credential from a Secret, or a value from the downward API. This is
+  # also the only way to override a variable the chart sets itself, since these
+  # land in `env` and an explicit `env` entry beats `envFrom`:
+  #
+  # extraEnv:
+  #   - name: SW_DATA_SOURCE_PASSWORD
+  #     valueFrom:
+  #       secretKeyRef:
+  #         name: oap-postgres
+  #         key: password
+  extraEnv: []
+  # Every key of a pre-created Secret becomes an env var in the OAP container
+  # (and in the init Job, which needs the same storage credentials).
+  # envFromSecret: oap-secrets
+  envFromSecret: ""
 
   # Allows you to add any config files in /skywalking/config
   # such as log4j2.xml, oal/core.oal, etc.
@@ -224,9 +256,10 @@ ui:
   # defaults to 101 (alpine's typical `nobody` GID).
   securityContext:
     fsGroup: 101
-  # Persistent state directory used by the BFF for audit log, setup state,
-  # alarm state, and wire debug log. Without persistence these files land in
-  # the container's writable layer and are lost on pod restart.
+  # Persistent state directory (/data). Horizon 1.0.0 writes the wire debug log
+  # there when debugLog is enabled; the login audit is not file-backed at all,
+  # its only backend is Postgres. Without persistence anything written there
+  # lands in the container's writable layer and is lost on restart.
   persistence:
     enabled: false
     # existingClaim: ""
@@ -253,51 +286,37 @@ ui:
     initialDelaySeconds: 10
     periodSeconds: 10
     failureThreshold: 6
-  # Extra `horizon.yaml` content, deep-merged over the values the chart computes
-  # (the in-cluster OAP URLs, the ingress-derived publicUrl, and the BFF port).
-  # Schema reference:
+  # Horizon can be configured three ways. The image ships a complete
+  # /app/horizon.yaml in which every field is a `${HORIZON_*:default}`
+  # placeholder, so the first two need no file at all:
+  #
+  #   1. `ui.extraEnv`      -- plain values, one env var per field
+  #   2. `ui.envFromSecret` -- the same, from a Secret, for anything sensitive
+  #   3. `ui.config`        -- a horizon.yaml rendered into a ConfigMap and
+  #                            mounted over the image's copy
+  #
+  # Prefer 1 and 2. Structured settings take JSON in a single variable, so a
+  # Secret covers even the nested ones:
+  #
+  #   HORIZON_AUTH_LOCAL_USERS=[{"username":"admin","passwordHash":"$argon2id$...","roles":["admin"]}]
+  #   HORIZON_AUTH_LDAP={"url":"ldaps://...","userBaseDn":"..."}
+  #   HORIZON_RBAC_ROLES={...}
+  #
+  # `ui.config` is for pinning a field regardless of the environment. Setting it
+  # mounts a file over the image's, which REPLACES that file: any field you do
+  # not write falls back to Horizon's built-in default, and its `HORIZON_*`
+  # variable stops working unless you write the token yourself
+  # (`cookieSecure: ${HORIZON_SESSION_COOKIE_SECURE:false}`). The chart's own
+  # computed values are merged in as tokens, so OAP stays reachable either way.
+  # Left empty, no ConfigMap is created and nothing is mounted.
+  #
+  # Field reference:
   # https://github.com/apache/skywalking-horizon-ui/blob/main/docs/setup/horizon-yaml.md
-  #
-  # EMPTY BY DESIGN. Horizon's image ships a fully env-tokenized
-  # /app/horizon.yaml, and the chart's ConfigMap replaces it -- so every field
-  # written here as a literal makes its `HORIZON_*` env var inert. Prefer
-  # `ui.extraEnv` / `ui.envFromSecret` for anything the chart does not compute,
-  # and set a field here only when you want to pin it regardless of env.
-  #
-  # Some examples, with the env var that does the same job:
-  #
-  # Only fields whose built-in default reads the environment can be set by a
-  # bare env var -- templates.mode, server.*, ai.*, mcp.*, oauth.*, audit.enabled
-  # among them:
-  #
-  #   templates.mode        HORIZON_TEMPLATES_MODE   `readonly` on OAP 10.x
-  #                                                  (with oap.ports.admin: null)
-  #
-  # Everything else has a literal default, so its HORIZON_* var is reachable ONLY
-  # through a `${...}` token written here. Setting the var alone does nothing:
-  #
-  #   session:
-  #     cookieSecure: ${HORIZON_SESSION_COOKIE_SECURE:false}
-  #   server:
-  #     trustProxy: ${HORIZON_TRUST_PROXY:false}
-  #   oap:
-  #     auth: ${HORIZON_OAP_AUTH:null}
   #
   # NO LOGIN IS CONFIGURED BY DEFAULT, and the BFF does not refuse to start
   # without one -- it boots, logs an error, serves the login page, and answers
   # the readiness probe with 200, so the pod goes Ready and nobody can log in.
-  # Supply users before you rely on the deployment. auth.local.users has a
-  # literal default, so HORIZON_AUTH_LOCAL_USERS in a Secret does NOTHING on its
-  # own -- the token has to be written here for the variable to reach it. Put the
-  # token in `config` and the value in a Secret named by `ui.envFromSecret`:
-  #
-  #   config:
-  #     auth:
-  #       local:
-  #         users:
-  #           - username: admin
-  #             passwordHash: "${HORIZON_ADMIN_HASH}"
-  #             roles: [admin]
+  # Set HORIZON_AUTH_LOCAL_USERS before you rely on the deployment.
   config: {}
   # Optional: pass extra env vars into the BFF container. Use this to
   # provide values referenced by `${VAR}` interpolation in `config`

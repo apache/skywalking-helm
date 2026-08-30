@@ -84,8 +84,8 @@ it exposed points Horizon at the wrong service.
 Full horizon.yaml config reference:
   https://github.com/apache/skywalking-horizon-ui/blob/main/docs/setup/horizon-yaml.md
 
-Horizon 1.0.0 ships its commented example AS the shipped config — the image's
-/app/horizon.yaml is fully env-tokenized. This chart replaces that file with
-the ConfigMap rendered from `ui.config`.
+Horizon is configured by environment variable: the image's /app/horizon.yaml is
+fully env-tokenized, and this chart mounts nothing over it unless you set
+`ui.config`. Use `ui.extraEnv` and `ui.envFromSecret`.
 {{- end }}
 

@@ -1,0 +1,104 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Covers the third configuration mechanism for both components: a file rendered
+# into a ConfigMap and mounted over the image's own.
+#
+# The other five cells all take the default path -- Horizon configured purely by
+# environment variable, with no ConfigMap created at all -- so without this the
+# opt-in mount would ship untested. It is also the riskier path: mounting over
+# Horizon's /app/horizon.yaml REPLACES it, and the chart has to merge its
+# computed values back in as tokens or the UI loses OAP entirely.
+#
+# Deliberately cheap: no istio, no bookinfo, no traffic generator. What is under
+# test is whether the overrides are read, which needs neither.
+
+setup:
+  env: kind
+  file: kind28.yaml
+  init-system-environment: env
+  kind:
+    expose-ports:
+      - namespace: default
+        resource: service/skywalking-ui
+        port: 80
+  steps:
+    - name: install yq
+      command: bash test/e2e/setup-e2e-shell/install.sh yq
+    - name: install kubectl
+      command: bash test/e2e/setup-e2e-shell/install.sh kubectl
+    - name: Install helm
+      command: bash test/e2e/setup-e2e-shell/install.sh helm
+    - name: Update chart dependencies
+      command: helm dep up chart/skywalking
+    - name: Install SkyWalking with both overrides
+      command: |
+        helm install skywalking chart/skywalking \
+                       --set fullnameOverride=skywalking \
+                       --set oap.replicas=1 \
+                       --set ui.image.repository=$UI_REPO \
+                       --set ui.image.tag=$UI_TAG \
+                       --set oap.image.repository=$OAP_REPO \
+                       --set oap.image.tag=$OAP_TAG \
+                       --set oap.storageType=banyandb \
+                       --set elasticsearch.enabled=false \
+                       --set banyandb.enabled=true \
+                       --set banyandb.image.repository=$BANYANDB_REPO \
+                       --set banyandb.image.tag=$BANYANDB_TAG \
+                       --set banyandb.standalone.enabled=true \
+                       --set banyandb.cluster.enabled=false \
+                       --set 'ui.config.session.ttlMinutes=17' \
+                       --set 'oap.config.log4j2\.xml=<Configuration status="INFO"><Appenders><Console name="Console" target="SYSTEM_OUT"><PatternLayout pattern="%d - %c - %L [%t] %-5p %x - %m%n"/></Console></Appenders><Loggers><Root level="INFO"><AppenderRef ref="Console"/></Root></Loggers></Configuration>' \
+                       -f test/e2e/values.yaml
+      wait:
+        - namespace: default
+          resource: deployments/skywalking-oap
+          for: condition=available
+        - namespace: default
+          resource: deployments/skywalking-ui
+          for: condition=available
+  timeout: 20m
+
+verify:
+  retry:
+    count: 20
+    interval: 10s
+  cases:
+    # The UI ConfigMap exists only because ui.config was set, and is mounted over
+    # the image's file.
+    - query: |
+        kubectl -n default get deployment skywalking-ui -o json | yq -p json -o yaml '{"mounted": ([.spec.template.spec.containers[0].volumeMounts[] | select(.mountPath == "/app/horizon.yaml")] | length > 0)}'
+      expected: expected/override-ui-mounted.yml
+
+    # Login through a mounted file proves two things at once. Horizon parsed the
+    # file -- a malformed one aborts the BFF at boot, uncaught -- and the chart
+    # merged the users token back in, without which the mount would replace the
+    # image's file, leave HORIZON_AUTH_LOCAL_USERS with nothing to expand into,
+    # and produce a Ready pod nobody can log into.
+    - query: |
+        bash test/e2e/script/horizon.sh http://${service_skywalking_ui_host}:${service_skywalking_ui_80} get /api/auth/me | yq -p json -o yaml '{"username": .username}'
+      expected: expected/override-login.yml
+
+    # And the merged tokens kept OAP reachable -- the failure mode a naive mount
+    # would produce is queryUrl reverting to 127.0.0.1.
+    - query: |
+        bash test/e2e/script/horizon.sh http://${service_skywalking_ui_host}:${service_skywalking_ui_80} get /api/oap/info | yq -p json -o yaml '{"reachable": .reachable}'
+      expected: expected/override-oap-reachable.yml
+
+    # OAP's own override: the file landed at /skywalking/config and OAP still
+    # started, which a malformed log4j2.xml would prevent.
+    - query: |
+        kubectl -n default get deployment skywalking-oap -o json | yq -p json -o yaml '{"mounted": ([.spec.template.spec.containers[0].volumeMounts[] | select(.mountPath == "/skywalking/config/log4j2.xml")] | length > 0)}'
+      expected: expected/override-oap-mounted.yml

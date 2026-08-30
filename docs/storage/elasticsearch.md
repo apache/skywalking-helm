@@ -212,8 +212,11 @@ elasticsearch:
 
 `host` and `port.http` feed both `SW_STORAGE_ES_CLUSTER_NODES` and the `wait-for-elasticsearch` init
 container probe. `user` and `password` are only emitted when non-empty, and they are rendered as
-literal env values in the OAP pod spec — treat the values file as a secret. For a TLS-fronted
-cluster add `--set oap.env.SW_STORAGE_ES_HTTP_PROTOCOL=https` (OAP defaults to `http`).
+literal env values in the OAP pod spec. Leave both empty and put `SW_ES_USER` / `SW_ES_PASSWORD` in a
+Secret referenced by `oap.envFromSecret` instead — see
+[Storage credentials from a Secret](../operate/oap-configuration.md#storage-credentials-from-a-secret).
+For a TLS-fronted cluster add `--set oap.env.SW_STORAGE_ES_HTTP_PROTOCOL=https` (OAP defaults to
+`http`).
 
 `chart/skywalking/values-my-es.yaml` is the ready-made example. It already carries the three required
 values, so nothing else has to be passed:

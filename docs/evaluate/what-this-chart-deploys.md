@@ -29,7 +29,7 @@ With everything else left at its default (`elasticsearch.enabled=true`), that re
 | Service | `skywalking-skywalking-helm-oap` | ClusterIP; ports `11800`, `12800`, `17128` |
 | Deployment | `skywalking-skywalking-helm-ui` | `ui.replicas: 1`, `strategy: Recreate` |
 | Service | `skywalking-skywalking-helm-ui` | ClusterIP, `80` → container `8081` |
-| ConfigMap | `skywalking-skywalking-helm-ui` | the `horizon.yaml` mounted at `/app/horizon.yaml` |
+| ConfigMap | `skywalking-skywalking-helm-ui` | only when `ui.config` is set — the rendered `horizon.yaml`, mounted over the image's |
 | ServiceAccount | `skywalking-skywalking-helm-oap` | used by both the OAP Deployment and the init Job |
 | Role + RoleBinding | `skywalking-skywalking-helm` | `get/watch/list` on pods, configmaps |
 | ClusterRole + ClusterRoleBinding | `skywalking-skywalking-helm` | `get/watch/list` on pods, pods/log, endpoints, services, nodes, namespaces, configmaps, deployments, replicasets, Istio `serviceentries` |

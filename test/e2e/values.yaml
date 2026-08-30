@@ -25,17 +25,16 @@ oap:
 # same hashes that ship in chart/skywalking/values.yaml; we re-state them
 # here so the test overlay is explicit about what the credentials are.
 ui:
-  config:
-    auth:
-      backend: local
-      local:
-        users:
-          - username: admin            # password: admin
-            passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$eemqy1r72oSXR58y8VpRqw$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM"
-            roles: [admin]
-          - username: skywalking       # password: skywalking
-            passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q"
-            roles: [viewer, maintainer]
+  # The e2e logs in through Horizon, so it needs users. This is the path the
+  # docs tell operators to use: a plain env var carrying JSON. In a real
+  # deployment the same variable comes from a Secret via ui.envFromSecret --
+  # here it is inline because the hashes are publicly known test credentials.
+  extraEnv:
+    - name: HORIZON_AUTH_LOCAL_USERS
+      value: >-
+        [{"username":"admin","passwordHash":"$argon2id$v=19$m=65536,t=3,p=4$eemqy1r72oSXR58y8VpRqw$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM","roles":["admin"]},
+        {"username":"skywalking","passwordHash":"$argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q","roles":["viewer","maintainer"]}]
+
 elasticsearch:
   nodeSets:
   - name: default

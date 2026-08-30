@@ -36,14 +36,3 @@ SATELLITE_REPO=ghcr.io/apache/skywalking-satellite/skywalking-satellite
 # image instead.
 BANYANDB_TAG=3b83e18fb0481d02e44eaa5df137fcf7b000754b
 BANYANDB_REPO=ghcr.io/apache/skywalking-banyandb
-
-# The OAP 10 compatibility line. FROZEN: 10.4.0 is the last v10 release, and it
-# pins compatibleServerApiVersions to 0.10, so this pair never moves again.
-# Horizon 1.0.0 supports this combination with `oap.ports.admin=null` and
-# `ui.config.templates.mode=readonly` -- the admin host and its /ui-management
-# template store are OAP 11 additions.
-# Unlike the 0.11 line above, both of these are real published release tags.
-OAP_10_TAG=10.4.0
-OAP_10_REPO=docker.io/apache/skywalking-oap-server
-BANYANDB_0_10_TAG=0.10.3
-BANYANDB_0_10_REPO=docker.io/apache/skywalking-banyandb
