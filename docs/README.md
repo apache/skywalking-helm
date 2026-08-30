@@ -55,7 +55,7 @@ the pod reports Ready and nobody can sign in until you configure users. See
 - **Every value** — [Chart Values](reference/skywalking-chart-values.md)
 - **Contributing** — [Run the E2E Tests](contributing/e2e-tests.md),
   [Package and Publish a Release](contributing/release.md)
-- **What changed in 5.0.0** — [Changelog](changes/changes.md)
+- **What changed** — [Changelog](changes/changes.md), and the [5.0.0 release notes](changes/changes-5.0.0.md)
 
 ## Related documentation
 

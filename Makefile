@@ -60,6 +60,7 @@ release-src: clean
 	--exclude .gitignore \
 	--exclude .DS_Store \
 	--exclude .github \
+	--exclude tools/releasing/skywalking-helm \
 	. && \
 	mv $(TMPDIR)/$(RELEASE_SRC).tgz .
 

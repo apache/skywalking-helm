@@ -1,6 +1,6 @@
 # Changelog
 
-## 5.1.0
+## NEXT_RELEASE_VERSION
 
 ### Breaking changes
 
