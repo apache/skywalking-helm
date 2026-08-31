@@ -15,13 +15,23 @@
 
 name: publish-helm
 
-# Two paths, following apache/skywalking's publish-docker workflow:
-#   push to master   -> a snapshot chart on ghcr.io, versioned 0.0.0-<sha>
-#   a GitHub release -> the release chart on Docker Hub, versioned from the tag
+# Two paths:
+#   push to master                 -> a snapshot chart on ghcr.io, versioned 0.0.0-<sha>, BUILT here
+#   a GitHub release, or a manual  -> the released chart on Docker Hub, DOWNLOADED from
+#   run for an already-voted           dist/release, never rebuilt
+#   version
 #
-# The release chart is a convenience binary. The Apache release is the signed
-# source tarball that the PMC votes on; this only publishes after that vote has
-# passed and the GitHub release has been created.
+# The released chart is a convenience binary, but it is a convenience copy of a specific voted
+# artifact -- so it is fetched from the release area rather than rebuilt from the tag. A rebuild is
+# not the same bytes: `helm dep up` re-resolves the subcharts at package time, so a chart packaged
+# today can embed different dependency content than the one the PMC voted on. Measured on 5.0.0:
+#
+#   voted   sha256 29ef163c285575aefad4a7a20d2cfd8f79005cc6f5e7668416e689ba82eea99e
+#   rebuilt sha256 189d07a86913626cfda0d4f5899f3c611fc4c36eb27ec2c285e5db106db8f2b7
+#
+# workflow_dispatch exists because a re-run replays the workflow file as of the ORIGINAL run's
+# commit, not master. When a release publish fails and the fix lands afterwards, re-running still
+# uses the old file; dispatching runs the current one.
 on:
   push:
     branches:
@@ -29,6 +39,12 @@ on:
   release:
     types:
       - released
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish, for example v5.0.0
+        required: true
+        type: string
 
 jobs:
   publish:
@@ -44,54 +60,103 @@ jobs:
         with:
           persist-credentials: false
 
-      # RELEASE_TAG arrives through env, never through ${{ }} interpolation into
-      # the script body: a tag is attacker-influenceable text that git permits to
-      # contain ';' and '$( )', and this step runs after the Docker Hub
-      # credentials have been written to $GITHUB_ENV. It is also validated
-      # against the only shape this project releases.
+      # Both RELEASE_TAG and INPUT_TAG arrive through env, never through ${{ }} interpolation
+      # into the script body: a tag and a dispatch input are both attacker-influenceable text that
+      # may contain ';' and '$( )', and this step runs after the Docker Hub credentials have been
+      # written to $GITHUB_ENV. Both are validated against the only shape this project releases.
       - name: Set environment variables
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
         run: |
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            if [[ ! "${RELEASE_TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              echo "::error::release tag '${RELEASE_TAG}' is not vMAJOR.MINOR.PATCH"
-              exit 1
-            fi
-            echo "HUB=registry-1.docker.io/apache" >> $GITHUB_ENV
-            echo "DOCKER_REGISTRY=registry-1.docker.io" >> $GITHUB_ENV
-            echo "DOCKER_USERNAME=${{ secrets.DOCKERHUB_USER }}" >> $GITHUB_ENV
-            echo "DOCKER_PASSWORD=${{ secrets.DOCKERHUB_TOKEN }}" >> $GITHUB_ENV
-            echo "VERSION=${RELEASE_TAG#v}" >> $GITHUB_ENV
-          else
+          case "${{ github.event_name }}" in
+            release)
+              if [[ ! "${RELEASE_TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                echo "::error::release tag '${RELEASE_TAG}' is not vMAJOR.MINOR.PATCH"
+                exit 1
+              fi
+              VERSION="${RELEASE_TAG#v}"
+              ;;
+            workflow_dispatch)
+              if [[ ! "${INPUT_TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                echo "::error::tag '${INPUT_TAG}' is not vMAJOR.MINOR.PATCH"
+                exit 1
+              fi
+              VERSION="${INPUT_TAG#v}"
+              ;;
+          esac
+
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "PUBLISH_MODE=snapshot" >> $GITHUB_ENV
             echo "HUB=ghcr.io/apache/skywalking-helm" >> $GITHUB_ENV
             echo "DOCKER_REGISTRY=ghcr.io" >> $GITHUB_ENV
             echo "DOCKER_USERNAME=${{ github.actor }}" >> $GITHUB_ENV
             echo "DOCKER_PASSWORD=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
             echo "VERSION=0.0.0-${{ github.sha }}" >> $GITHUB_ENV
+          else
+            echo "PUBLISH_MODE=release" >> $GITHUB_ENV
+            echo "HUB=registry-1.docker.io/apache" >> $GITHUB_ENV
+            echo "DOCKER_REGISTRY=registry-1.docker.io" >> $GITHUB_ENV
+            echo "DOCKER_USERNAME=${{ secrets.DOCKERHUB_USER }}" >> $GITHUB_ENV
+            echo "DOCKER_PASSWORD=${{ secrets.DOCKERHUB_TOKEN }}" >> $GITHUB_ENV
+            echo "VERSION=${VERSION}" >> $GITHUB_ENV
           fi
 
-      # Docker Hub credentials are org secrets. Fail with a readable message
-      # rather than an opaque unauthorized from the registry.
+      # Docker Hub credentials are org secrets. Fail with a readable message rather than an opaque
+      # unauthorized from the registry.
       - name: Check the release credentials
-        if: github.event_name == 'release'
+        if: github.event_name != 'push'
         run: |
           if [[ -z "${DOCKER_USERNAME}" || -z "${DOCKER_PASSWORD}" ]]; then
             echo "::error::DOCKERHUB_USER / DOCKERHUB_TOKEN are not available to this repository."
             exit 1
           fi
 
-      # The chart version is the release tag, not whatever happens to be in
-      # Chart.yaml. Publishing 5.0.0 from a v5.1.0 tag would be silent and
-      # unfixable once the tag is immutable, so refuse instead.
-      - name: Check the chart version matches the tag
-        if: github.event_name == 'release'
+      # The voted artifact, taken from the release area, signature and checksum checked before it
+      # is trusted enough to push anywhere. dist.apache.org, not downloads.apache.org: the release
+      # area is authoritative and immediate, while the mirror lags behind an svn commit.
+      - name: Fetch the voted chart from dist/release
+        if: github.event_name != 'push'
         run: |
-          CHART_VERSION=$(grep '^version: ' chart/skywalking/Chart.yaml | awk '{print $2}')
-          if [[ "${CHART_VERSION}" != "${VERSION}" ]]; then
-            echo "::error::chart/skywalking/Chart.yaml is ${CHART_VERSION} but the release tag is ${VERSION}."
+          BASE="https://dist.apache.org/repos/dist/release/skywalking/helm/${VERSION}"
+          CHART="skywalking-helm-${VERSION}.tgz"
+
+          for f in "${CHART}" "${CHART}.asc" "${CHART}.sha512"; do
+            if ! curl -fsSL --retry 3 -o "${f}" "${BASE}/${f}"; then
+              echo "::error::${BASE}/${f} is not there. Has release-passed.sh moved ${VERSION} from dev to release yet?"
+              exit 1
+            fi
+          done
+
+          curl -fsSL --retry 3 https://downloads.apache.org/skywalking/KEYS -o KEYS
+          gpg --batch --quiet --import KEYS
+          gpg --batch --verify "${CHART}.asc" "${CHART}" \
+            || { echo "::error::signature check failed for ${CHART}"; exit 1; }
+          sha512sum -c "${CHART}.sha512" \
+            || { echo "::error::checksum check failed for ${CHART}"; exit 1; }
+
+          # The archive must be the version it claims, and must carry its legal files.
+          PACKAGED=$(tar xzOf "${CHART}" skywalking-helm/Chart.yaml | awk '/^version: /{print $2; exit}')
+          if [[ "${PACKAGED}" != "${VERSION}" ]]; then
+            echo "::error::the voted chart says ${PACKAGED} but ${VERSION} was requested"
             exit 1
           fi
+          for f in LICENSE NOTICE; do
+            tar tzf "${CHART}" | grep -qx "skywalking-helm/${f}" \
+              || { echo "::error::${f} missing from the voted chart"; exit 1; }
+          done
+          echo "verified the voted ${CHART}: signature, checksum, version and legal files"
+
+      # Snapshots have no voted artifact to copy, so they are built here and versioned by commit.
+      - name: Package the snapshot
+        if: github.event_name == 'push'
+        run: |
+          sed -i "s/^version: .*/version: ${VERSION}/" chart/skywalking/Chart.yaml
+          # `make package` runs `prepare` first, which copies NOTICE and LICENSE into the chart
+          # directory. Calling `helm package` directly publishes an ASF artifact without its legal
+          # files -- which is what this did before.
+          make package
+          test -f "skywalking-helm-${VERSION}.tgz" || { echo "::error::package did not produce skywalking-helm-${VERSION}.tgz"; exit 1; }
 
       - name: Log in to the container registry
         uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
@@ -100,27 +165,12 @@ jobs:
           username: ${{ env.DOCKER_USERNAME }}
           password: ${{ env.DOCKER_PASSWORD }}
 
-      - name: Package and push the chart
-        run: |
-          # Snapshots are versioned by commit; a release keeps the version the
-          # previous step just verified against the tag.
-          if [[ ${{ github.event_name }} != "release" ]]; then
-            sed -i "s/^version: .*/version: ${VERSION}/" chart/skywalking/Chart.yaml
-          fi
-          # `make package` runs `prepare` first, which copies NOTICE and LICENSE
-          # into the chart directory. Calling `helm package` directly publishes an
-          # ASF artifact without its legal files -- which is what this did before.
-          make package
-          test -f "skywalking-helm-${VERSION}.tgz" || { echo "::error::package did not produce skywalking-helm-${VERSION}.tgz"; exit 1; }
-          for f in LICENSE NOTICE; do
-            tar tzf "skywalking-helm-${VERSION}.tgz" | grep -qx "skywalking-helm/${f}" \
-              || { echo "::error::${f} missing from the packaged chart"; exit 1; }
-          done
-          helm push "skywalking-helm-${VERSION}.tgz" "oci://${HUB}"
+      - name: Push the chart
+        run: helm push "skywalking-helm-${VERSION}.tgz" "oci://${HUB}"
 
       - name: Report what was published
         run: |
-          echo "Pushed skywalking-helm ${VERSION} to oci://${HUB}" >> $GITHUB_STEP_SUMMARY
+          echo "Pushed skywalking-helm ${VERSION} to oci://${HUB} (${PUBLISH_MODE})" >> $GITHUB_STEP_SUMMARY
           echo '```shell' >> $GITHUB_STEP_SUMMARY
           {
             echo "helm install skywalking oci://${HUB}/skywalking-helm --version ${VERSION} \\"
