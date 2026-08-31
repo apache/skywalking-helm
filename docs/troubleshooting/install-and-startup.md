@@ -66,7 +66,7 @@ helm install eck-crds eck-operator-crds \
   --repo https://helm.elastic.co --version 3.3.1 \
   -n skywalking --create-namespace
 
-helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm --version 5.0.0 \
+helm install skywalking oci://docker.io/apache/skywalking-helm --version 5.0.0 \
   -n skywalking \
   --set oap.image.tag=11.0.0 \
   --set oap.storageType=elasticsearch \

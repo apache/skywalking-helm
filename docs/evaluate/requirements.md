@@ -8,7 +8,7 @@ default (Elasticsearch) path requires.
 | Requirement | Version | Where it comes from |
 |---|---|---|
 | Kubernetes | 1.21+ | `eck-operator` 3.3.1 and `eck-elasticsearch` 0.18.1 both declare a `kubeVersion` floor of `1.21.0-0`; `chart/skywalking` itself declares none. Helm does **not** enforce a *subchart's* `kubeVersion`, so an older cluster still installs — it just runs an unsupported ECK. |
-| Helm | 3.8+ (4.x also works) | The chart is `apiVersion: v2`, and `helm dep up` pulls the BanyanDB dependency from an OCI registry (`oci://registry-1.docker.io/apache`), which needs Helm's non-experimental OCI support (3.8.0). |
+| Helm | 3.8+ (4.x also works) | The chart is `apiVersion: v2`, and `helm dep up` pulls the BanyanDB dependency from an OCI registry (`oci://docker.io/apache`), which needs Helm's non-experimental OCI support (3.8.0). |
 | `kubectl` | matching your cluster | Used to watch the install (`kubectl get pods -w`) and for all troubleshooting. |
 
 CI exercises the chart on a four-node [kind](https://kind.sigs.k8s.io/) cluster running

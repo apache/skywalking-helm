@@ -63,7 +63,7 @@ namespaced `pods` read permission yourself, or OAP starts and never discovers a 
 
 ```shell
 helm install skywalking \
-  oci://registry-1.docker.io/apache/skywalking-helm \
+  oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 \
   -n skywalking --create-namespace \
   --set oap.image.tag=11.0.0 \

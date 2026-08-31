@@ -6,7 +6,7 @@ UI removal, the OAP 11 dashboard-template changes, and the new `ui.config` defau
 ## Run the upgrade
 
 ```shell
-helm upgrade skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+helm upgrade skywalking oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 -n skywalking \
   --set oap.image.tag=11.0.0 \
   --set oap.storageType=banyandb \
@@ -199,7 +199,7 @@ To force a rerun without changing a value, delete the Job and upgrade again:
 
 ```shell
 kubectl delete job -n skywalking -l release=skywalking
-helm upgrade skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+helm upgrade skywalking oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 -n skywalking --reuse-values
 ```
 

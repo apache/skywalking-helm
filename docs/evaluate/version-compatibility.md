@@ -19,7 +19,7 @@ This is the combination every cell in `test/e2e/` installs on each CI run, so it
 | Kubernetes | `v1.28.15` — every e2e cell runs `test/e2e/kind28.yaml` (`kindest/node:v1.28.15`) | your cluster |
 
 ```shell
-helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+helm install skywalking oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 \
   --set oap.image.tag=11.0.0 \
   --set oap.storageType=banyandb \

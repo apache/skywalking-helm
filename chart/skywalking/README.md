@@ -33,7 +33,7 @@ independently.
 (`banyandb.enabled=true`).
 
 ```shell
-helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+helm install skywalking oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 -n skywalking --create-namespace \
   --set oap.image.tag=11.0.0 \
   --set oap.storageType=banyandb \

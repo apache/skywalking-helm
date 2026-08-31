@@ -54,7 +54,7 @@ helm template skywalking chart/skywalking \
 Uncomment the lines already present in `values.yaml`, or pass them on the command line:
 
 ```shell
-helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+helm install skywalking oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 \
   --set oap.image.tag=11.0.0 \
   --set oap.storageType=banyandb \

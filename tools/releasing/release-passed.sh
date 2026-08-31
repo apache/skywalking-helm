@@ -266,7 +266,7 @@ storage backend -- on Kubernetes with Helm 3.
 
 Install:
 
-  helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm --version ${VERSION} \\
+  helm install skywalking oci://docker.io/apache/skywalking-helm --version ${VERSION} \\
     --set oap.image.tag=<oap-version> \\
     --set ui.image.tag=<horizon-version> \\
     --set oap.storageType=elasticsearch

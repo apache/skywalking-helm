@@ -60,7 +60,7 @@ ui:
 
 ```shell
 helm install "${SKYWALKING_RELEASE_NAME}" \
-  oci://registry-1.docker.io/apache/skywalking-helm \
+  oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=11.0.0 \
@@ -125,7 +125,7 @@ ui:
 
 ```shell
 helm install "${SKYWALKING_RELEASE_NAME}" \
-  oci://registry-1.docker.io/apache/skywalking-helm \
+  oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=11.0.0 \

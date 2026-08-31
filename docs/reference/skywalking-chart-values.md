@@ -279,7 +279,7 @@ helm install my-release chart/skywalking -f my-values.yaml
 ```
 
 Released versions install from the OCI reference instead —
-`oci://registry-1.docker.io/apache/skywalking-helm --version <x.y.z>`. See
+`oci://docker.io/apache/skywalking-helm --version <x.y.z>`. See
 [Chart sources](../install/chart-sources.md).
 
 > **Tip**: You can use the default [values.yaml](../../chart/skywalking/values.yaml)

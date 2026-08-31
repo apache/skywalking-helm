@@ -13,7 +13,7 @@ Three values have no defaults and must be supplied every time: `oap.image.tag`,
 `oap.storageType`, `ui.image.tag`.
 
 ```shell
-helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+helm install skywalking oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 -n skywalking --create-namespace \
   --set oap.image.tag=11.0.0 \
   --set oap.storageType=elasticsearch \
@@ -107,7 +107,7 @@ or `metrics` entries and they are opened on both the container and the Service. 
 A gateway that fronts OAP for agent traffic. Off by default; it needs its own image tag.
 
 ```shell
-helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+helm install skywalking oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 -n skywalking \
   --set oap.image.tag=11.0.0 \
   --set oap.storageType=elasticsearch \

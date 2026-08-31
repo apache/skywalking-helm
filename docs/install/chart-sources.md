@@ -7,7 +7,7 @@ address to point `helm install` at, and what each one actually carries.
 
 | Source | Address | Carries | Use when |
 | --- | --- | --- | --- |
-| Docker Hub (OCI) | `oci://registry-1.docker.io/apache/skywalking-helm` | Released `skywalking-helm` charts, `4.3.0` through `4.8.0` | Default. Any normal install. |
+| Docker Hub (OCI) | `oci://docker.io/apache/skywalking-helm` | Released `skywalking-helm` charts, `4.3.0` through `4.8.0` | Default. Any normal install. |
 | Apache JFrog (legacy) | `https://apache.jfrog.io/artifactory/skywalking-helm` | Released charts `4.3.0` and older only — frozen, no new releases | You are pinned to an old chart and cannot move yet. |
 | ghcr.io (OCI) | `oci://ghcr.io/apache/skywalking-helm/skywalking-helm` | Snapshot of every commit on `master`, versioned `0.0.0-<commit-sha>` | Testing an unreleased fix. |
 | Source tree | `git clone` + `helm dep up chart/skywalking` | Your working copy of `chart/skywalking` | You are editing the chart. |
@@ -24,7 +24,7 @@ required values are always yours to set:
 ## Released chart, Docker Hub OCI registry (>= 4.3.0)
 
 The chart is pushed to Docker Hub as an OCI artifact (`make publish` runs
-`helm push … oci://registry-1.docker.io/apache`). There is no `helm repo add` step — an OCI
+`helm push … oci://docker.io/apache`). There is no `helm repo add` step — an OCI
 reference is the chart.
 
 ```shell
@@ -33,7 +33,7 @@ export SKYWALKING_RELEASE_NAME=skywalking
 export SKYWALKING_RELEASE_NAMESPACE=default
 
 helm install "${SKYWALKING_RELEASE_NAME}" \
-  oci://registry-1.docker.io/apache/skywalking-helm \
+  oci://docker.io/apache/skywalking-helm \
   --version "${SKYWALKING_RELEASE_VERSION}" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=11.0.0 \
@@ -47,8 +47,8 @@ available chart versions — pick and pin `--version` deliberately. To inspect o
 before installing:
 
 ```shell
-helm show values oci://registry-1.docker.io/apache/skywalking-helm --version 5.0.0
-helm pull oci://registry-1.docker.io/apache/skywalking-helm --version 5.0.0
+helm show values oci://docker.io/apache/skywalking-helm --version 5.0.0
+helm pull oci://docker.io/apache/skywalking-helm --version 5.0.0
 ```
 
 The registry holds `4.3.0`, `4.4.0`, `4.5.0`, `4.6.0`, `4.7.0` and `4.8.0`. `4.9.0` is a released
@@ -128,7 +128,7 @@ versions — the BanyanDB server version is `banyandb.image.tag`, currently `0.1
 | `eck-operator` | 3.3.1 | `https://helm.elastic.co/` | `elasticsearch.enabled` |
 | `eck-elasticsearch` (alias `elasticsearch`) | 0.18.1 | `https://helm.elastic.co/` | `elasticsearch.enabled` |
 | `postgresql` | 12.1.2 | `https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami` | `postgresql.enabled` |
-| `skywalking-banyandb-helm` (alias `banyandb`) | 0.7.0 | `oci://registry-1.docker.io/apache` | `banyandb.enabled` |
+| `skywalking-banyandb-helm` (alias `banyandb`) | 0.7.0 | `oci://docker.io/apache` | `banyandb.enabled` |
 
 `make package` does the same `helm dep up` plus `helm package`, with `LICENSE` and `NOTICE` copied
 into the chart directory first, and drops `skywalking-helm-5.0.0.tgz` in the repo root. `make clean`
