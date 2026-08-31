@@ -235,7 +235,7 @@ Download Links: https://skywalking.apache.org/downloads/
 
 Release Notes: https://github.com/apache/skywalking-helm/blob/${TAG}/docs/changes/changes.md
 
-Documentation: https://skywalking.apache.org/docs/skywalking-helm/${VERSION}/readme/
+Documentation: https://skywalking.apache.org/docs/skywalking-helm/${TAG}/readme/
 
 Website: https://skywalking.apache.org/
 
@@ -252,8 +252,8 @@ remaining() {
   step "What is left, by hand"
   log "1. website PR against apache/skywalking-website:"
   log "     data/releases.yml  -- add ${VERSION}, drop the previous entry"
-  log "     data/docs.yml      -- the Kubernetes Helm entry still points at the old"
-  log "                           apache/skywalking-kubernetes repo; fix while you are there"
+  log "     data/docs.yml      -- add a '${TAG}' entry under the Kubernetes Helm docs list, and"
+  log "                           repoint 'Latest' at this release's commit"
   log "2. send the ANNOUNCE mail above to dev@skywalking.apache.org and announce@apache.org"
   log "     from your @apache.org address, with the vote permalink filled in"
   log "3. close the 5.0.0 milestone here and 'Helm - ${VERSION}' on apache/skywalking"
