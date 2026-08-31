@@ -45,7 +45,7 @@ Then install SkyWalking with `--set eck-operator.installCRDs=false` so the bundl
 try to create the same CRDs a second time:
 
 ```shell
-helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+helm install skywalking oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" \
   --set oap.image.tag=11.0.0 \

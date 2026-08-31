@@ -71,4 +71,4 @@ release: release-src package
 	shasum -a 512 $(CHART_NAME)-$(VERSION).tgz > $(CHART_NAME)-$(VERSION).tgz.sha512
 
 publish: package
-	helm push ${CHART_NAME}-${VERSION}.tgz oci://registry-1.docker.io/apache
+	helm push ${CHART_NAME}-${VERSION}.tgz oci://docker.io/apache

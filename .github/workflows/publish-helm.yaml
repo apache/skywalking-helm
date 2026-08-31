@@ -95,8 +95,16 @@ jobs:
             echo "VERSION=0.0.0-${{ github.sha }}" >> $GITHUB_ENV
           else
             echo "PUBLISH_MODE=release" >> $GITHUB_ENV
-            echo "HUB=registry-1.docker.io/apache" >> $GITHUB_ENV
-            echo "DOCKER_REGISTRY=registry-1.docker.io" >> $GITHUB_ENV
+            # docker.io, never registry-1.docker.io, matching apache/skywalking's publish-docker.
+            #
+            # This is what broke the 5.0.0 publish. `docker login <host>` stores the credential
+            # under the host you name, and `helm push` then normalises back to Docker Hub's
+            # canonical host and looks there, finding nothing. Both hostnames PULL anonymously
+            # without complaint -- the chart's own dependency resolves through either -- so the
+            # mismatch stays invisible until a push with credentials, the one operation nothing
+            # had ever exercised.
+            echo "HUB=docker.io/apache" >> $GITHUB_ENV
+            echo "DOCKER_REGISTRY=docker.io" >> $GITHUB_ENV
             echo "DOCKER_USERNAME=${{ secrets.DOCKERHUB_USER }}" >> $GITHUB_ENV
             echo "DOCKER_PASSWORD=${{ secrets.DOCKERHUB_TOKEN }}" >> $GITHUB_ENV
             echo "VERSION=${VERSION}" >> $GITHUB_ENV

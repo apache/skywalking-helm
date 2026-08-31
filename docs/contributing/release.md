@@ -23,7 +23,7 @@ carries six files.
 | --- | --- | --- |
 | dist.apache.org | source tarball, `.asc`, `.sha512` | `skywalking-helm-5.0.0-src.tgz` |
 | dist.apache.org | packaged chart, `.asc`, `.sha512` | `skywalking-helm-5.0.0.tgz` |
-| Docker Hub (OCI) | the chart users install — a convenience binary, pushed **after** the vote | `oci://registry-1.docker.io/apache/skywalking-helm:5.0.0` |
+| Docker Hub (OCI) | the chart users install — a convenience binary, pushed **after** the vote | `oci://docker.io/apache/skywalking-helm:5.0.0` |
 | ghcr.io (OCI) | `0.0.0-<sha>` snapshot of every `master` commit — **not** a release | `oci://ghcr.io/apache/skywalking-helm/skywalking-helm:0.0.0-<sha>` |
 
 The dist path for this project is `skywalking/helm/`. The `skywalking/kubernetes/` directory on dist
@@ -95,7 +95,7 @@ Every dependency version has to resolve before you can build. BanyanDB Helm is r
 to the same Docker Hub OCI namespace, so ask the registry:
 
 ```shell
-helm show chart oci://registry-1.docker.io/apache/skywalking-banyandb-helm --version 0.7.0
+helm show chart oci://docker.io/apache/skywalking-banyandb-helm --version 0.7.0
 ```
 
 An `Error: ... not found` means it is not published there. Cross-check the source release exists too:
@@ -454,7 +454,7 @@ Before it pushes anything the workflow runs three hard guards, under a repositor
 
 It packages with `make package` (not bare `helm package`, so `NOTICE` and `LICENSE` are in the
 chart), re-checks that both files are inside the tarball, and pushes to
-`oci://registry-1.docker.io/apache`, where `helm push` appends the chart name — landing at
+`oci://docker.io/apache`, where `helm push` appends the chart name — landing at
 `apache/skywalking-helm:$VERSION`.
 
 Watch it and verify the result — this is not ceremony. Docker Hub currently holds
@@ -463,7 +463,7 @@ the registry**, which is the gap this workflow exists to close. Confirm yours la
 
 ```shell
 gh run list --workflow publish-helm.yaml --repo apache/skywalking-helm --limit 3
-helm show chart oci://registry-1.docker.io/apache/skywalking-helm --version "$VERSION"
+helm show chart oci://docker.io/apache/skywalking-helm --version "$VERSION"
 ```
 
 A `FetchReference ... not found` means the chart is not there, whatever the workflow's exit status
@@ -497,7 +497,7 @@ It prints this list at the end; the detail is here.
 
 ```makefile
 publish: package
-	helm push ${CHART_NAME}-${VERSION}.tgz oci://registry-1.docker.io/apache
+	helm push ${CHART_NAME}-${VERSION}.tgz oci://docker.io/apache
 ```
 
 It re-packages from your **working tree** and pushes to Docker Hub. Reach for it only when Actions is
@@ -511,10 +511,10 @@ It has **none** of the workflow's guards:
 - It builds from your working copy, not from the tag — uncommitted local edits get published, and
   nothing ties the pushed chart to the voted artifact.
 
-If you must use it: `helm registry login registry-1.docker.io` first (write access to the `apache`
+If you must use it: `helm registry login docker.io` first (write access to the `apache`
 Docker Hub organization is required), run it from a pristine checkout of `v$VERSION`, and only after
 the vote has passed and the artifacts have moved to `dist/release`. Verify with
-`helm show chart oci://registry-1.docker.io/apache/skywalking-helm --version $VERSION`.
+`helm show chart oci://docker.io/apache/skywalking-helm --version $VERSION`.
 
 ---
 

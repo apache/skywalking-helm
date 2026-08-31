@@ -42,7 +42,7 @@ To have Helm surface init-Job failures directly — instead of only reporting th
 Ready — add `--wait-for-jobs` alongside `--wait`:
 
 ```shell
-helm upgrade --install skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+helm upgrade --install skywalking oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 -n skywalking --create-namespace \
   --set oap.image.tag=11.0.0 \
   --set oap.storageType=banyandb \
@@ -181,7 +181,7 @@ value, delete the Job and upgrade — Helm recreates the now-missing resource:
 
 ```shell
 kubectl delete job -n skywalking -l release=skywalking
-helm upgrade skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+helm upgrade skywalking oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 -n skywalking --reuse-values
 ```
 

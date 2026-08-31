@@ -42,7 +42,7 @@ Any other key under `postgresql.` is passed straight through to the Bitnami subc
 
 ```shell
 helm install skywalking \
-  oci://registry-1.docker.io/apache/skywalking-helm \
+  oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 \
   -n default \
   --set oap.image.tag=11.0.0 \
@@ -80,7 +80,7 @@ postgresql:
 
 ```shell
 helm install skywalking \
-  oci://registry-1.docker.io/apache/skywalking-helm \
+  oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 \
   -n default \
   --set oap.image.tag=11.0.0 \

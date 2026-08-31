@@ -57,7 +57,7 @@ carry `valueFrom`) or `oap.envFromSecret`.
 BanyanDB (standalone is the chart's default BanyanDB mode):
 
 ```shell
-helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+helm install skywalking oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 \
   --set oap.image.tag=11.0.0 \
   --set ui.image.tag=horizon-1.0.0 \
@@ -74,7 +74,7 @@ See [Version Compatibility](../evaluate/version-compatibility.md).
 Elasticsearch (the default):
 
 ```shell
-helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+helm install skywalking oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 \
   --set oap.image.tag=11.0.0 \
   --set ui.image.tag=horizon-1.0.0 \
@@ -89,7 +89,7 @@ helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm \
 PostgreSQL, demo only:
 
 ```shell
-helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm \
+helm install skywalking oci://docker.io/apache/skywalking-helm \
   --version 5.0.0 \
   --set oap.image.tag=11.0.0 \
   --set ui.image.tag=horizon-1.0.0 \

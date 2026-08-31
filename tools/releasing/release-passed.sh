@@ -48,6 +48,12 @@ log()  { echo "  $*"; }
 step() { echo; echo "=== $* ==="; }
 die()  { echo "ERROR: $*" >&2; exit 1; }
 
+# Script scope, over a script-scope variable: an EXIT trap runs after the function has returned and
+# cannot see a `local`, and under `set -u` the unbound name would make the trap itself fail.
+NOTES_FILE=""
+cleanup() { [[ -n "${NOTES_FILE}" ]] && rm -f "${NOTES_FILE}"; return 0; }
+trap cleanup EXIT
+
 ask() {
   # `read` exits 1 at EOF, which under set -e would kill the run with no message.
   local reply
@@ -173,6 +179,45 @@ remove_previous() {
   fi
 }
 
+# The release page used to carry a single line pointing at the changelog. Nobody follows a link to
+# find out what changed in a release they are already looking at, and every release before 5.0.0
+# carried its full notes inline. This rebuilds that: the curated changelog section for this version,
+# then GitHub's own generated list of merged PRs and new contributors.
+build_release_notes() {
+  NOTES_FILE=$(mktemp)
+
+  # After release.sh's next-version PR merges the section lives in its own file; before that it is
+  # still the current changelog. Try both.
+  local src=""
+  for candidate in "docs/changes/changes-${VERSION}.md" "docs/changes/changes.md"; do
+    if [[ -f "${candidate}" ]] && grep -qx "## ${VERSION}" "${candidate}"; then src="${candidate}"; break; fi
+  done
+
+  if [[ -n "${src}" ]]; then
+    # The section runs from its own heading to the next one. Relative links resolve inside docs/
+    # but not on a release page, so point them at the hosted docs for this tag.
+    awk -v want="## ${VERSION}" '$0 == want {f=1; next} f && /^## / {exit} f' "${src}" \
+      | sed -E "s#\]\(\.\./([^)]+)\.md\)#](https://skywalking.apache.org/docs/skywalking-helm/${TAG}/\1/)#g" \
+      | sed '/./,$!d' \
+      > "${NOTES_FILE}"
+    log "notes: ${VERSION} section of ${src}"
+  else
+    echo "See https://github.com/apache/skywalking-helm/blob/${TAG}/docs/changes/changes.md" > "${NOTES_FILE}"
+    log "WARNING: no '## ${VERSION}' section found in docs/changes/ -- falling back to a link"
+  fi
+
+  # Appended rather than passed as --generate-notes, so the body is assembled here and the exact
+  # text is known before anything is published.
+  local generated
+  generated=$(gh api -X POST repos/apache/skywalking-helm/releases/generate-notes \
+                -f tag_name="${TAG}" -q .body 2>/dev/null || true)
+  if [[ -n "${generated}" ]]; then
+    printf '\n---\n\n%s\n' "${generated}" >> "${NOTES_FILE}"
+  else
+    log "WARNING: could not generate the merged-PR list; notes carry the changelog only"
+  fi
+}
+
 github_release() {
   step "Create the GitHub release"
 
@@ -186,6 +231,8 @@ github_release() {
     return
   fi
 
+  build_release_notes
+
   if confirm "gh release create ${TAG} (this publishes the chart to Docker Hub)"; then
     # --verify-tag: without it gh CREATES a missing tag from the default branch
     # head, which is not necessarily the commit the PMC voted on.
@@ -193,7 +240,7 @@ github_release() {
       --repo apache/skywalking-helm \
       --verify-tag \
       --title "${VERSION}" \
-      --notes "See https://github.com/apache/skywalking-helm/blob/${TAG}/docs/changes/changes.md"
+      --notes-file "${NOTES_FILE}"
     log "created -- watch the publish-helm workflow"
     gh run list --repo apache/skywalking-helm --workflow=publish-helm.yaml --limit 1 2>/dev/null || true
   fi
@@ -219,7 +266,7 @@ storage backend -- on Kubernetes with Helm 3.
 
 Install:
 
-  helm install skywalking oci://registry-1.docker.io/apache/skywalking-helm --version ${VERSION} \\
+  helm install skywalking oci://docker.io/apache/skywalking-helm --version ${VERSION} \\
     --set oap.image.tag=<oap-version> \\
     --set ui.image.tag=<horizon-version> \\
     --set oap.storageType=elasticsearch

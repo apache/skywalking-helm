@@ -43,7 +43,7 @@ not both own the CRDs.
 
 ```shell
 helm install "${SKYWALKING_RELEASE_NAME}" \
-  oci://registry-1.docker.io/apache/skywalking-helm \
+  oci://docker.io/apache/skywalking-helm \
   --version "${SKYWALKING_RELEASE_VERSION}" \
   -n "${SKYWALKING_RELEASE_NAMESPACE}" --create-namespace \
   --set oap.image.tag=11.0.0 \
