@@ -1,0 +1,112 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: dockerhub-auth-check
+
+# A read-only diagnostic. It publishes nothing, pushes nothing and writes nothing.
+#
+# `helm push` of the 5.0.0 chart failed with:
+#
+#   GET https://auth.docker.io/token?scope=repository:apache/skywalking-helm:pull,push
+#   response status code 401: Unauthorized
+#
+# Two baselines, both measured rather than assumed:
+#
+#   anonymous            -> http 200, granted=pull       (a REDUCED scope, not a refusal)
+#   deliberately bad     -> http 401                     (matches what CI saw)
+#   credentials
+#
+# So a client that failed to find its credential would have got a 200 with pull only, and the push
+# would have died later at the blob upload -- not at this endpoint. CI's 401 is the signature of
+# credentials that were sent and rejected. The one thing no one outside a workflow run can do is
+# ask with the CI credential itself, which is what this does.
+#
+# It asks for the same scope on two repositories: the one that fails, and one the same credential
+# is known to push to (apache/skywalking-oap-server, release publish succeeded 2026-08-28).
+#
+# Delete this workflow once the question is settled.
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    if: github.repository == 'apache/skywalking-helm'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    name: Docker Hub auth check
+    steps:
+      - name: Ask Docker Hub for a push-scoped token
+        env:
+          DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          # No `set -x` anywhere in this file, and every curl discards its body: the only thing
+          # printed is an HTTP status and, where a token comes back, the "access" claim -- which
+          # describes the repository's permissions, not the identity's.
+          set -eu
+
+          if [[ -z "${DOCKERHUB_USER}" || -z "${DOCKERHUB_TOKEN}" ]]; then
+            echo "::error::DOCKERHUB_USER / DOCKERHUB_TOKEN are empty in this repository"
+            exit 1
+          fi
+          echo "both secrets are present and non-empty"
+          echo
+
+          ask() { # <label> <repo> <auth|anon>
+            local label="$1" repo="$2" mode="$3" url code granted
+            url="https://auth.docker.io/token?service=registry.docker.io&scope=repository:${repo}:pull,push"
+
+            if [[ "${mode}" == auth ]]; then
+              code=$(curl -sS -o /tmp/tok.json -w '%{http_code}' -u "${DOCKERHUB_USER}:${DOCKERHUB_TOKEN}" "${url}" || echo "000")
+            else
+              code=$(curl -sS -o /tmp/tok.json -w '%{http_code}' "${url}" || echo "000")
+            fi
+
+            # A 200 does not mean push was granted: Docker Hub issues anonymous tokens with a
+            # reduced scope. The "access" claim is what actually says which actions were allowed.
+            granted="-"
+            if [[ "${code}" == "200" ]]; then
+              granted=$(python3 - <<'PY' || echo "unreadable"
+          import base64, json
+          payload = json.load(open("/tmp/tok.json"))["token"].split(".")[1]
+          payload += "=" * (-len(payload) % 4)
+          access = json.loads(base64.urlsafe_b64decode(payload)).get("access", [])
+          print(",".join(sorted({a for e in access for a in e.get("actions", [])})) or "none")
+          PY
+              )
+            fi
+            printf '  %-6s  %-34s  http=%-4s  granted=%s\n' "${mode}" "${repo}" "${code}" "${granted}"
+            rm -f /tmp/tok.json
+          }
+
+          echo "scope requested: repository:<repo>:pull,push"
+          echo
+          for repo in apache/skywalking-helm apache/skywalking-oap-server; do
+            ask x "${repo}" anon
+            ask x "${repo}" auth
+          done
+
+          echo
+          echo "Baselines: anonymous returns 200 with granted=pull; invalid credentials return 401."
+          echo
+          echo "How to read the 'auth' rows:"
+          echo "  401 on skywalking-helm, 200 granted=pull,push on skywalking-oap-server"
+          echo "    -> credential is good; the difference is per-repository permission on Docker Hub."
+          echo "  401 on both"
+          echo "    -> the credential itself is rejected. It is the token, not the repository."
+          echo "  200 granted=pull only"
+          echo "    -> authenticated and accepted, but read-only on that repository."
+          echo "  200 granted=pull,push on skywalking-helm"
+          echo "    -> auth is fine now; re-run publish-helm (workflow_dispatch, tag v5.0.0)."
