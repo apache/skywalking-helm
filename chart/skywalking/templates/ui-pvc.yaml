@@ -19,11 +19,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ template "skywalking.ui.fullname" . }}-data
   labels:
-    app: {{ template "skywalking.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    component: "{{ .Values.ui.name }}"
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "skywalking.labels" (dict "context" . "component" .Values.ui.name) | nindent 4 }}
   {{- with .Values.ui.persistence.annotations }}
   annotations:
 {{ toYaml . | indent 4 }}

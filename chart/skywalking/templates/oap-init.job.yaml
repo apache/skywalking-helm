@@ -29,13 +29,19 @@ metadata:
   # The name carries a hash of the chart values: a Job's `spec.template` is immutable, so a stable
   # name would make `helm upgrade` fail with "field is immutable" whenever the pod template changes.
   # Hashing yields a fresh Job whenever a relevant value changes; Helm prunes the previous one.
-  name: "{{ printf "%s-init-%s" (include "skywalking.oap.fullname" . | trunc 40 | trimSuffix "-") (.Values | toYaml | sha256sum | trunc 8) }}"
+  #
+  # The pod template's labels follow the release's label style (see "skywalking.labelStyle"), so the
+  # style is part of the hash too: moving a release from legacy to modern renames the Job instead of
+  # patching its immutable template. A legacy release hashes exactly what 5.0.0 hashed, so upgrading
+  # one keeps its Job. The `labelStyle` value itself is left out: it only overrides how the style is
+  # found, and setting or removing it must not run init again.
+  {{- $hashed := omit .Values "labelStyle" }}
+  {{- if eq (include "skywalking.labelStyle" .) "modern" }}
+  {{- $_ := set $hashed "_labelStyle" "modern" }}
+  {{- end }}
+  name: "{{ printf "%s-init-%s" (include "skywalking.oap.fullname" . | trunc 40 | trimSuffix "-") ($hashed | toYaml | sha256sum | trunc 8) }}"
   labels:
-    app: {{ template "skywalking.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    component: "{{ template "skywalking.fullname" . }}-job"
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "skywalking.labels" (dict "context" . "component" (printf "%s-init" .Values.oap.name | trunc 63 | trimSuffix "-") "legacyComponent" (printf "%s-job" (include "skywalking.fullname" .))) | nindent 4 }}
 spec:
   {{- if .Values.oapInit.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ .Values.oapInit.ttlSecondsAfterFinished }}
@@ -43,10 +49,19 @@ spec:
   template:
     metadata:
       name: "{{ .Release.Name }}-oap-init"
+      # Do not change these labels in either style. A Job's pod template is immutable, and an upgrade
+      # with unchanged values keeps this Job's name, so Helm patches the existing Job and any edit here
+      # fails the upgrade with "field is immutable". The legacy branch renders exactly what 5.0.0 did for
+      # every release 5.0.0 could install; the 63-character cap only matters for names it rejected.
+      # test/e2e/e2e-upgrade.yaml checks this.
       labels:
+      {{- if eq (include "skywalking.labelStyle" .) "legacy" }}
         app: {{ template "skywalking.name" . }}
-        component: "{{ template "skywalking.fullname" . }}-job"
+        component: {{ printf "%s-job" (include "skywalking.fullname" .) | trunc 63 | trimSuffix "-" | quote }}
         release: {{ .Release.Name }}
+      {{- else }}
+        {{- include "skywalking.selectorLabels.modern" (dict "context" . "component" (printf "%s-init" .Values.oap.name | trunc 63 | trimSuffix "-")) | nindent 8 }}
+      {{- end }}
 {{- if .Values.oapInit.extraPodLabels }}
 {{ toYaml .Values.oapInit.extraPodLabels | indent 8 }}
 {{- end }}

@@ -609,3 +609,17 @@ satellite:
 
 nameOverride: ""
 fullnameOverride: ""
+
+# The release's label style, fixed by how the release was first installed.
+#   modern: only the Kubernetes recommended app.kubernetes.io/* labels, and every selector
+#           (Deployments, Services, OAP cluster discovery, Satellite's OAP lookup, anti-affinity)
+#           matches on them. What a release installed with 5.1.0 or later uses.
+#   legacy: the app/release/component/chart/heritage labels plus the recommended ones, with every
+#           selector on the old labels. What a release installed before 5.1.0 keeps, because a
+#           Deployment's selector is immutable.
+#   auto:   find out from the release's existing Deployments; a new release is modern.
+# Set `legacy` for a release installed before 5.1.0 when the chart is rendered without cluster
+# access (Argo CD, `helm template | kubectl apply`): "auto" cannot see the existing Deployments
+# there and would render the modern style, which the running pods do not match. The value is left
+# out of the init Job's name hash, so changing it does not run init again.
+labelStyle: auto

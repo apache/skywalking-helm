@@ -285,7 +285,7 @@ real path with `subPath`, so only that one file is placed and the rest of the im
 `/skywalking/config` directory stays intact.
 
 ```shell
-kubectl get cm -n skywalking -l component=oap
+kubectl get cm -n skywalking skywalking-skywalking-helm-oap-cm-override
 kubectl exec -n skywalking deploy/skywalking-skywalking-helm-oap -- ls /skywalking/config/oal
 ```
 
@@ -334,9 +334,9 @@ What the chart does when `enabled` is `true`:
 
 | | |
 |---|---|
-| ConfigMap | Creates one named exactly `skywalking-dynamic-config`, with `data` taken verbatim from `oap.dynamicConfig.config` and labels `app`/`release`/`component` |
+| ConfigMap | Creates one named exactly `skywalking-dynamic-config`, with `data` taken verbatim from `oap.dynamicConfig.config` and the OAP component's labels |
 | Env | Sets `SW_CONFIGURATION=k8s-configmap` and `SW_CONFIG_CONFIGMAP_PERIOD` to `oap.dynamicConfig.period` (seconds, default `60`) on the OAP Deployment |
-| Discovery | OAP finds the ConfigMap in `SW_CLUSTER_K8S_NAMESPACE` (the release namespace) using the label selector `SW_CLUSTER_K8S_LABEL`, which the chart sets to `app=<release>,release=<release>,component=oap` — the same labels it puts on the ConfigMap |
+| Discovery | OAP finds the ConfigMap in `SW_CLUSTER_K8S_NAMESPACE` (the release namespace) using the label selector `SW_CLUSTER_K8S_LABEL`, which the chart sets to `app.kubernetes.io/name=skywalking-helm,app.kubernetes.io/instance=<release>,app.kubernetes.io/component=oap` (`app=<release>,release=<release>,component=oap` on a release installed before 5.1.0) — the same labels it puts on the ConfigMap |
 | RBAC | The chart's Role already grants `get`/`watch`/`list` on `configmaps` when `serviceAccounts.oap.create` is `true` |
 
 Keys are `<module>.<provider>.<config-name>`; values may be a scalar or a multi-line block. The

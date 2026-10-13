@@ -3,9 +3,10 @@
 Every change to this chart is validated by an end-to-end suite that installs `chart/skywalking` into
 a throwaway [kind](https://kind.sigs.k8s.io/) cluster, pushes real traffic through it, and then asks
 **Horizon UI's BFF** the questions an operator would ask. Nothing in the suite talks to the OAP's
-GraphQL endpoint directly — that would test the OAP, not the chart. Five cells run in CI, covering
-two OAP lines against two storage backends. This page explains how they are put together and how to
-run one on your own machine.
+GraphQL endpoint directly — that would test the OAP, not the chart. Five cells run in CI: three that
+push traffic through OAP 11 on two storage backends, one for configuration overrides, and one that
+upgrades the published chart. This page explains how they are put together and how to run one on
+your own machine.
 
 ## The framework
 
@@ -38,7 +39,7 @@ interpolates into a base URL. The OAP's own ports are not exposed at all.
 and `{{ notEmpty .version }}`, so a case asserts "these services are present" or "this field has a
 value", not an exact payload.
 
-## The four cells
+## The cells
 
 Three of them run the same fixture — kind `kindest/node:v1.28.15` (one control plane, three workers),
 namespace `istio-system`, `fullnameOverride=skywalking`, `oap.replicas=1`, Satellite enabled, Horizon
@@ -66,7 +67,7 @@ components: a file rendered into a ConfigMap and mounted over the image's own.
 | Storage | BanyanDB 0.11 standalone — the cheapest backend that still exercises a real one |
 | UI override | `ui.config.session.ttlMinutes=17`, which makes the chart render and mount the UI ConfigMap |
 | OAP override | `oap.config.log4j2\.xml=<Configuration …>`, mounted at `/skywalking/config/log4j2.xml` |
-| Cases | Four |
+| Cases | Six |
 
 It is deliberately cheap — no Istio, no bookinfo, no traffic generator. What is under test is
 whether the overrides are read, which needs none of that, so it skips the `MESH` fixture entirely
@@ -74,10 +75,50 @@ and never queries a metric.
 
 The mount is the riskier path, and the reason this cell exists. Mounting over Horizon's
 `/app/horizon.yaml` *replaces* it, so the chart has to merge its computed values back in as
-`${HORIZON_*:default}` tokens. Two of the four cases exist to catch that regression rather than to
+`${HORIZON_*:default}` tokens. Two of the cases exist to catch that regression rather than to
 check the ConfigMap: logging in proves the `HORIZON_AUTH_LOCAL_USERS` token survived the mount
 (without it the pod is Ready and nobody can sign in), and `/api/oap/info` proves `queryUrl` did not
 revert to `127.0.0.1`.
+
+The last two cases check the labels of a fresh install: its Deployments select their pods by the
+recommended `app.kubernetes.io/*` labels, nothing in the release carries a Helm 2 `release` label,
+its Services select by the recommended labels, and OAP finds its peers by them. The upgrade cell
+below covers a release installed before 5.1.0.
+
+### The fifth cell: `e2e-upgrade.yaml`
+
+Every other cell installs fresh, so it only ever sees objects this chart created. This one takes the
+path every existing user takes: it installs the last published chart from
+`oci://docker.io/apache/skywalking-helm` (`CHART_FROM` in the file, `5.0.0`), then runs `helm upgrade` to the
+working tree with **identical** values, on BanyanDB standalone with Satellite enabled. A second upgrade
+then sets only `labelStyle: legacy`.
+
+An upgrade can fail where a fresh install passes, on fields Kubernetes never lets change. A
+Deployment's selector is one: releases installed before 5.1.0 select by `app`/`release`/`component`,
+and the chart has to keep that selector or the upgrade fails with `field is immutable`. The init
+Job's pod template is the other: while the chart's default values match `CHART_FROM`'s, identical
+values keep the Job's name, so Helm patches the existing Job, and any chart change to its pod
+template fails the upgrade the same way. The values are identical in both `helm` commands on
+purpose, because different values would rename the Job and hide this.
+
+| Case | Asserts |
+| --- | --- |
+| Deployment selectors | All three still select by `app`, `release` and `component` |
+| Pod labels | The rolled pods of all three carry the `app.kubernetes.io/*` labels |
+| Init Job | One succeeded Job with `app.kubernetes.io/component: oap-init`, the same object as before the upgrade while the effective values equal `CHART_FROM`'s |
+| Init Job after the override | A second upgrade that only sets `labelStyle: legacy` keeps the same Job, so the override never runs init again |
+| Init Job pod template | Rendered from `CHART_FROM` and from the working tree with identical values for BanyanDB, Elasticsearch and PostgreSQL, a Job that keeps its name keeps its pod template |
+| Login and OAP reachability | Traffic still reaches the pods through the Services |
+
+The live upgrade runs on the bundled BanyanDB, whose subchart defaults changed after `5.0.0`, so its
+Job is renamed and the in-place path is not exercised there. Elasticsearch and PostgreSQL releases
+still keep their Job's name on the upgrade, which is why the pod-template case renders all three
+backends instead of relying on the live one.
+
+`CHART_FROM` stays at `5.0.0`, the last release whose Deployments select by the legacy labels. A
+release installed with 5.1.0 or later selects by the recommended labels, so a later `CHART_FROM`
+would test something else and fail `expected/upgrade-selectors.yml`. Upgrading from the latest
+release is a different test; add it as its own cell.
 
 ### There are no OAP 10.4 cells
 
@@ -147,9 +188,9 @@ services:
 The `yq` projection is deliberate: pull out the two or three fields that carry the meaning, sort
 anything order-dependent, and keep the expected file small enough to read.
 
-## Two traps
+## Three traps
 
-Both of these cost real debugging time, so they are commented in the cell files as well.
+All of these cost real debugging time, so they are commented in the cell files as well.
 
 **`/api/layer/:key/services` returns `reachable: true` with an empty list even when the OAP is
 down.** Asserting on `.reachable` there proves nothing — the case would pass against a dead backend.
@@ -167,6 +208,12 @@ case does:
 against `expected/horizon-service-cpm.yml`, which expects `positive: true` alongside
 `reachable: true` and `id: cpm`. Use `notEmpty` for strings such as `.version`; compare numbers
 yourself.
+
+**Do not `helm install --wait` with the bundled BanyanDB.** The BanyanDB subchart's
+`*-banyandb-http` Service is a `LoadBalancer`, which never gets an address on kind, so Helm 3's
+`--wait` blocks on it until the timeout even though every pod is Ready. Helm 4 does not, so a local
+run with Helm 4 passes and CI does not. The cells wait with infra-e2e `wait:` conditions or
+`kubectl wait` / `kubectl rollout status` instead.
 
 ## Login: the chart ships no users
 
@@ -257,8 +304,8 @@ bash test/e2e/script/horizon.sh http://localhost:8080 get /api/layer/MESH/servic
 ## How CI runs them
 
 `.github/workflows/e2e.ci.yaml` runs the suite from one matrix job, `als`, with `fail-fast: false`
-and a matrix of four entries — one per cell — each with a 60-minute timeout, so one failing storage
-backend does not cancel the other four:
+and a matrix of five entries — one per cell — each with a 60-minute timeout, so one failing cell
+does not cancel the others:
 
 ```yaml
 strategy:
@@ -267,7 +314,7 @@ strategy:
     test:
       - name: Horizon + OAP 11 + Elasticsearch
         config: test/e2e/e2e-oap11-elasticsearch.yaml
-      # …the two OAP 11 BanyanDB cells, and e2e-config-override.yaml
+      # …the two OAP 11 BanyanDB cells, e2e-config-override.yaml and e2e-upgrade.yaml
 ```
 
 Each entry logs in to `ghcr.io` (the Satellite and BanyanDB 0.11 images live there), sets up Go 1.24,

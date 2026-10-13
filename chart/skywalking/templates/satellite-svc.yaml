@@ -19,11 +19,7 @@ kind: Service
 metadata:
   name: {{ template "skywalking.satellite.fullname" . }}
   labels:
-    app: {{ template "skywalking.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    component: "{{ .Values.satellite.name }}"
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "skywalking.labels" (dict "context" . "component" .Values.satellite.name) | nindent 4 }}
 spec:
   type: {{ .Values.satellite.service.type }}
   ports:
@@ -32,7 +28,5 @@ spec:
     name: {{ $key }}
   {{- end }}
   selector:
-    app: {{ template "skywalking.name" . }}
-    component: "{{ .Values.satellite.name }}"
-    release: {{ .Release.Name }}
+    {{- include "skywalking.selectorLabels" (dict "context" . "component" .Values.satellite.name) | nindent 4 }}
 {{- end }}

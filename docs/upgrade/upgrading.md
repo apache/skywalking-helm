@@ -1,7 +1,8 @@
 # Upgrade
 
-How to run `helm upgrade` on this chart, and the breaking changes chart 5.0.0 brings — the booster
-UI removal, the OAP 11 dashboard-template changes, and the new `ui.config` default.
+How to run `helm upgrade` on this chart, the labels a release keeps or gets from 5.1.0 on, and the
+breaking changes chart 5.0.0 brings — the booster UI removal, the OAP 11
+dashboard-template changes, and the new `ui.config` default.
 
 ## Run the upgrade
 
@@ -28,6 +29,96 @@ Three values have no defaults and must be present on **every** upgrade, not just
 `helm upgrade` does not remember `--set` flags from the previous release, so either repeat them,
 pass a values file with `-f`, or add `--reuse-values`. `--wait-for-jobs` alongside `--wait` makes
 Helm report an init-Job failure directly instead of leaving you to guess why OAP never went Ready.
+
+## Labels and selectors
+
+Since 5.1.0 the chart uses the Kubernetes
+[recommended labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/):
+`app.kubernetes.io/name` (always the chart name, `skywalking-helm`), `app.kubernetes.io/instance`
+(the release name), `app.kubernetes.io/component` (`oap`, `ui`, `satellite`, `oap-init`),
+`app.kubernetes.io/managed-by` and `helm.sh/chart`. Which labels a release carries, and which its
+selectors match on, depends on when it was first installed, because Kubernetes never lets a
+Deployment's selector change:
+
+| | Installed with 5.1.0 or later | Installed before 5.1.0 |
+|---|---|---|
+| Labels on resources and pods | The recommended labels only | `app`, `release`, `component`, `chart`, `heritage`, plus the recommended labels |
+| Deployment, Service and anti-affinity selectors | The recommended labels | `app`, `release`, `component` |
+| OAP cluster discovery and dynamic configuration, Satellite's OAP lookup | The recommended labels | `app`, `release`, `component` |
+
+`helm upgrade` needs no extra step for either. The chart tells them apart with Helm's `lookup`: when
+the release's OAP, UI or Satellite Deployment already exists and selects by `release`, the release
+keeps the old style, and a Deployment created later in it, such as Satellite enabled after the
+upgrade, gets the same style. The pods of an older release roll once to pick up the recommended
+labels.
+
+The `kubectl -l` commands in these docs use the recommended labels, which every release carries from
+5.1.0 on. Your own selectors, NetworkPolicies and monitors keep working on a release installed before
+5.1.0; on a new release, write them against the recommended labels.
+
+To see which style a release uses:
+
+```shell
+kubectl get deployment -n skywalking \
+  -o custom-columns='NAME:.metadata.name,RELEASE:.metadata.annotations.meta\.helm\.sh/release-name,SELECTOR:.spec.selector.matchLabels'
+```
+
+The OAP init Job keeps its pod labels as they were, because a Job's pod template is immutable.
+Whether init runs again depends on the Job's name, which hashes the computed values, chart defaults
+included, and not on the labels. From 5.0.0, an Elasticsearch or PostgreSQL release keeps its Job and
+has it relabelled in place. A release with the bundled BanyanDB runs init once more, because the
+BanyanDB subchart's defaults changed in 5.1.0.
+
+### Argo CD and other tools that render without cluster access
+
+`lookup` returns nothing when the chart is rendered without cluster access: Argo CD,
+`helm template | kubectl apply`, and `helm upgrade --dry-run=client`. There the chart cannot see the
+existing Deployments and renders the labels of a new release. For a release installed before 5.1.0,
+set:
+
+```yaml
+labelStyle: legacy
+```
+
+**Without it, OAP and the UI become unreachable.** The Services switch to the recommended labels,
+while Kubernetes rejects the new Deployment selectors with `spec.selector: ... field is immutable`,
+so the running pods never get labels the Services match. Set the value and sync again to recover. A
+release first installed with 5.1.0 or later needs nothing. The value is left out of the init Job's
+name hash, so setting or removing it does not run init again.
+
+For the same reason, a preview rendered without cluster access shows the new labels for an existing
+release, although the real upgrade keeps the old ones. `helm upgrade --dry-run=server` previews what
+the upgrade will actually apply.
+
+### Moving an existing release to the new labels
+
+This is optional. Delete the three Deployments and upgrade: with no Deployment left to inherit from,
+Helm renders the release like a new one and moves everything to the recommended labels, the
+selectors and OAP discovery included. OAP, the UI and Satellite are down until the new pods are
+Ready. Storage, ConfigMaps and the UI's PersistentVolumeClaim are kept. The init Job gets a new name
+and runs once more, because its pod's labels change with the style.
+
+```shell
+# A release installed before 5.1.0 still has the release label.
+# This must list only the OAP, UI and Satellite Deployments of this release.
+kubectl get deployment -n skywalking -l release=skywalking
+kubectl delete deployment -n skywalking -l release=skywalking
+helm upgrade skywalking oci://docker.io/apache/skywalking-helm \
+  --version 5.1.0 -n skywalking -f my-values.yaml
+```
+
+With Argo CD, remove `labelStyle: legacy` in the same change, then sync. Anything of your own that
+selects by the old labels stops matching once the release has moved.
+
+After the move, `helm rollback` to a revision from before it fails on the same three Deployments,
+because their selector would change back. Delete them first; they no longer carry the `release`
+label, so select them by the recommended labels:
+
+```shell
+kubectl delete deployment -n skywalking \
+  -l app.kubernetes.io/name=skywalking-helm,app.kubernetes.io/instance=skywalking
+helm rollback skywalking <revision> -n skywalking
+```
 
 ## Chart 5.0.0 is a version set
 
@@ -198,9 +289,14 @@ inert; delete it by hand.
 To force a rerun without changing a value, delete the Job and upgrade again:
 
 ```shell
-kubectl delete job -n skywalking -l release=skywalking
+# The release's current init Job, read from its rendered manifest: right for any chart version and
+# either label style. With `helm template | kubectl apply`, pipe your rendered output into the same
+# awk instead; `kubectl apply` never prunes a Job that a values change replaced.
+kubectl delete job -n skywalking "$(helm get manifest skywalking -n skywalking | awk '/^kind: Job$/ {j=1} j && /^  name:/ {gsub(/"/, "", $2); print $2; exit}')"
+# Keep the chart version the release already runs (see `helm list -n skywalking`): an older
+# version would also roll back the release's labels and selectors.
 helm upgrade skywalking oci://docker.io/apache/skywalking-helm \
-  --version 5.0.0 -n skywalking --reuse-values
+  --version <current chart version> -n skywalking --reuse-values
 ```
 
 More detail in [The OAP Init Job](../operate/oap-init-job.md).

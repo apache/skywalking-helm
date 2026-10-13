@@ -19,9 +19,7 @@ kind: ConfigMap
 metadata:
   name: {{ template "skywalking.fullname" . }}-oap-cm-override
   labels:
-    app: {{ template "skywalking.name" . }}
-    release: {{ .Release.Name }}
-    component: {{ .Values.oap.name }}
+    {{- include "skywalking.labels" (dict "context" . "component" .Values.oap.name) | nindent 4 }}
 data:
 {{- range $path, $config := .Values.oap.config }}
  {{- if typeIs "string" $config }}

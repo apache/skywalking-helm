@@ -80,11 +80,7 @@ kind: ConfigMap
 metadata:
   name: {{ template "skywalking.ui.fullname" . }}
   labels:
-    app: {{ template "skywalking.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    component: "{{ .Values.ui.name }}"
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "skywalking.labels" (dict "context" . "component" .Values.ui.name) | nindent 4 }}
 data:
   horizon.yaml: |
 {{ toYaml $merged | indent 4 }}
