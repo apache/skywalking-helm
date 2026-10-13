@@ -19,9 +19,7 @@ kind: ConfigMap
 metadata:
   name: {{ template "skywalking.fullname" . }}-satellite-cm-override
   labels:
-    app: {{ template "skywalking.name" . }}
-    release: {{ .Release.Name }}
-    component: {{ .Values.satellite.name }}
+    {{- include "skywalking.labels" (dict "context" . "component" .Values.satellite.name) | nindent 4 }}
 data:
 {{- range $path, $config := .Values.satellite.config }}
  {{- if typeIs "string" $config }}

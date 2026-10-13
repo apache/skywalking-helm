@@ -76,6 +76,21 @@ verify:
     count: 20
     interval: 10s
   cases:
+    # A fresh install selects its pods by the recommended labels. A release
+    # installed before 5.1.0 keeps its legacy selectors; e2e-upgrade.yaml covers
+    # that side.
+    - query: |
+        kubectl -n default get deployment skywalking-oap skywalking-ui -o json | yq -p json -o yaml '[.items[] | {"name": .metadata.name, "selector": .spec.selector.matchLabels}] | sort_by(.name)'
+      expected: expected/fresh-selectors.yml
+
+    # And it carries no Helm 2 label at all: nothing in the release is labelled
+    # release=skywalking, the Services select by the recommended labels, and OAP
+    # finds its peers by them.
+    - query: |
+        helm2=$(kubectl -n default get deployment,service,configmap,serviceaccount,job,pod -l release=skywalking -o name | wc -l | tr -d ' ')
+        kubectl -n default get service,deployment -l app.kubernetes.io/name=skywalking-helm,app.kubernetes.io/instance=skywalking -o json | yq -p json -o yaml "{\"helm2Labelled\": $helm2, \"serviceSelectors\": ([.items[] | select(.kind == \"Service\") | .spec.selector | keys | sort | join(\",\")] | unique), \"oapDiscovery\": ([.items[] | select(.kind == \"Deployment\" and .metadata.name == \"skywalking-oap\") | .spec.template.spec.containers[0].env[] | select(.name == \"SW_CLUSTER_K8S_LABEL\") | .value] | .[0])}"
+      expected: expected/fresh-labels.yml
+
     # The UI ConfigMap exists only because ui.config was set, and is mounted over
     # the image's file.
     - query: |

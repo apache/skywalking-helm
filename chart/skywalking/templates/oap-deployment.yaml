@@ -17,25 +17,17 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: {{ template "skywalking.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    component: "{{ .Values.oap.name }}"
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "skywalking.labels" (dict "context" . "component" .Values.oap.name) | nindent 4 }}
   name: {{ template "skywalking.oap.fullname" . }}
 spec:
   replicas: {{ .Values.oap.replicas }}
   selector:
     matchLabels:
-      app: {{ template "skywalking.name" . }}
-      component: "{{ .Values.oap.name }}"
-      release: {{ .Release.Name }}
+      {{- include "skywalking.selectorLabels" (dict "context" . "component" .Values.oap.name) | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ template "skywalking.name" . }}
-        component: "{{ .Values.oap.name }}"
-        release: {{ .Release.Name }}
+        {{- include "skywalking.podLabels" (dict "context" . "component" .Values.oap.name) | nindent 8 }}
         {{- if .Values.oap.podAnnotations }}
       annotations:
 {{ toYaml .Values.oap.podAnnotations | indent 8 }}
@@ -53,9 +45,7 @@ spec:
             - topologyKey: "kubernetes.io/hostname"
               labelSelector:
                 matchLabels:
-                  app: "{{ template "skywalking.name" . }}"
-                  release: "{{ .Release.Name }}"
-                  component: "{{ .Values.oap.name }}"
+                  {{- include "skywalking.selectorLabels" (dict "context" . "component" .Values.oap.name) | nindent 18 }}
       {{- else if eq .Values.oap.antiAffinity "soft" }}
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -64,9 +54,7 @@ spec:
               topologyKey: kubernetes.io/hostname
               labelSelector:
                 matchLabels:
-                  app: "{{ template "skywalking.name" . }}"
-                  release: "{{ .Release.Name }}"
-                  component: "{{ .Values.oap.name }}"
+                  {{- include "skywalking.selectorLabels" (dict "context" . "component" .Values.oap.name) | nindent 18 }}
       {{- end }}
       {{- with .Values.oap.nodeAffinity }}
         nodeAffinity:

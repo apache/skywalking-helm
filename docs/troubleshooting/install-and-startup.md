@@ -13,13 +13,20 @@ short `skywalking-oap` names instead).
 ```shell
 helm status skywalking -n skywalking
 kubectl get pods,jobs -n skywalking
-kubectl describe pod -n skywalking -l component=oap
-kubectl logs -n skywalking -l release=skywalking --all-containers --tail=200
+# The OAP pods, through the OAP Deployment's own selector, which is right for any chart version.
+# The Deployment is <fullname>-oap: skywalking-skywalking-helm-oap for a release named skywalking.
+OAP_PODS=$(kubectl get deployment -n skywalking skywalking-skywalking-helm-oap \
+  -o go-template='{{range $k, $v := .spec.selector.matchLabels}}{{$k}}={{$v}},{{end}}')
+kubectl describe pod -n skywalking -l "${OAP_PODS%,}"
+kubectl logs -n skywalking -l "${OAP_PODS%,}" --all-containers --tail=200
+kubectl logs -n skywalking deployment/skywalking-skywalking-helm-ui --tail=200
 ```
 
 `kubectl describe` is where init-container state (`Init:0/1`, `Init:Error`) and probe/OOM kill
-reasons appear; `kubectl logs -l release=skywalking` covers the OAP pods, the UI pod and the init
-Job pod in one shot.
+reasons appear. The commands go through the Deployments rather than fixed labels, because a release
+installed before 5.1.0 and a newer one label their pods differently; see
+[Upgrade](../upgrade/upgrading.md#labels-and-selectors). Read the init Job's logs through the Job,
+as below.
 
 ---
 
@@ -117,7 +124,11 @@ reporting that OAP never became Ready, and read the Job's logs:
 
 ```shell
 kubectl get jobs -n skywalking
-kubectl logs -n skywalking -l component=skywalking-skywalking-helm-job --tail=200
+# The release's current init Job, read from its rendered manifest: right for any chart version and
+# either label style. With `helm template | kubectl apply`, pipe your rendered output into the same
+# awk instead; `kubectl apply` never prunes a Job that a values change replaced.
+JOB=$(helm get manifest skywalking -n skywalking | awk '/^kind: Job$/ {j=1} j && /^  name:/ {gsub(/"/, "", $2); print $2; exit}')
+kubectl logs -n skywalking "job/$JOB" --all-containers --tail=200
 ```
 
 Then work down the list below: the Job's own `wait-for-*` init container is the usual culprit.
@@ -133,7 +144,10 @@ and its `RESTARTS` count climbs every ~5 minutes, as the default startup-probe b
 
 ```shell
 kubectl get jobs -n skywalking          # want COMPLETIONS 1/1
-kubectl delete job -n skywalking -l release=skywalking
+# The release's current init Job, read from its rendered manifest: right for any chart version and
+# either label style. With `helm template | kubectl apply`, pipe your rendered output into the same
+# awk instead; `kubectl apply` never prunes a Job that a values change replaced.
+kubectl delete job -n skywalking "$(helm get manifest skywalking -n skywalking | awk '/^kind: Job$/ {j=1} j && /^  name:/ {gsub(/"/, "", $2); print $2; exit}')"
 helm upgrade skywalking <chart> -n skywalking --reuse-values
 ```
 
@@ -160,7 +174,8 @@ The PostgreSQL loop never gives up, so a wrong host there shows as a pod that si
 indefinitely rather than erroring. Check what it is actually waiting on:
 
 ```shell
-kubectl logs -n skywalking -l component=oap -c wait-for-postgresql
+# OAP_PODS as in "Triage first" above
+kubectl logs -n skywalking -l "${OAP_PODS%,}" -c wait-for-postgresql
 kubectl get pods,svc -n skywalking   # is the backend even scheduled?
 ```
 

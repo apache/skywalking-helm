@@ -19,10 +19,7 @@ kind: RoleBinding
 metadata:
   name: {{ template "skywalking.fullname" . }}
   labels:
-    app: {{ template "skywalking.name" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: "{{ .Release.Name }}"
-    heritage: "{{ .Release.Service }}"
+    {{- include "skywalking.labels" (dict "context" . "component" .Values.oap.name) | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role

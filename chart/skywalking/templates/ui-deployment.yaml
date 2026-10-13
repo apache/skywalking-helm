@@ -19,11 +19,7 @@ kind: Deployment
 metadata:
   name: {{ template "skywalking.ui.fullname" . }}
   labels:
-    app: {{ template "skywalking.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    component: "{{ .Values.ui.name }}"
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "skywalking.labels" (dict "context" . "component" .Values.ui.name) | nindent 4 }}
 spec:
   replicas: {{ .Values.ui.replicas }}
   # Horizon UI's BFF holds the session table in memory. Recreate (not
@@ -33,15 +29,11 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: {{ template "skywalking.name" . }}
-      component: "{{ .Values.ui.name }}"
-      release: {{ .Release.Name }}
+      {{- include "skywalking.selectorLabels" (dict "context" . "component" .Values.ui.name) | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ template "skywalking.name" . }}
-        component: "{{ .Values.ui.name }}"
-        release: {{ .Release.Name }}
+        {{- include "skywalking.podLabels" (dict "context" . "component" .Values.ui.name) | nindent 8 }}
       annotations:
 {{- if .Values.ui.config }}
         # A subPath mount never updates in place, so roll the pod when the

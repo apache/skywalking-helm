@@ -1,0 +1,184 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Covers the path every existing user takes: a release installed with the last
+# published chart, upgraded to the working tree with identical values.
+#
+# Every other cell installs fresh, so it only ever sees objects this chart
+# created. An upgrade can fail where a fresh install passes, on fields Kubernetes
+# never lets change:
+#
+#   - A Deployment's spec.selector. Releases installed before 5.1.0 select their
+#     pods by app/release/component. The chart has to look the existing
+#     Deployments up and keep that selector, or `helm upgrade` fails with
+#     "field is immutable".
+#   - The init Job's pod template. While the chart's default values match
+#     CHART_FROM's, identical values keep the Job's name, so Helm patches the
+#     existing Job, and any chart change to its pod template fails the upgrade
+#     the same way. The values are identical in both helm commands on purpose:
+#     different values would rename the Job and hide this.
+#
+# Deliberately cheap, like e2e-config-override.yaml: no Istio, no traffic.
+#
+# CHART_FROM stays at 5.0.0, the last release whose Deployments select by the
+# legacy labels. A release installed with 5.1.0 or later selects by the
+# recommended labels, so a later CHART_FROM would test something else and fail
+# expected/upgrade-selectors.yml.
+
+setup:
+  env: kind
+  file: kind28.yaml
+  init-system-environment: env
+  kind:
+    expose-ports:
+      - namespace: default
+        resource: service/skywalking-ui
+        port: 80
+  steps:
+    - name: install yq
+      command: bash test/e2e/setup-e2e-shell/install.sh yq
+    - name: install kubectl
+      command: bash test/e2e/setup-e2e-shell/install.sh kubectl
+    - name: Install helm
+      command: bash test/e2e/setup-e2e-shell/install.sh helm
+    - name: Update chart dependencies
+      command: helm dep up chart/skywalking
+    - name: Install the published chart, then upgrade it to the working tree
+      command: |
+        CHART_FROM=5.0.0
+        args=(
+          --set fullnameOverride=skywalking
+          --set oap.replicas=1
+          --set ui.image.repository=$UI_REPO
+          --set ui.image.tag=$UI_TAG
+          --set oap.image.repository=$OAP_REPO
+          --set oap.image.tag=$OAP_TAG
+          --set oap.storageType=banyandb
+          --set elasticsearch.enabled=false
+          --set banyandb.enabled=true
+          --set banyandb.image.repository=$BANYANDB_REPO
+          --set banyandb.image.tag=$BANYANDB_TAG
+          --set banyandb.standalone.enabled=true
+          --set banyandb.cluster.enabled=false
+          --set satellite.enabled=true
+          --set satellite.image.repository=$SATELLITE_REPO
+          --set satellite.image.tag=$SATELLITE_TAG
+          -f test/e2e/values.yaml
+        )
+        # No `helm --wait`: the BanyanDB subchart's HTTP Service is a
+        # LoadBalancer, which never gets an address on kind, so Helm 3 would
+        # wait for it until the timeout. Wait for what each step needs instead.
+        ready() {
+          kubectl -n default wait --for=condition=complete job -l release=skywalking --timeout=15m
+          for d in oap ui satellite; do
+            kubectl -n default rollout status deployment/skywalking-$d --timeout=15m
+          done
+        }
+        # The init Job after each step, for the verify phase.
+        job() { kubectl -n default get job -l release=skywalking -o jsonpath='{.items[0].metadata.name} {.items[0].metadata.uid}{"\n"}'; }
+        # Pulled once: the verify phase renders it again.
+        # `helm pull -d` does not create the directory.
+        rm -rf /tmp/skywalking-helm-e2e-chart-from && mkdir -p /tmp/skywalking-helm-e2e-chart-from
+        helm pull oci://docker.io/apache/skywalking-helm --version "$CHART_FROM" -d /tmp/skywalking-helm-e2e-chart-from
+        helm install skywalking /tmp/skywalking-helm-e2e-chart-from/skywalking-helm-$CHART_FROM.tgz "${args[@]}"
+        ready
+        job > /tmp/skywalking-helm-e2e-init-job-1
+        helm upgrade skywalking chart/skywalking "${args[@]}"
+        ready
+        job > /tmp/skywalking-helm-e2e-init-job-2
+        # Setting the override on a release that already uses the legacy label
+        # style renders the same objects, and must not run init again: the
+        # Job's name hash leaves labelStyle out.
+        helm upgrade skywalking chart/skywalking "${args[@]}" --set labelStyle=legacy
+        ready
+      wait:
+        - namespace: default
+          resource: deployments/skywalking-oap
+          for: condition=available
+        - namespace: default
+          resource: deployments/skywalking-ui
+          for: condition=available
+        - namespace: default
+          resource: deployments/skywalking-satellite
+          for: condition=available
+  timeout: 30m
+
+verify:
+  retry:
+    count: 20
+    interval: 10s
+  cases:
+    # The Deployments kept the selector the published chart created them with.
+    - query: |
+        kubectl -n default get deployment skywalking-oap skywalking-satellite skywalking-ui -o json | yq -p json -o yaml '[.items[] | {"name": .metadata.name, "selector": .spec.selector.matchLabels}] | sort_by(.name)'
+      expected: expected/upgrade-selectors.yml
+
+    # The pods rolled and carry the recommended labels as well, so a future
+    # selector change has nothing left to wait for.
+    - query: |
+        kubectl -n default get pods -l app.kubernetes.io/name=skywalking-helm,app.kubernetes.io/instance=skywalking -o json | yq -p json -o yaml '{"components": ([.items[] | select(.status.phase == "Running") | .metadata.labels."app.kubernetes.io/component"] | unique | sort)}'
+      expected: expected/upgrade-pods-relabelled.yml
+
+    # The init Job carries the new labels and was never replaced, so init did
+    # not run again.
+    #   inPlace: the upgrade from CHART_FROM kept the same Job under the same
+    #     name. That holds while the effective values equal CHART_FROM's
+    #     (labelStyle aside); once the chart's default values drift, a renamed
+    #     Job is correct, and only then is one accepted.
+    #   keptOnOverride: setting labelStyle kept the same Job. This one holds
+    #     whatever the defaults do.
+    - query: |
+        read -r name1 uid1 < /tmp/skywalking-helm-e2e-init-job-1
+        read -r name2 uid2 < /tmp/skywalking-helm-e2e-init-job-2
+        values() { helm -n default get values skywalking --all --revision $1 -o json | yq -p json -o json -I=0 'del(.labelStyle) | sort_keys(..)'; }
+        same=$([ "$(values 1)" = "$(values 2)" ] && echo true || echo false)
+        inplace=$([ "$same" = false ] || [ "$name1 $uid1" = "$name2 $uid2" ] && echo true || echo false)
+        kubectl -n default get job -l release=skywalking -o json | yq -p json -o yaml "[.items[] | select(.metadata.deletionTimestamp == null)] | {\"jobs\": length, \"succeeded\": .[0].status.succeeded, \"component\": .[0].metadata.labels.\"app.kubernetes.io/component\", \"inPlace\": $inplace, \"keptOnOverride\": (.[0].metadata.name == \"$name2\" and .[0].metadata.uid == \"$uid2\")}"
+      expected: expected/upgrade-init-job.yml
+
+    # The live upgrade above runs on the bundled BanyanDB, whose subchart
+    # defaults changed after CHART_FROM, so its Job is renamed and the in-place
+    # path goes untested there. Elasticsearch and PostgreSQL releases still keep
+    # their Job's name on the upgrade, so Helm patches the Job, and any chart
+    # change to its immutable pod template would fail their upgrade. Render the
+    # Job from CHART_FROM and from the working tree with identical values for
+    # each backend: a Job that keeps its name must keep its pod template.
+    - query: |
+        from=$(ls /tmp/skywalking-helm-e2e-chart-from/*.tgz)
+        job() { helm template skywalking "$@" --set oap.image.tag=x --set ui.image.tag=x | yq -o json -I=0 'select(.kind == "Job") | {"name": .metadata.name, "template": .spec.template} | sort_keys(..)'; }
+        for backend in banyandb elasticsearch postgresql; do
+          case $backend in
+            banyandb) a=(--set oap.storageType=banyandb --set elasticsearch.enabled=false --set banyandb.enabled=true --set banyandb.image.tag=x) ;;
+            elasticsearch) a=(--set oap.storageType=elasticsearch) ;;
+            postgresql) a=(--set oap.storageType=postgresql --set elasticsearch.enabled=false --set postgresql.enabled=true) ;;
+          esac
+          # A release upgraded from CHART_FROM keeps the legacy label style.
+          old=$(job "$from" "${a[@]}"); new=$(job chart/skywalking "${a[@]}" --set labelStyle=legacy)
+          if [ "$(echo "$old" | yq .name)" = "$(echo "$new" | yq .name)" ] && [ "$old" != "$new" ]; then
+            echo "$backend: breaks"
+          else
+            echo "$backend: ok"
+          fi
+        done
+      expected: expected/upgrade-init-job-template.yml
+
+    # Traffic still reaches the pods through the Services, which kept selecting
+    # by the legacy labels: Horizon logs in and reaches OAP.
+    - query: |
+        bash test/e2e/script/horizon.sh http://${service_skywalking_ui_host}:${service_skywalking_ui_80} get /api/auth/me | yq -p json -o yaml '{"username": .username, "roles": .roles}'
+      expected: expected/horizon-me.yml
+    - query: |
+        bash test/e2e/script/horizon.sh http://${service_skywalking_ui_host}:${service_skywalking_ui_80} get /api/oap/info | yq -p json -o yaml '{"reachable": .reachable, "version": .version}'
+      expected: expected/horizon-oap-info.yml

@@ -92,7 +92,7 @@ Service. These env vars are set by the template and should not be overridden:
 | `SATELLITE_GRPC_CLIENT_FINDER` | `kubernetes` |
 | `SATELLITE_GRPC_CLIENT_KUBERNETES_NAMESPACE` | the release namespace |
 | `SATELLITE_GRPC_CLIENT_KUBERNETES_KIND` | `pod` |
-| `SATELLITE_GRPC_CLIENT_KUBERNETES_SELECTOR_LABEL` | `app={release},release={release},component=oap` — the `app` label is the release name, not the chart name |
+| `SATELLITE_GRPC_CLIENT_KUBERNETES_SELECTOR_LABEL` | `app.kubernetes.io/name=skywalking-helm,app.kubernetes.io/instance={release},app.kubernetes.io/component=oap`; a release installed before 5.1.0 keeps `app={release},release={release},component=oap` |
 | `SATELLITE_GRPC_CLIENT_KUBERNETES_EXTRA_PORT` | `oap.ports.grpc` (`11800`) |
 
 That is why the chart also creates the Role granting `pods` read access, and the RoleBinding that

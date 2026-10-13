@@ -14,19 +14,21 @@ rendered by the chart:
 |---|---|---|
 | `SW_CLUSTER` | hardwired | `kubernetes` |
 | `SW_CLUSTER_K8S_NAMESPACE` | `.Release.Namespace` | `sw` |
-| `SW_CLUSTER_K8S_LABEL` | `skywalking.oap.labels` helper | `app=skywalking,release=skywalking,component=oap` |
+| `SW_CLUSTER_K8S_LABEL` | `skywalking.oap.labels` helper | `app.kubernetes.io/name=skywalking-helm,app.kubernetes.io/instance=skywalking,app.kubernetes.io/component=oap` |
 | `SKYWALKING_COLLECTOR_UID` | downward API, `metadata.uid` | the pod's own UID |
 
 The label selector is built from the release name and `oap.name`, and it matches exactly the labels
-the OAP Deployment puts on its pods. Each OAP pod watches pods in its own namespace carrying those
+the OAP Deployment puts on its pods. A release installed before 5.1.0 keeps the old form,
+`app=skywalking,release=skywalking,component=oap`; see
+[Upgrade](../upgrade/upgrading.md#labels-and-selectors). Each OAP pod watches pods in its own namespace carrying those
 labels, treats every Ready peer as a cluster member at *pod IP + the core gRPC port*, and uses
 `SKYWALKING_COLLECTOR_UID` to recognise which of those pods is itself.
 
 Two consequences worth knowing:
 
 - **Cluster membership is namespace-scoped.** Two releases in different namespaces never join each
-  other. Two releases in the *same* namespace do not join either, because `release=` is part of the
-  selector.
+  other. Two releases in the *same* namespace do not join either, because the release name
+  (`app.kubernetes.io/instance`, or `release` on an older release) is part of the selector.
 - **The peer port is OAP's configured core gRPC port, not `oap.ports.grpc`.** `oap.ports.grpc`
   only declares the container port and the Service port; the chart does not set `SW_CORE_GRPC_PORT`.
   If you change `oap.ports.grpc` away from `11800`, set the matching backend property too:
@@ -78,9 +80,9 @@ helm install skywalking \
 or afterwards:
 
 ```shell
-# the Deployment carries the same labels the cluster selector uses
-kubectl scale deployment -n <namespace> \
-  -l app=<release>,release=<release>,component=oap --replicas=3
+# The OAP Deployment is <fullname>-oap: <release>-skywalking-helm-oap by default,
+# <fullnameOverride>-oap when that is set. `kubectl get deployment -n <namespace>` lists it.
+kubectl scale deployment -n <namespace> <release>-skywalking-helm-oap --replicas=3
 ```
 
 (A `kubectl scale` is transient — the next `helm upgrade` resets it to `oap.replicas`.)
@@ -116,9 +118,9 @@ affinity:
         topologyKey: kubernetes.io/hostname
         labelSelector:
           matchLabels:
-            app: "skywalking"
-            release: "skywalking"
-            component: "oap"
+            app.kubernetes.io/name: "skywalking-helm"
+            app.kubernetes.io/instance: "skywalking"
+            app.kubernetes.io/component: "oap"
 ```
 
 `hard` renders a requirement:
@@ -130,10 +132,12 @@ affinity:
       - topologyKey: "kubernetes.io/hostname"
         labelSelector:
           matchLabels:
-            app: "skywalking"
-            release: "skywalking"
-            component: "oap"
+            app.kubernetes.io/name: "skywalking-helm"
+            app.kubernetes.io/instance: "skywalking"
+            app.kubernetes.io/component: "oap"
 ```
+
+A release installed before 5.1.0 renders `app`, `release` and `component` there instead.
 
 With `hard`, at most one OAP pod runs per node — so `oap.replicas` greater than the number of
 schedulable nodes leaves the surplus pods `Pending` forever. Any other value (including `""`) renders

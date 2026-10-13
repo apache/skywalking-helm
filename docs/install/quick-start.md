@@ -75,7 +75,7 @@ and stays un-Ready until that Job finishes. Both run in the main install phase, 
 `--wait-for-jobs` makes Helm surface an init-Job failure directly). To watch the Job:
 
 ```shell
-kubectl get job -n "${SKYWALKING_RELEASE_NAMESPACE}" -l release="${SKYWALKING_RELEASE_NAME}"
+kubectl get jobs -n "${SKYWALKING_RELEASE_NAMESPACE}"   # the chart's only Job: <oap name>-init-<hash>
 kubectl logs -n "${SKYWALKING_RELEASE_NAMESPACE}" job/<oap-init-job-name> -f
 ```
 

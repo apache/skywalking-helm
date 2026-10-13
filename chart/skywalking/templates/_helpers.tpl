@@ -49,10 +49,125 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
-Create a oap full labels value.
+Labels.
+
+A release has one label style, fixed by how it was first installed:
+
+- "modern", a release installed with 5.1.0 or later: only the Kubernetes recommended labels
+  (app.kubernetes.io/*, helm.sh/chart), and every selector matches on them: the Deployments, the
+  Services, OAP cluster discovery and dynamic configuration (SW_CLUSTER_K8S_LABEL), Satellite's OAP
+  lookup and pod anti-affinity.
+- "legacy", a release installed before 5.1.0: the Helm 2 labels it always had (app, release,
+  component, chart, heritage) plus the recommended ones, and every selector keeps matching on the
+  Helm 2 labels. A Deployment's selector is immutable, so such a release cannot switch in place.
+
+"skywalking.labelStyle" decides which. The label helpers take (dict "context" $ "component" "<c>");
+"legacyComponent" overrides the legacy component value where it differs (the OAP init Job).
+*/}}
+
+{{/*
+The release's label style, "legacy" or "modern". `labelStyle: auto` looks the release's Deployments up
+in the order OAP, UI, Satellite: the first that exists decides, legacy when its selector has the Helm 2
+`release` key. A release with none of them is new, so modern. `lookup` returns nothing when the chart is
+rendered without cluster access (`helm template`, Argo CD, `--dry-run=client`), so a release installed
+before 5.1.0 that is rendered that way must set `labelStyle: legacy`.
+*/}}
+{{- define "skywalking.labelStyle" -}}
+{{- $style := .Values.labelStyle | default "auto" -}}
+{{- if not (has $style (list "auto" "legacy" "modern")) -}}
+{{- fail (printf "labelStyle must be auto, legacy or modern, got %v" $style) -}}
+{{- end -}}
+{{- if eq $style "auto" -}}
+{{- $style = "" -}}
+{{- range $name := list (include "skywalking.oap.fullname" $) (include "skywalking.ui.fullname" $) (include "skywalking.satellite.fullname" $) -}}
+{{- if not $style -}}
+{{- $existing := lookup "apps/v1" "Deployment" $.Release.Namespace $name -}}
+{{- if $existing -}}
+{{- $style = ternary "legacy" "modern" (not (empty (dig "spec" "selector" "matchLabels" "release" "" $existing))) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- $style | default "modern" -}}
+{{- end -}}
+
+{{/*
+app.kubernetes.io/name: the chart name, as the Kubernetes recommended labels define it. The legacy
+"app" label holds the release name instead, see "skywalking.name".
+
+It ignores nameOverride on purpose. The label is part of the Deployment selector of a modern release,
+and that selector is immutable, while nameOverride can change on an upgrade without renaming the
+Deployments when fullnameOverride is set. nameOverride only names resources.
+*/}}
+{{- define "skywalking.appName" -}}
+{{- .Chart.Name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "skywalking.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "skywalking.selectorLabels.legacy" -}}
+app: {{ include "skywalking.name" .context | quote }}
+release: {{ .context.Release.Name | quote }}
+component: {{ default .component .legacyComponent | trunc 63 | trimSuffix "-" | quote }}
+{{- end -}}
+
+{{- define "skywalking.selectorLabels.modern" -}}
+app.kubernetes.io/name: {{ include "skywalking.appName" .context | quote }}
+app.kubernetes.io/instance: {{ .context.Release.Name | quote }}
+app.kubernetes.io/component: {{ .component | quote }}
+{{- end -}}
+
+{{/*
+Selector labels in the release's style: Deployment selectors, Service selectors, pod anti-affinity.
+*/}}
+{{- define "skywalking.selectorLabels" -}}
+{{- if eq (include "skywalking.labelStyle" .context) "legacy" -}}
+{{ include "skywalking.selectorLabels.legacy" . }}
+{{- else -}}
+{{ include "skywalking.selectorLabels.modern" . }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Pod labels. A legacy release's pods carry both sets, so its selectors keep matching and a later move
+to the modern style finds the recommended labels already in place. No chart version here, or every
+chart upgrade would restart the pods.
+*/}}
+{{- define "skywalking.podLabels" -}}
+{{- if eq (include "skywalking.labelStyle" .context) "legacy" -}}
+{{ include "skywalking.selectorLabels.legacy" . }}
+{{ include "skywalking.selectorLabels.modern" . }}
+{{- else -}}
+{{ include "skywalking.selectorLabels.modern" . }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Resource labels: the pod labels plus the chart and manager labels.
+*/}}
+{{- define "skywalking.labels" -}}
+{{ include "skywalking.podLabels" . }}
+app.kubernetes.io/managed-by: {{ .context.Release.Service | quote }}
+helm.sh/chart: {{ include "skywalking.chart" .context | quote }}
+{{- if eq (include "skywalking.labelStyle" .context) "legacy" }}
+chart: {{ include "skywalking.chart" .context | quote }}
+heritage: {{ .context.Release.Service | quote }}
+{{- end }}
+{{- end -}}
+
+{{/*
+The OAP pods' selector as a comma-separated string, in the release's style. OAP uses it to find its
+peers and its dynamic-configuration ConfigMap (SW_CLUSTER_K8S_LABEL), and Satellite uses it to find
+OAP (SATELLITE_GRPC_CLIENT_KUBERNETES_SELECTOR_LABEL).
 */}}
 {{- define "skywalking.oap.labels" -}}
+{{- if eq (include "skywalking.labelStyle" .) "legacy" -}}
 app={{ template "skywalking.name" . }},release={{ .Release.Name }},component={{ .Values.oap.name }}
+{{- else -}}
+app.kubernetes.io/name={{ include "skywalking.appName" . }},app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component={{ .Values.oap.name }}
+{{- end -}}
 {{- end -}}
 
 {{/*

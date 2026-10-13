@@ -18,11 +18,7 @@ kind: Service
 metadata:
   name: {{ template "skywalking.oap.fullname" . }}
   labels:
-    app: {{ template "skywalking.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    component: "{{ .Values.oap.name }}"
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "skywalking.labels" (dict "context" . "component" .Values.oap.name) | nindent 4 }}
   {{- with .Values.oap.service.annotations }}
   annotations:
     {{- range $key, $value := . }}
@@ -37,6 +33,4 @@ spec:
     name: {{ $key }}
   {{- end }}
   selector:
-    app: {{ template "skywalking.name" . }}
-    component: "{{ .Values.oap.name }}"
-    release: {{ .Release.Name }}
+    {{- include "skywalking.selectorLabels" (dict "context" . "component" .Values.oap.name) | nindent 4 }}

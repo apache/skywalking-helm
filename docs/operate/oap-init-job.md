@@ -57,11 +57,16 @@ helm upgrade --install skywalking oci://docker.io/apache/skywalking-helm \
 
 A Job's `spec.template` is immutable. With a stable name, any `helm upgrade` that changes the pod
 template (a new image tag, a new env var) would fail with `field is immutable`. So the name carries
-a short hash of the rendered values:
+a short hash of the rendered values, without `labelStyle`, plus the label style for a release
+installed with 5.1.0 or later:
 
 ```gotemplate
+{{- $hashed := omit .Values "labelStyle" }}
+{{- if eq (include "skywalking.labelStyle" .) "modern" }}
+{{- $_ := set $hashed "_labelStyle" "modern" }}
+{{- end }}
 {{ printf "%s-init-%s" (include "skywalking.oap.fullname" . | trunc 40 | trimSuffix "-")
-                       (.Values | toYaml | sha256sum | trunc 8) }}
+                       ($hashed | toYaml | sha256sum | trunc 8) }}
 ```
 
 For a release named `skywalking` that renders to, for example:
@@ -75,7 +80,18 @@ Consequences worth knowing:
 - Any value change produces a new Job name, so `helm upgrade` creates a fresh Job and re-runs init;
   Helm prunes the previous one because it is no longer in the manifest.
 - The hash covers the **whole** values tree, including subchart values — an unrelated change
-  (a UI setting, a BanyanDB replica count) also re-runs init.
+  (a UI setting, a BanyanDB replica count) also re-runs init. A new chart version whose default
+  values differ, its own or a subchart's, re-runs init on the upgrade too.
+- `labelStyle` is left out of the hash: it only overrides how the release's label style is found,
+  so setting or removing it does not re-run init. The style itself is hashed for a release installed
+  with 5.1.0 or later, because the Job's pod labels follow it: moving an older release to the new
+  labels renames the Job and runs init once more instead of failing. A release installed before
+  5.1.0 hashes exactly what 5.0.0 hashed.
+- The chart itself must never change the Job's pod template, labels included, without a values
+  change that renames the Job: with an unchanged name, Helm patches the existing Job and the
+  upgrade fails with `field is immutable`. That is why a release installed before 5.1.0 keeps exactly
+  the pod labels 5.0.0 rendered, with the recommended labels only on the Job's own metadata. The
+  upgrade E2E cell checks this.
 - The OAP name is truncated to 40 characters before the suffix, so the Job name stays inside the
   63-character DNS limit.
 
@@ -154,9 +170,12 @@ The liveness and readiness probes default to the same TCP check on `12800` with
 export NS=skywalking
 export RELEASE=skywalking
 
-# The chart renders exactly one Job, whatever the storage type
-kubectl get jobs -n "$NS" -l release="$RELEASE"
-JOB=$(kubectl get jobs -n "$NS" -l release="$RELEASE" -o jsonpath='{.items[0].metadata.name}')
+# The chart renders exactly one Job per release, whatever the storage type. Read its name from the
+# release's rendered manifest, which is right for any chart version and either label style. With
+# `helm template | kubectl apply`, pipe your rendered output into the same awk instead: `kubectl
+# apply` never prunes a Job that a values change replaced, so the namespace may hold older ones.
+JOB=$(helm get manifest "$RELEASE" -n "$NS" | awk '/^kind: Job$/ {j=1} j && /^  name:/ {gsub(/"/, "", $2); print $2; exit}')
+kubectl get job -n "$NS" "$JOB"
 
 # Logs (while running, and after completion until the TTL removes it)
 kubectl logs -n "$NS" "job/$JOB" --tail=200
@@ -180,9 +199,14 @@ Every `helm upgrade` with a changed value already reruns init. To rerun it witho
 value, delete the Job and upgrade — Helm recreates the now-missing resource:
 
 ```shell
-kubectl delete job -n skywalking -l release=skywalking
+# The release's current init Job, read from its rendered manifest: right for any chart version and
+# either label style. With `helm template | kubectl apply`, pipe your rendered output into the same
+# awk instead; `kubectl apply` never prunes a Job that a values change replaced.
+kubectl delete job -n skywalking "$(helm get manifest skywalking -n skywalking | awk '/^kind: Job$/ {j=1} j && /^  name:/ {gsub(/"/, "", $2); print $2; exit}')"
+# Keep the chart version the release already runs (see `helm list -n skywalking`): an older
+# version would also roll back the release's labels and selectors.
 helm upgrade skywalking oci://docker.io/apache/skywalking-helm \
-  --version 5.0.0 -n skywalking --reuse-values
+  --version <current chart version> -n skywalking --reuse-values
 ```
 
 ## See also

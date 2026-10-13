@@ -18,25 +18,17 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: {{ template "skywalking.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    component: "{{ .Values.satellite.name }}"
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "skywalking.labels" (dict "context" . "component" .Values.satellite.name) | nindent 4 }}
   name: {{ template "skywalking.satellite.fullname" . }}
 spec:
   replicas: {{ .Values.satellite.replicas }}
   selector:
     matchLabels:
-      app: {{ template "skywalking.name" . }}
-      component: "{{ .Values.satellite.name }}"
-      release: {{ .Release.Name }}
+      {{- include "skywalking.selectorLabels" (dict "context" . "component" .Values.satellite.name) | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ template "skywalking.name" . }}
-        component: "{{ .Values.satellite.name }}"
-        release: {{ .Release.Name }}
+        {{- include "skywalking.podLabels" (dict "context" . "component" .Values.satellite.name) | nindent 8 }}
         {{- if .Values.satellite.podAnnotations }}
       annotations:
 {{ toYaml .Values.satellite.podAnnotations | indent 8 }}
@@ -55,9 +47,7 @@ spec:
             - topologyKey: "kubernetes.io/hostname"
               labelSelector:
                 matchLabels:
-                  app: "{{ template "skywalking.name" . }}"
-                  release: "{{ .Release.Name }}"
-                  component: "{{ .Values.satellite.name }}"
+                  {{- include "skywalking.selectorLabels" (dict "context" . "component" .Values.satellite.name) | nindent 18 }}
       {{- else if eq .Values.satellite.antiAffinity "soft" }}
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -66,9 +56,7 @@ spec:
               topologyKey: kubernetes.io/hostname
               labelSelector:
                 matchLabels:
-                  app: "{{ template "skywalking.name" . }}"
-                  release: "{{ .Release.Name }}"
-                  component: "{{ .Values.satellite.name }}"
+                  {{- include "skywalking.selectorLabels" (dict "context" . "component" .Values.satellite.name) | nindent 18 }}
       {{- end }}
       {{- with .Values.satellite.nodeAffinity }}
         nodeAffinity:
