@@ -60,6 +60,16 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # The kind nodes and all their pods share the host's inotify limits. Without this, BanyanDB
+      # standalone exits with "couldn't initialize inotify: too many open files". Raise them to at
+      # least the values the kind known-issues page recommends.
+      - name: Raise inotify limits for kind
+        run: |
+          watches=$(sysctl -n fs.inotify.max_user_watches)
+          instances=$(sysctl -n fs.inotify.max_user_instances)
+          echo "runner defaults: max_user_watches=${watches} max_user_instances=${instances}"
+          sudo sysctl -w fs.inotify.max_user_watches=$(( watches > 524288 ? watches : 524288 )) \
+                         fs.inotify.max_user_instances=$(( instances > 512 ? instances : 512 ))
       - name: ${{ matrix.test.name }}
         uses: apache/skywalking-infra-e2e@56ac8befeb5f910f2dc9339e65d07cd18953f90e
         with:
