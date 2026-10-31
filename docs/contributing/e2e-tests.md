@@ -53,8 +53,10 @@ each of those pairings needs.
 | `test/e2e/e2e-oap11-banyandb-cluster.yaml` | 11.0.0 | BanyanDB 0.11, cluster mode | As above but `banyandb.standalone.enabled=false`, `banyandb.cluster.enabled=true`. |
 
 All three also switch Zipkin on — `oap.ports.zipkin-query=9412` plus `SW_RECEIVER_ZIPKIN=default`
-and `SW_QUERY_ZIPKIN=default` — because the chart only emits `oap.zipkinUrl` into Horizon's config
-when that port is set, and one verify case asserts Horizon can reach it. Each runs seven cases.
+— because the chart only emits `oap.zipkinUrl` into Horizon's config when that port is set, and one
+verify case asserts Horizon can reach it. The port already makes the chart set `SW_QUERY_ZIPKIN`;
+setting it again through `oap.env` duplicates the env entry, which Helm 4's server-side apply
+rejects. Each runs seven cases.
 
 ### The fourth cell: `e2e-config-override.yaml`
 
