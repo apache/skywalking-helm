@@ -60,12 +60,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.24'
       - name: ${{ matrix.test.name }}
-        uses: apache/skywalking-infra-e2e@8c21e43e241a32a54bdf8eeceb9099eb27e5e9b4
+        uses: apache/skywalking-infra-e2e@56ac8befeb5f910f2dc9339e65d07cd18953f90e
         with:
           e2e-file: $GITHUB_WORKSPACE/${{ matrix.test.config }}
       - if: ${{ failure() }}
