@@ -62,7 +62,6 @@ setup:
                        --set banyandb.auth.enabled=true \
                        --set oap.ports.zipkin-query=9412 \
                        --set oap.env.SW_RECEIVER_ZIPKIN=default \
-                       --set oap.env.SW_QUERY_ZIPKIN=default \
                        --set satellite.enabled=true \
                        --set satellite.image.repository=$SATELLITE_REPO \
                        --set satellite.image.tag=$SATELLITE_TAG \

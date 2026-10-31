@@ -55,17 +55,23 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Login to ghcr
-        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.24'
+      # The kind nodes and all their pods share the host's inotify limits. Without this, BanyanDB
+      # standalone exits with "couldn't initialize inotify: too many open files". Raise them to at
+      # least the values the kind known-issues page recommends.
+      - name: Raise inotify limits for kind
+        run: |
+          watches=$(sysctl -n fs.inotify.max_user_watches)
+          instances=$(sysctl -n fs.inotify.max_user_instances)
+          echo "runner defaults: max_user_watches=${watches} max_user_instances=${instances}"
+          sudo sysctl -w fs.inotify.max_user_watches=$(( watches > 524288 ? watches : 524288 )) \
+                         fs.inotify.max_user_instances=$(( instances > 512 ? instances : 512 ))
       - name: ${{ matrix.test.name }}
-        uses: apache/skywalking-infra-e2e@8c21e43e241a32a54bdf8eeceb9099eb27e5e9b4
+        uses: apache/skywalking-infra-e2e@56ac8befeb5f910f2dc9339e65d07cd18953f90e
         with:
           e2e-file: $GITHUB_WORKSPACE/${{ matrix.test.config }}
       - if: ${{ failure() }}
