@@ -16,6 +16,7 @@
 #
 
 github:
+  dependabot_updates: false
   description: Apache SkyWalking Kubernetes Deployment Helm Chart
   homepage: https://skywalking.apache.org/
   labels:
