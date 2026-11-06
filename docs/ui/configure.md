@@ -142,13 +142,16 @@ variable. A `:null` default in the shipped file means "fall through to the built
 
 Each variable carries the **whole** block, replacing it rather than merging into it — so restate the
 parts of the default you want to keep. `layers.excluded` defaults to `FAAS` and `VIRTUAL_GATEWAY`,
-which is why hiding one more means naming all three:
+and from Horizon 1.2.0 also `OTLP_VIRTUAL_GATEWAY`, the layer OAP 11.2.0 gives a gateway listed in
+its `gateways.yml` when the services around it report OTLP traces. Hiding one more layer therefore
+means naming the defaults too. A key for a layer OAP does not report hides nothing, so the example
+below works on any version:
 
 ```yaml
 ui:
   extraEnv:
     - name: HORIZON_LAYERS_EXCLUDED
-      value: '[{"key":"FAAS"},{"key":"VIRTUAL_GATEWAY"},{"key":"SO11Y_OAP","reason":"Internal."}]'
+      value: '[{"key":"FAAS"},{"key":"VIRTUAL_GATEWAY"},{"key":"OTLP_VIRTUAL_GATEWAY"},{"key":"SO11Y_OAP","reason":"Internal."}]'
     - name: HORIZON_PERFORMANCE
       value: '{"bulk":{"dashboard":{"bulkSize":8}}}'
 ```
