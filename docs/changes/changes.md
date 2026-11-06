@@ -38,3 +38,8 @@
 - **The Satellite Role and RoleBinding carried OAP's component label.** They now carry Satellite's.
 
 ### Documentation
+
+- **The Configure Horizon page names `OTLP_VIRTUAL_GATEWAY` among the layers Horizon hides by
+  default.** Horizon 1.2.0 hides it next to `FAAS` and `VIRTUAL_GATEWAY`, and the
+  `HORIZON_LAYERS_EXCLUDED` example now lists it, so an install that copies the example to hide one
+  more layer keeps the OTLP gateway layer hidden as well.
