@@ -36,7 +36,7 @@ The field list itself is owned upstream:
 | Environment variable | Value | Set when |
 |---|---|---|
 | `HORIZON_SERVER_PORT` | `ui.service.internalPort` (`8081`) | always |
-| `HORIZON_OAP_QUERY_URL` | in-cluster OAP service + `oap.ports.rest` (`12800`) | always |
+| `HORIZON_OAP_QUERY_URL` | in-cluster OAP service + `oap.ports.query` when set, else `oap.ports.rest` (`12800`) | always |
 | `HORIZON_OAP_ADMIN_URL` | in-cluster OAP service + `oap.ports.admin` (`17128`) | only when `oap.ports.admin` is set |
 | `HORIZON_OAP_ZIPKIN_URL` | in-cluster OAP service + `oap.ports.zipkin-query` + `/zipkin` | only when `oap.ports.zipkin-query` is set |
 | `HORIZON_PUBLIC_URL` | first entry of `ui.ingress.hosts`, `https` when a `tls` block covers that host, else `http` | only when `ui.ingress.enabled` **and** `ui.ingress.hosts` are set |

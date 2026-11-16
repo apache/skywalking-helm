@@ -30,7 +30,7 @@ Learn more, please visit https://skywalking.apache.org/
 {{- if not .Values.ui.enabled }}
 The web UI is disabled in this release (ui.enabled=false). No UI Deployment,
 Service, ConfigMap, Ingress, or PVC was created. OAP is still reachable on
-its GraphQL port (default 12800) for any external UI you point at it.
+its GraphQL port ({{ .Values.oap.ports.query | default .Values.oap.ports.rest }}) for any external UI you point at it.
 {{- else }}
 Get the UI URL by running these commands:
 {{- if .Values.ui.ingress.enabled }}

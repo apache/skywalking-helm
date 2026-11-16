@@ -35,7 +35,10 @@ helm template skywalking chart/skywalking \
 | Key | Default | Serves | In `oap.ports` by default | Needs OAP env too |
 |---|---|---|---|---|
 | `grpc` | `11800` | Native agent protocol (traces, JVM/meters, profiling, logs, events). Every other gRPC receiver — OTLP, Envoy ALS, Rover eBPF, Satellite forwarding — shares it, because `SW_RECEIVER_GRPC_PORT` defaults to `0` (fall back to the core gRPC server) | yes | no |
-| `rest` | `12800` | GraphQL query API at `/graphql` (Horizon's `oap.queryUrl`, `swctl`). HTTP receivers share it for the same reason (`SW_RECEIVER_SHARING_REST_PORT:0`). All three pod probes `tcpSocket` this port | yes | no |
+| `rest` | `12800` | GraphQL query API at `/graphql` (Horizon's `oap.queryUrl`, `swctl`), unless `query` is set. HTTP receivers share it for the same reason (`SW_RECEIVER_SHARING_REST_PORT:0`). All three pod probes `tcpSocket` this port | yes | no |
+| `receiver-grpc` | `11811` in the commented example | The gRPC receivers moved off `grpc` — see [Separate the receiver and query ports](#separate-the-receiver-and-query-ports). Satellite forwards here when it is set | no | no — the chart sets `SW_RECEIVER_GRPC_PORT` |
+| `receiver-rest` | `12811` in the commented example | The HTTP receivers moved off `rest` | no | no — the chart sets `SW_RECEIVER_SHARING_REST_PORT` |
+| `query` | `12810` in the commented example | The GraphQL query API, the AI agent conversation API and `/status/config/ttl`, moved off `rest`. Horizon's `oap.queryUrl` follows it. Needs OAP 11.2.0 or later | no | no — the chart sets `SW_QUERY_SERVER_REST_PORT` |
 | `admin` | `17128` | admin-server: `/status/*`, `/debugging/*`, inspect, dsl-debugging, runtime-rule, and the `ui-management` template store Horizon uses when `ui.config.templates.mode` is `live`. Wired into Horizon as `oap.adminUrl` | yes | no |
 | `zipkin-receiver` | `9411` | Zipkin span ingestion, `POST /api/v2/spans` | no | no — the chart sets `SW_RECEIVER_ZIPKIN=default` and `SW_RECEIVER_ZIPKIN_REST_PORT` for you |
 | `zipkin-query` | `9412` | Zipkin query API under `/zipkin` (Zipkin-Lens compatible). Also makes the chart write Horizon's `oap.zipkinUrl` | no | no — the chart sets `SW_QUERY_ZIPKIN=default` and `SW_QUERY_ZIPKIN_REST_PORT` |
@@ -107,7 +110,38 @@ oap:
     periodSeconds: 10
 ```
 
-The default probes hardcode `12800`; leaving them behind makes the pod restart-loop. Horizon needs no change either way — the UI ConfigMap renders `oap.queryUrl` / `oap.adminUrl` from `oap.ports.rest` / `oap.ports.admin`. `zipkin-receiver` and `zipkin-query` have no such problem — the chart derives their env from the value.
+The default probes hardcode `12800`; leaving them behind makes the pod restart-loop. Horizon needs no change either way — the UI ConfigMap renders `oap.queryUrl` / `oap.adminUrl` from `oap.ports.rest` (or `oap.ports.query` when set) / `oap.ports.admin`. `zipkin-receiver` and `zipkin-query` have no such problem — the chart derives their env from the value.
+
+## Separate the receiver and query ports
+
+By default `grpc` and `rest` carry both the agent and the query traffic: agents report on the same
+ports that the UI queries, and `grpc` also carries the cluster traffic between OAP nodes.
+Three keys split them, so each port can be published, firewalled and given TLS on its own:
+
+```yaml
+oap:
+  ports:
+    grpc: 11800
+    rest: 12800
+    admin: 17128
+    receiver-grpc: 11811   # agents, Envoy, OTLP gRPC, Satellite
+    receiver-rest: 12811   # browser SDK, HTTP agents, OTLP HTTP
+    query: 12810           # GraphQL, AI agent conversations, /status/config/ttl
+```
+
+For each key that is set, the chart publishes the port and sets the OAP variable that starts the
+server (`SW_RECEIVER_GRPC_PORT`, `SW_RECEIVER_SHARING_REST_PORT`, `SW_QUERY_SERVER_REST_PORT`). It
+also points its own clients at the new ports: Horizon's `oap.queryUrl` uses `query`, and Satellite
+forwards to `receiver-grpc`. With all three set, no agent or query traffic is left on `grpc` and
+`rest`: `grpc` carries the cluster traffic between OAP nodes, and `rest` the probes, which keep
+checking `12800`. The keys are independent; set only the ones you need.
+
+`receiver-grpc` and `receiver-rest` work on every OAP release this chart supports. `query` needs OAP
+11.2.0 or later: an older OAP ignores the variable and keeps GraphQL on `12800`, while Horizon would
+query the closed `query` port.
+
+Repoint the clients outside the chart yourself: agents to `receiver-grpc`, browser and other HTTP
+reporters to `receiver-rest`, and `swctl --base-url` or any other GraphQL client to `query`.
 
 ## What to point at what
 
@@ -154,7 +188,7 @@ oap:
 
 `oap.service.type` accepts any Service type (`ClusterIP`, `NodePort`, `LoadBalancer`) and `oap.service.annotations` is passed straight through to the Service metadata. The agent protocol on `11800` is gRPC over HTTP/2, so an L7 HTTP ingress will not do — use an L4 / NLB Service or a gRPC-aware gateway.
 
-A public OAP Service publishes **every** key in `oap.ports`, and `admin: 17128` is one of them by default — it serves `/status/*`, `/debugging/*`, inspect and the runtime-rule write APIs. Front the public address with something that forwards only `11800` / `12800` rather than dropping `admin` from `oap.ports`: the UI ConfigMap still renders `oap.adminUrl` as `:17128`, so removing the port breaks Horizon. See [TLS](tls.md) before putting any of these on the internet.
+A public OAP Service publishes **every** key in `oap.ports`, and `admin: 17128` is one of them by default — it serves `/status/*`, `/debugging/*`, inspect and the runtime-rule write APIs. Front the public address with something that forwards only `11800` / `12800` (or only the receiver ports, when [separated](#separate-the-receiver-and-query-ports)) rather than dropping `admin` from `oap.ports`: the UI ConfigMap still renders `oap.adminUrl` as `:17128`, so removing the port breaks Horizon. See [TLS](tls.md) before putting any of these on the internet.
 
 ## Related
 

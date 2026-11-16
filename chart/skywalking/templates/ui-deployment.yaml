@@ -95,7 +95,7 @@ spec:
         - name: HORIZON_SERVER_PORT
           value: {{ .Values.ui.service.internalPort | quote }}
         - name: HORIZON_OAP_QUERY_URL
-          value: "http://{{ $oap }}:{{ .Values.oap.ports.rest }}"
+          value: "http://{{ $oap }}:{{ .Values.oap.ports.query | default .Values.oap.ports.rest }}"
 {{- if .Values.oap.ports.admin }}
         - name: HORIZON_OAP_ADMIN_URL
           value: "http://{{ $oap }}:{{ .Values.oap.ports.admin }}"
