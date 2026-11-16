@@ -23,7 +23,7 @@ Booster UI needed only the GraphQL query port. Horizon's BFF needs two, and the 
 
 | field | OAP port | chart value | what it carries |
 |---|---|---|---|
-| `oap.queryUrl` | `12800` | `oap.ports.rest` | the GraphQL query API |
+| `oap.queryUrl` | `12800` by default | `oap.ports.query` when set, else `oap.ports.rest` | the GraphQL query API |
 | `oap.adminUrl` | `17128` | `oap.ports.admin` | `/status/*`, `/debugging/*`, inspect, DSL debugging, runtime rules, dashboard templates |
 | `oap.zipkinUrl` | commented out by default | `oap.ports.zipkin-query` | written as `http://<oap>:<port>/zipkin`, only when that port is set |
 

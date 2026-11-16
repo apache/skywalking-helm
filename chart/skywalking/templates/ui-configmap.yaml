@@ -30,7 +30,7 @@ default is left out so upstream owns it.
 */ -}}
 {{- $oap := include "skywalking.oap.fullname" . }}
 {{- $oapDefaults := dict
-  "queryUrl" (printf "${HORIZON_OAP_QUERY_URL:http://%s:%v}" $oap .Values.oap.ports.rest)
+  "queryUrl" (printf "${HORIZON_OAP_QUERY_URL:http://%s:%v}" $oap (.Values.oap.ports.query | default .Values.oap.ports.rest))
 }}
 {{- /* The admin host arrived in OAP 11. On a 10.x release 17128 is the
 AI-pipeline URI-recognition server, so advertising an adminUrl there would point

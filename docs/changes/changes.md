@@ -32,6 +32,7 @@
   working tree with identical values, checking that the old labels and selectors are kept and the
   init Job is never broken by an immutable pod-template change. `e2e-config-override.yaml` now checks
   that a fresh install carries only the recommended labels and selects by them.
+- **Separated receiver and query ports.** Three opt-in keys under `oap.ports` move OAP traffic off `grpc` / `rest`, so each port can be exposed, firewalled and given TLS on its own: `receiver-grpc` (sets `SW_RECEIVER_GRPC_PORT`; Satellite forwards to it), `receiver-rest` (sets `SW_RECEIVER_SHARING_REST_PORT`) and `query` (sets `SW_QUERY_SERVER_REST_PORT`, needs OAP 11.2.0 or later; Horizon's `queryUrl` follows it). With none set, nothing changes. See [OAP Endpoints](../expose/oap-endpoints.md#separate-the-receiver-and-query-ports).
 
 ### Bugs
 

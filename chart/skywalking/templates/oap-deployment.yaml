@@ -130,6 +130,18 @@ spec:
         - name: SW_QUERY_ZIPKIN_REST_PORT
           value: "{{ index .Values.oap.ports "zipkin-query" }}"
 {{- end }}
+{{- if index .Values.oap.ports "receiver-grpc" }}
+        - name: SW_RECEIVER_GRPC_PORT
+          value: "{{ index .Values.oap.ports "receiver-grpc" }}"
+{{- end }}
+{{- if index .Values.oap.ports "receiver-rest" }}
+        - name: SW_RECEIVER_SHARING_REST_PORT
+          value: "{{ index .Values.oap.ports "receiver-rest" }}"
+{{- end }}
+{{- if .Values.oap.ports.query }}
+        - name: SW_QUERY_SERVER_REST_PORT
+          value: "{{ .Values.oap.ports.query }}"
+{{- end }}
         - name: JAVA_OPTS
           value: "-Dmode=no-init {{ .Values.oap.javaOpts }}"
         - name: SW_CLUSTER

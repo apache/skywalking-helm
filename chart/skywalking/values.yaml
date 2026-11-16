@@ -47,6 +47,19 @@ oap:
     # null on any 10.x release, where 17128 is the AI-pipeline URI-recognition
     # server instead, so pointing Horizon at it reaches the wrong service.
     admin: 17128
+    # Separated ports. Each key, when set, starts that OAP server and moves its
+    # traffic off grpc / rest. With all three set, no agent or query traffic is
+    # left there: grpc carries the cluster traffic between OAP nodes, and rest
+    # the probes.
+    # receiver-grpc: gRPC receivers (agents, Envoy, OTLP gRPC); Satellite
+    #   forwards here when it is set.
+    # receiver-rest: HTTP receivers (browser SDK, HTTP agents, OTLP HTTP).
+    # query: GraphQL, the AI agent conversation API and /status/config/ttl;
+    #   Horizon's queryUrl follows it. Needs OAP 11.2.0 or later, older OAP
+    #   ignores it and the UI would query a closed port.
+    # receiver-grpc: 11811
+    # receiver-rest: 12811
+    # query: 12810
     # zipkin-receiver: 9411
     # zipkin-query: 9412
     # promql: 9090
