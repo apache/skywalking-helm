@@ -200,6 +200,8 @@ Preflight refuses to start when:
 
 - any of `helm`, `gpg`, `shasum`, `svn`, `git`, `make`, `tar`, `awk` is missing. All of them are
   reported in one message — finding them one at a time costs one failed run per package;
+- Docker is not installed or its daemon is not running. `make release` packs and checks the tarballs
+  in a Linux container;
 - `helm` is older than 3.8. The chart ships only as an OCI artifact, and `helm push` to an `oci://`
   registry arrived in 3.8. Helm 4 is accepted: `Chart.yaml` is `apiVersion: v2`, which both majors
   read;
@@ -626,12 +628,16 @@ scratch.
 
 ```makefile
 release-src: clean
-	tar -zcvf $(TMPDIR)/$(RELEASE_SRC).tgz \
+	bash tools/releasing/linux-tar.sh pack . -zcvf - \
 	--exclude bin --exclude .git --exclude .idea \
 	--exclude .gitignore --exclude .DS_Store --exclude .github \
-	. && \
+	. > $(TMPDIR)/$(RELEASE_SRC).tgz && \
 	mv $(TMPDIR)/$(RELEASE_SRC).tgz .
 ```
+
+The tar is GNU tar in a Linux container (`tools/releasing/linux-tar.sh`), not the host's `tar`, so a
+release made on macOS carries no macOS metadata (AppleDouble `._*` files or extended-attribute
+headers). It writes the archive to stdout, which the host redirects into `$(TMPDIR)`.
 
 It archives the whole working directory — hence the `clean` prerequisite, which removes `charts/`,
 `Chart.lock` and this version's `.tgz` files before the tar runs. The tar is built in `$(TMPDIR)` and
@@ -651,13 +657,16 @@ list ships inside the ASF source release.
 
 ```makefile
 release: release-src package
+	bash tools/releasing/linux-tar.sh verify $(RELEASE_SRC).tgz $(CHART_NAME)-$(VERSION).tgz
 	gpg --batch --yes --armor --detach-sig $(RELEASE_SRC).tgz
 	shasum -a 512 $(RELEASE_SRC).tgz > $(RELEASE_SRC).tgz.sha512
 	gpg --batch --yes --armor --detach-sig $(CHART_NAME)-$(VERSION).tgz
 	shasum -a 512 $(CHART_NAME)-$(VERSION).tgz > $(CHART_NAME)-$(VERSION).tgz.sha512
 ```
 
-The full sequence, in order: `clean` → `release-src` → `prepare` → `package` → sign and checksum.
+The full sequence, in order: `clean` → `release-src` → `prepare` → `package` → check → sign and checksum.
+The check unpacks both tarballs with GNU tar in the same Linux image, and stops before signing if
+tar prints any warning or finds a `._*` entry.
 **Both** artifacts are signed and checksummed, leaving six files in the repository root:
 
 ```text

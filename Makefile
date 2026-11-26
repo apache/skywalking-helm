@@ -53,7 +53,7 @@ clean:
 		${RELEASE_SRC}.tgz.sha512
 
 release-src: clean
-	tar -zcvf $(TMPDIR)/$(RELEASE_SRC).tgz \
+	bash tools/releasing/linux-tar.sh pack . -zcvf - \
 	--exclude bin \
 	--exclude .git \
 	--exclude .idea \
@@ -61,10 +61,11 @@ release-src: clean
 	--exclude .DS_Store \
 	--exclude .github \
 	--exclude tools/releasing/skywalking-helm \
-	. && \
+	. > $(TMPDIR)/$(RELEASE_SRC).tgz && \
 	mv $(TMPDIR)/$(RELEASE_SRC).tgz .
 
 release: release-src package
+	bash tools/releasing/linux-tar.sh verify $(RELEASE_SRC).tgz $(CHART_NAME)-$(VERSION).tgz
 	gpg --batch --yes --armor --detach-sig $(RELEASE_SRC).tgz
 	shasum -a 512 $(RELEASE_SRC).tgz > $(RELEASE_SRC).tgz.sha512
 	gpg --batch --yes --armor --detach-sig $(CHART_NAME)-$(VERSION).tgz

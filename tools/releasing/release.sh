@@ -119,6 +119,8 @@ preflight() {
     command -v "${tool}" >/dev/null || missing="${missing} ${tool}"
   done
   [[ -z "${missing}" ]] || die "not installed:${missing}"
+  # make release packs and checks the tarballs with GNU tar in a Linux container.
+  bash "${SCRIPT_DIR}/linux-tar.sh" check || die "make release needs Docker running"
 
   # Present is not the same as usable, and each of these otherwise fails LATE: a missing signing
   # key after the whole build, bad svn credentials after the tag is already pushed, an
