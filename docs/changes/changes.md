@@ -37,6 +37,9 @@
 ### Bugs
 
 - **The Satellite Role and RoleBinding carried OAP's component label.** They now carry Satellite's.
+- **The source release tarball carried macOS metadata.** The 5.0.0 source tarball was packed on macOS and holds
+  an AppleDouble `._*` file beside every file, with extended-attribute headers that GNU tar warns about. It is
+  now packed with GNU tar on Linux.
 
 ### Documentation
 
